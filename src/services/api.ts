@@ -1,7 +1,7 @@
 import { apiClient } from './apiClient';
 import type {
   AiPrediction, Alert, AlertStatus, AnalysisResult, AnalysisType, AuthResponse, DashboardSummary, Device,
-  Measurement, Network, NetworkReport, ProtocolStatistic, Role, Strategy, TrafficSession, User, Zone,
+  Measurement, Network, NetworkReport, ProtocolStatistic, StaffRole, Strategy, TrafficSession, User, Zone,
 } from '../types';
 
 export interface NetworkInput {
@@ -17,12 +17,14 @@ export interface NetworkInput {
 export const api = {
   login: (username: string, password: string) =>
     apiClient.post<AuthResponse>('/api/auth/login', { username, password }),
+  register: (username: string, password: string) =>
+    apiClient.post<AuthResponse>('/api/auth/register', { username, password }),
   me: () => apiClient.get<User>('/api/auth/me'),
 
   users: () => apiClient.get<User[]>('/api/users'),
-  createUser: (username: string, password: string, role: Role) =>
+  createUser: (username: string, password: string, role: StaffRole) =>
     apiClient.post<User>('/api/users', { username, password, role }),
-  changeUserRole: (id: number, role: Role) => apiClient.patch<User>(`/api/users/${id}/role`, { role }),
+  changeUserRole: (id: number, role: StaffRole) => apiClient.patch<User>(`/api/users/${id}/role`, { role }),
   deleteUser: (id: number) => apiClient.delete(`/api/users/${id}`),
 
   dashboard: () => apiClient.get<DashboardSummary>('/api/dashboard/summary'),

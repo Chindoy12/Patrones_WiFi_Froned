@@ -3,14 +3,15 @@ import { useAuth } from '../auth/AuthContext';
 import { PASSWORD_RULES, USERNAME_MAX, USERNAME_PATTERN, isStrongPassword } from '../auth/credentials';
 import { DataState } from '../components/DataState';
 import { PageHeader } from '../components/PageHeader';
+import { roleLabel } from '../format';
 import { PasswordInput } from '../components/PasswordInput';
 import { errorMessage, useApi } from '../hooks/useApi';
 import { api } from '../services/api';
 import { ApiError } from '../services/apiClient';
-import type { Role } from '../types';
+import type { StaffRole } from '../types';
 
 const MAX_USERS = 3;
-const ROLE_LABEL: Record<Role, string> = { ADMIN: 'Administrador', ANALYST: 'Analista', VIEWER: 'Observador' };
+const ROLE_LABEL: Record<StaffRole, string> = { ADMIN: 'Administrador', ANALYST: 'Analista', VIEWER: 'Observador' };
 
 export function UsersPage() {
   const { user: current } = useAuth();
@@ -42,11 +43,11 @@ export function UsersPage() {
                   <li key={u.id}>
                     <span className="list__main"><strong>{u.username}</strong>{u.username === current?.username && ' (tú)'}</span>
                     {u.username === current?.username ? (
-                      <span className="muted">{ROLE_LABEL[u.role]}</span>
+                      <span className="muted">{roleLabel[u.role]}</span>
                     ) : (
                       <>
                         <select aria-label={`Rol de ${u.username}`} value={u.role}
-                                onChange={(e) => act(() => api.changeUserRole(u.id, e.target.value as Role))}>
+                                onChange={(e) => act(() => api.changeUserRole(u.id, e.target.value as StaffRole))}>
                           {Object.entries(ROLE_LABEL).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
                         </select>
                         <button className="link-button link-button--danger"
@@ -75,7 +76,7 @@ export function UsersPage() {
 function CreateUserForm({ onCreated }: { onCreated: () => void }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState<Role>('ANALYST');
+  const [role, setRole] = useState<StaffRole>('ANALYST');
   const [errors, setErrors] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
 
@@ -118,7 +119,7 @@ function CreateUserForm({ onCreated }: { onCreated: () => void }) {
       </ul>
       <div className="field">
         <label htmlFor="new-role">Rol</label>
-        <select id="new-role" value={role} onChange={(e) => setRole(e.target.value as Role)}>
+        <select id="new-role" value={role} onChange={(e) => setRole(e.target.value as StaffRole)}>
           {Object.entries(ROLE_LABEL).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
         </select>
       </div>

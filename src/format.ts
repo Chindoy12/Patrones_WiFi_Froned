@@ -1,3 +1,5 @@
+import type { Role } from './types';
+
 const dateTime = new Intl.DateTimeFormat('es-CO', { dateStyle: 'short', timeStyle: 'short' });
 const time = new Intl.DateTimeFormat('es-CO', { hour: '2-digit', minute: '2-digit' });
 
@@ -26,4 +28,8 @@ export const statusLabel: Record<string, string> = {
   NONE: 'Sin anomalía', LOW: 'Baja', MEDIUM: 'Media', HIGH: 'Alta',
   THRESHOLD: 'Umbrales', STATISTICAL: 'Estadístico', ANOMALY_DETECTION: 'Inteligencia artificial',
   SIMULATION: 'Simulación', ROUTER_API: 'API de router', SNMP: 'SNMP', SYSTEM: 'Sistema', TRAFFIC_CAPTURE: 'Captura de tráfico',
+};
+
+export const roleLabel: Record<Role, string> = {
+  ADMIN: 'Administrador', ANALYST: 'Analista', VIEWER: 'Observador', USER: 'Usuario',
 };

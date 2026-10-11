@@ -23,7 +23,8 @@ describe('frontend security rules', () => {
     expect(offenders.map((o) => o.file)).toEqual([]);
   });
 
-  it('has no self-registration endpoint', () => {
-    expect(sources.filter(({ text }) => text.includes('/api/auth/register'))).toEqual([]);
+  it('lets visitors sign up without ever choosing a role', () => {
+    const api = readFileSync('src/services/api.ts', 'utf8');
+    expect(api).toMatch(/'\/api\/auth\/register', \{ username, password \}/);
   });
 });

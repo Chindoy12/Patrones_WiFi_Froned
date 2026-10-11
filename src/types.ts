@@ -1,4 +1,8 @@
-export type Role = 'ADMIN' | 'ANALYST' | 'VIEWER';
+/** ADMIN, ANALYST and VIEWER are the team; USER is a self-registered end user. */
+export type StaffRole = 'ADMIN' | 'ANALYST' | 'VIEWER';
+export type Role = StaffRole | 'USER';
+
+export const isStaff = (role: Role): role is StaffRole => role !== 'USER';
 export type NetworkStatus = 'NORMAL' | 'WARNING' | 'CRITICAL';
 export type DataSourceType = 'SIMULATION' | 'ROUTER_API' | 'SNMP' | 'SYSTEM' | 'TRAFFIC_CAPTURE';
 export type AnalysisType = 'THRESHOLD' | 'STATISTICAL' | 'ANOMALY_DETECTION';
