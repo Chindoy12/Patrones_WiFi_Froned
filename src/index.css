@@ -151,11 +151,109 @@ a { color: var(--accent); }
 .figures dd { margin: 0; font-size: 1.5rem; font-weight: 600; }
 
 /* Auth */
-.auth { min-height: 100vh; display: grid; place-items: center; padding: 20px; background: linear-gradient(160deg, var(--paper) 55%, #dde9ee); }
-.auth__card { width: min(400px, 100%); background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 32px; }
-.auth__card > p { color: var(--muted); }
-.auth__card .button { width: 100%; margin-top: 4px; }
-.auth__alt { text-align: center; font-size: .9rem; }
+/* Login and sign-up: light streaks behind a frosted-glass card */
+.auth-shell {
+  position: relative; min-height: 100vh; display: grid; place-items: center; padding: 24px 16px; overflow: hidden;
+  background:
+    radial-gradient(1200px 600px at 50% 115%, rgba(120, 190, 255, .55), transparent 60%),
+    radial-gradient(700px 500px at 88% -10%, rgba(90, 160, 255, .35), transparent 60%),
+    linear-gradient(165deg, #0a2559 0%, #12408f 45%, #1d63c9 100%);
+}
+.auth-shell__streaks { position: absolute; inset: 0; pointer-events: none; }
+.auth-shell__streaks span {
+  position: absolute; left: -30%; width: 160%; height: 2px; border-radius: 2px; opacity: 0;
+  background: linear-gradient(90deg, transparent, rgba(150, 210, 255, .95) 45%, #fff 50%, rgba(150, 210, 255, .95) 55%, transparent);
+  box-shadow: 0 0 12px rgba(120, 190, 255, .8);
+  animation: auth-streak 7s linear infinite;
+}
+.auth-shell__streaks span:nth-child(1) { top: 18%; transform: rotate(-16deg); animation-delay: 0s; }
+.auth-shell__streaks span:nth-child(2) { top: 32%; transform: rotate(-22deg); animation-delay: 1.4s; animation-duration: 8s; }
+.auth-shell__streaks span:nth-child(3) { top: 48%; transform: rotate(-12deg); animation-delay: 2.8s; }
+.auth-shell__streaks span:nth-child(4) { top: 62%; transform: rotate(-26deg); animation-delay: .7s; animation-duration: 9s; }
+.auth-shell__streaks span:nth-child(5) { top: 76%; transform: rotate(-18deg); animation-delay: 3.6s; }
+.auth-shell__streaks span:nth-child(6) { top: 88%; transform: rotate(-14deg); animation-delay: 5s; animation-duration: 8.5s; }
+.auth-shell__streaks span:nth-child(7) { top: 8%; transform: rotate(-24deg); animation-delay: 4.2s; }
+@keyframes auth-streak {
+  0% { opacity: 0; translate: -25% 0; }
+  15% { opacity: .9; }
+  60% { opacity: .5; }
+  100% { opacity: 0; translate: 25% 0; }
+}
+
+.auth-card {
+  position: relative; width: min(420px, 100%); padding: 34px 32px 28px; color: #fff;
+  background: linear-gradient(160deg, rgba(255, 255, 255, .24), rgba(255, 255, 255, .08));
+  backdrop-filter: blur(18px) saturate(140%); -webkit-backdrop-filter: blur(18px) saturate(140%);
+  clip-path: polygon(26px 0, 100% 0, 100% calc(100% - 26px), calc(100% - 26px) 100%, 0 100%, 0 26px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .4);
+  animation: auth-card-in .6s ease-out both;
+}
+.auth-card::before, .auth-card::after {
+  content: ''; position: absolute; width: 3px; height: 64px; border-radius: 3px; background: rgba(150, 210, 255, .85);
+  box-shadow: 0 0 10px rgba(120, 190, 255, .9);
+}
+.auth-card::before { left: 9px; top: 30%; }
+.auth-card::after { right: 9px; bottom: 26%; }
+@keyframes auth-card-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+
+.auth-card__brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.3rem; letter-spacing: .02em; }
+.auth-card h1 { margin: 20px 0 4px; font-size: 1.6rem; font-weight: 600; }
+.auth-card__subtitle { margin: 0 0 22px; color: rgba(255, 255, 255, .78); }
+.auth-card .field label { color: rgba(255, 255, 255, .88); font-size: .88rem; }
+.auth-card .field input, .auth-card .password input {
+  background: rgba(255, 255, 255, .14); border: 1px solid rgba(255, 255, 255, .32); color: #fff;
+  border-radius: 999px; padding: 11px 18px;
+}
+.auth-card .password input { padding-right: 50px; }
+.auth-card input::placeholder { color: rgba(255, 255, 255, .55); }
+.auth-card input:focus { border-color: #a9d6ff; box-shadow: 0 0 0 3px rgba(120, 190, 255, .35); outline: none; }
+.auth-card input:-webkit-autofill { -webkit-text-fill-color: #fff; transition: background-color 9999s; }
+.auth-card :focus-visible { outline: 3px solid #a9d6ff; outline-offset: 2px; }
+.auth-card .password__toggle { color: rgba(255, 255, 255, .8); right: 8px; }
+.auth-card .password__toggle:hover { background: rgba(255, 255, 255, .16); color: #fff; }
+.auth-card small, .auth-card .muted { color: rgba(255, 255, 255, .72); }
+.auth-card .field__error { color: #ffc9c9; }
+.auth-card .rules { background: rgba(255, 255, 255, .08); border-color: rgba(255, 255, 255, .2); color: rgba(255, 255, 255, .75); }
+.auth-card .rules li.is-ok { color: #a6f2c6; }
+.auth-card .notice--error { background: rgba(255, 90, 90, .2); border-color: rgba(255, 160, 160, .55); color: #ffe4e4; }
+.auth-card .button {
+  width: 100%; margin-top: 6px; padding: 12px; border-radius: 999px; background: #fff; color: #0d2f6e; font-weight: 600;
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+.auth-card .button:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 10px 24px rgba(5, 25, 80, .35); }
+.auth-card .button:disabled { opacity: .55; cursor: not-allowed; }
+.auth-card__footer { margin-top: 18px; text-align: center; font-size: .92rem; color: rgba(255, 255, 255, .8); }
+.auth-card__footer a { color: #fff; font-weight: 600; text-underline-offset: 3px; }
+
+/* Wi-Fi mark: dot and arcs light up in blue from the bottom, one after another */
+.wifi-logo { overflow: visible; flex-shrink: 0; }
+.wifi-logo__dot { fill: rgba(255, 255, 255, .2); animation: wifi-dot 2.4s ease-in-out infinite; }
+.wifi-logo__arc { fill: none; stroke: rgba(255, 255, 255, .2); stroke-width: 5; stroke-linecap: round; animation: wifi-arc 2.4s ease-in-out infinite; }
+.wifi-logo__arc--1 { animation-delay: .3s; }
+.wifi-logo__arc--2 { animation-delay: .6s; }
+.wifi-logo__arc--3 { animation-delay: .9s; }
+.wifi-logo--busy .wifi-logo__dot, .wifi-logo--busy .wifi-logo__arc { animation-duration: 1.2s; }
+.wifi-logo--busy .wifi-logo__arc--1 { animation-delay: .15s; }
+.wifi-logo--busy .wifi-logo__arc--2 { animation-delay: .3s; }
+.wifi-logo--busy .wifi-logo__arc--3 { animation-delay: .45s; }
+@keyframes wifi-arc {
+  0%, 5% { stroke: rgba(255, 255, 255, .2); filter: none; }
+  18%, 70% { stroke: #5cb0ff; filter: drop-shadow(0 0 5px rgba(92, 176, 255, .9)); }
+  90%, 100% { stroke: rgba(255, 255, 255, .2); filter: none; }
+}
+@keyframes wifi-dot {
+  0%, 5% { fill: rgba(255, 255, 255, .2); filter: none; }
+  18%, 70% { fill: #5cb0ff; filter: drop-shadow(0 0 5px rgba(92, 176, 255, .9)); }
+  90%, 100% { fill: rgba(255, 255, 255, .2); filter: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-shell__streaks span, .auth-card { animation: none; }
+  .auth-shell__streaks span { opacity: .35; }
+  .wifi-logo__dot, .wifi-logo__arc { animation: none; }
+  .wifi-logo__dot { fill: #5cb0ff; }
+  .wifi-logo__arc { stroke: #5cb0ff; }
+}
 
 @media (max-width: 1000px) {
   .grid-2, .grid-2--wide-left, .overview { grid-template-columns: minmax(0, 1fr); }
