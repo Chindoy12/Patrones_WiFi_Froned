@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
+import { roleLabel } from '../format';
 
 const SECTIONS = [
   { to: '/', label: 'Panel' },
@@ -13,8 +14,6 @@ const SECTIONS = [
   { to: '/alerts', label: 'Alertas' },
   { to: '/reports', label: 'Reportes' },
 ];
-
-const ROLE_LABEL = { ADMIN: 'Administrador', ANALYST: 'Analista', VIEWER: 'Observador' };
 
 export function Layout() {
   const { user, logout, can } = useAuth();
@@ -44,7 +43,7 @@ export function Layout() {
         {user && (
           <div className="sidebar__user">
             <span>{user.username}</span>
-            <small>{ROLE_LABEL[user.role]}</small>
+            <small>{roleLabel[user.role]}</small>
             <button className="link-button" onClick={logout}>Cerrar sesión</button>
           </div>
         )}
