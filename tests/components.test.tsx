@@ -5,11 +5,12 @@ import { describe, expect, it, vi } from 'vitest';
 import { AuthProvider } from '../src/auth/AuthContext';
 import { DataState } from '../src/components/DataState';
 import { StatusBadge } from '../src/components/StatusBadge';
+import { WifiLogo } from '../src/components/WifiLogo';
 import { LoginPage } from '../src/pages/LoginPage';
 import { api } from '../src/services/api';
 import { ApiError } from '../src/services/apiClient';
 
-vi.mock('../src/services/api', () => ({ api: { me: vi.fn(), login: vi.fn() } }));
+vi.mock('../src/services/api', () => ({ api: { me: vi.fn(), login: vi.fn(), register: vi.fn() } }));
 
 const renderLogin = () => render(<MemoryRouter><AuthProvider><LoginPage /></AuthProvider></MemoryRouter>);
 
@@ -17,6 +18,15 @@ describe('StatusBadge', () => {
   it('shows the Spanish label and the tone for the status', () => {
     render(<StatusBadge value="CRITICAL" />);
     expect(screen.getByText('Crítico')).toHaveClass('badge--bad');
+  });
+});
+
+describe('WifiLogo', () => {
+  it('draws the dot and three arcs that light up one after another', () => {
+    const { container } = render(<WifiLogo busy />);
+    expect(container.querySelector('.wifi-logo--busy')).not.toBeNull();
+    expect(container.querySelectorAll('.wifi-logo__arc')).toHaveLength(3);
+    expect(container.querySelector('.wifi-logo__dot')).not.toBeNull();
   });
 });
 
@@ -81,8 +91,9 @@ describe('LoginPage', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Demasiados intentos');
   });
 
-  it('offers no self-registration', () => {
+  it('invites new visitors to sign up and no longer shows the team-only notice', () => {
     renderLogin();
-    expect(screen.queryByText(/crear cuenta/i)).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Crea una aquí' })).toHaveAttribute('href', '/registro');
+    expect(screen.queryByText(/solo para el equipo autorizado/i)).not.toBeInTheDocument();
   });
 });
