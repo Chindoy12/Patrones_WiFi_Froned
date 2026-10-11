@@ -1,29 +1,20 @@
-import type { ReactNode } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
-import { AuthProvider, useAuth } from './auth/AuthContext';
+import { AuthProvider } from './auth/AuthContext';
+import { RequireAdmin, RequireAuth, RequireEndUser, RequireStaff } from './auth/guards';
 import { Layout } from './components/Layout';
 import { AlertsPage } from './pages/AlertsPage';
 import { AnalysisPage } from './pages/AnalysisPage';
 import { AnomaliesPage } from './pages/AnomaliesPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { DevicesPage } from './pages/DevicesPage';
+import { EndUserHomePage } from './pages/EndUserHomePage';
 import { HistoryPage } from './pages/HistoryPage';
 import { LoginPage } from './pages/LoginPage';
 import { MeasurementsPage } from './pages/MeasurementsPage';
 import { NetworksPage } from './pages/NetworksPage';
+import { RegisterPage } from './pages/RegisterPage';
 import { ReportsPage } from './pages/ReportsPage';
 import { UsersPage } from './pages/UsersPage';
-
-function RequireAuth({ children }: { children: ReactNode }) {
-  const { user, ready } = useAuth();
-  if (!ready) return <p className="notice">Cargando…</p>;
-  return user ? <>{children}</> : <Navigate to="/login" replace />;
-}
-
-function RequireAdmin({ children }: { children: ReactNode }) {
-  const { can } = useAuth();
-  return can('ADMIN') ? <>{children}</> : <Navigate to="/" replace />;
-}
 
 export function App() {
   return (
@@ -31,7 +22,9 @@ export function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
-          <Route element={<RequireAuth><Layout /></RequireAuth>}>
+          <Route path="/registro" element={<RegisterPage />} />
+          <Route path="/mi-wifi" element={<RequireAuth><RequireEndUser><EndUserHomePage /></RequireEndUser></RequireAuth>} />
+          <Route element={<RequireAuth><RequireStaff><Layout /></RequireStaff></RequireAuth>}>
             <Route index element={<DashboardPage />} />
             <Route path="networks" element={<NetworksPage />} />
             <Route path="devices" element={<DevicesPage />} />
