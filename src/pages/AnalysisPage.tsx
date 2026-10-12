@@ -4,7 +4,7 @@ import { DataState } from '../components/DataState';
 import { NetworkPicker } from '../components/NetworkPicker';
 import { PageHeader } from '../components/PageHeader';
 import { StatusBadge } from '../components/StatusBadge';
-import { formatNumber, statusLabel } from '../format';
+import { anomalyTypeLabel, formatNumber, statusLabel } from '../format';
 import { errorMessage, useApi } from '../hooks/useApi';
 import { useNetworkSelection } from '../hooks/useNetworkSelection';
 import { api } from '../services/api';
@@ -83,6 +83,9 @@ function ResultView({ result }: { result: AnalysisResult }) {
           <div><dt>Modelo</dt><dd>{p.modelVersion}</dd></div>
           <div><dt>Puntaje de anomalía</dt><dd className="num">{formatNumber(p.anomalyScore, 3)}</dd></div>
           <div><dt>Severidad</dt><dd><StatusBadge value={p.severity} /></dd></div>
+          {p.anomalyDetected && p.anomalyType && (
+            <div><dt>Causa probable</dt><dd><span className="cause">{anomalyTypeLabel[p.anomalyType]}</span></dd></div>
+          )}
           {p.recommendation && (
             <div>
               <dt>{p.recommendationSource === 'CLAUDE' ? 'Recomendaciones de la IA (Claude)' : 'Recomendación automática'}</dt>
