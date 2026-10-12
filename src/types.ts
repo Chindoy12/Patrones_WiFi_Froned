@@ -89,6 +89,9 @@ export interface ProtocolStatistic {
   periodEnd: string;
 }
 
+export type AnomalyType =
+  | 'NONE' | 'CONGESTION' | 'INTERFERENCE' | 'WEAK_COVERAGE' | 'PROVIDER_ISSUE' | 'SUSPICIOUS_TRAFFIC' | 'UNKNOWN';
+
 export interface AiPrediction {
   id: number;
   networkId: number;
@@ -97,6 +100,8 @@ export interface AiPrediction {
   anomalyDetected: boolean;
   anomalyScore: number;
   severity: AiSeverity;
+  /** null for predictions saved before the AI diagnosed causes. */
+  anomalyType: AnomalyType | null;
   message: string;
   recommendation: string | null;
   recommendationSource: 'RULES' | 'CLAUDE';
@@ -186,4 +191,53 @@ export interface HomeNetworkInput {
   name: string;
   provider?: string;
   contractedMbps?: number;
+}
+
+export interface AnomalyCauseCount {
+  /** UNCLASSIFIED groups anomalies saved before the AI diagnosed causes. */
+  anomalyType: AnomalyType | 'UNCLASSIFIED';
+  count: number;
+}
+
+export interface AiModelInfo {
+  algorithm: string;
+  modelVersion: string;
+  features: string[];
+  threshold: number;
+  trainedOn: string;
+  recommendationEngine: string;
+}
+
+export interface AlgorithmMetrics {
+  algorithm: string;
+  precision: number;
+  recall: number;
+  f1: number;
+  falsePositiveRate: number;
+  rocAuc: number;
+  averagePrecision: number;
+  recallByType: Record<string, number>;
+  fitMs: number;
+  predictUsPerSample: number;
+  production: boolean;
+}
+
+export interface ModelEvaluation {
+  dataset: string;
+  trainSamples: number;
+  testNormal: number;
+  testAnomalies: number;
+  productionAlgorithm: string;
+  modelVersion: string;
+  algorithms: AlgorithmMetrics[];
+  tuning: { nEstimators: number; maxSamples: string; f1: number; recall: number; falsePositiveRate: number; best: boolean }[];
+  sensitivity: { contamination: number; precision: number; recall: number; falsePositiveRate: number; production: boolean }[];
+  diagnosis: { accuracy: number; evaluated: number; confusion: Record<string, Record<string, number>> };
+  generatedAt: string;
+}
+
+export interface AiModelOverview {
+  model: AiModelInfo;
+  evaluation: ModelEvaluation | null;
+  evaluationReady: boolean;
 }
