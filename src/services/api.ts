@@ -1,4 +1,5 @@
 import { apiClient } from './apiClient';
+import { sealPassword } from './passwordCipher';
 import type {
   AiPrediction, Alert, AlertStatus, AnalysisResult, AnalysisType, AuthResponse, DashboardSummary, Device,
   Measurement, Network, NetworkReport, ProtocolStatistic, StaffRole, Strategy, TrafficSession, User, Zone,
@@ -15,15 +16,16 @@ export interface NetworkInput {
 }
 
 export const api = {
-  login: (username: string, password: string) =>
-    apiClient.post<AuthResponse>('/api/auth/login', { username, password }),
-  register: (username: string, password: string) =>
-    apiClient.post<AuthResponse>('/api/auth/register', { username, password }),
+  // Passwords always leave the browser sealed (see passwordCipher), never as readable text.
+  login: async (username: string, password: string) =>
+    apiClient.post<AuthResponse>('/api/auth/login', { username, ...(await sealPassword(password)) }),
+  register: async (username: string, password: string) =>
+    apiClient.post<AuthResponse>('/api/auth/register', { username, ...(await sealPassword(password)) }),
   me: () => apiClient.get<User>('/api/auth/me'),
 
   users: () => apiClient.get<User[]>('/api/users'),
-  createUser: (username: string, password: string, role: StaffRole) =>
-    apiClient.post<User>('/api/users', { username, password, role }),
+  createUser: async (username: string, password: string, role: StaffRole) =>
+    apiClient.post<User>('/api/users', { username, role, ...(await sealPassword(password)) }),
   changeUserRole: (id: number, role: StaffRole) => apiClient.patch<User>(`/api/users/${id}/role`, { role }),
   deleteUser: (id: number) => apiClient.delete(`/api/users/${id}`),
 
