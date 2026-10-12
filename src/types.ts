@@ -172,3 +172,18 @@ export interface NetworkReport {
   anomalies: number;
   simulatedData: boolean;
 }
+
+/** A network an end user registers for themself (never one of the university networks). */
+export interface HomeNetwork {
+  id: number;
+  name: string;
+  provider: string | null;
+  contractedMbps: number | null;
+  createdAt: string;
+}
+
+export interface HomeNetworkInput {
+  name: string;
+  provider?: string;
+  contractedMbps?: number;
+}
