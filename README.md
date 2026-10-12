@@ -29,11 +29,20 @@ tests/                      pruebas de apiClient, reglas de arquitectura y compo
 
 ## Secciones
 
-Equipo: Panel · Redes · Dispositivos · Mediciones · Historial · Análisis · Anomalías · Alertas · Reportes · Usuarios
-(solo administrador). Usuario final: **Mi Wi-Fi** (`/mi-wifi`), con su propio encabezado y colores claros: registra,
+Equipo: Panel · Redes · Dispositivos · Mediciones · Historial · Análisis · Anomalías · Modelo de IA · Alertas ·
+Reportes · Usuarios (solo administrador). Usuario final: **Mi Wi-Fi** (`/mi-wifi`), con su propio encabezado y colores claros: registra,
 edita y elimina sus redes (hasta 3, con proveedor y velocidad contratada). Nunca ve el menú ni las rutas del equipo.
 Las acciones se muestran según el rol (Observador consulta; Analista recolecta, analiza y gestiona alertas;
 Administrador además registra redes).
+
+## Inteligencia artificial (equipo)
+
+- **Análisis** y **Anomalías** muestran la **causa probable** que diagnostica la IA (congestión, interferencia,
+  cobertura débil, falla del proveedor, tráfico sospechoso); Anomalías resume además las causas de los últimos 30 días.
+- **Modelo de IA** (`/ai-model`) muestra el modelo en producción y su evaluación: comparación de Isolation Forest con
+  Local Outlier Factor y One-Class SVM (precisión, recall, F1, falsas alarmas, ROC-AUC y tiempo), detección por tipo
+  de falla, ajuste de hiperparámetros, sensibilidad del umbral y acierto del diagnóstico. Todo llega por el backend
+  (`GET /api/ai/model`); el navegador nunca llama al servicio de IA.
 
 ## Inicio de sesión y cuentas
 
@@ -57,7 +66,7 @@ Administrador además registra redes).
 npm install
 cp .env.example .env        # VITE_API_URL=http://localhost:8080
 npm run dev                 # http://localhost:5173
-npm test                    # 42 pruebas
+npm test                    # 45 pruebas
 npm run build               # tipos + build de producción en dist/
 ```
 
