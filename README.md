@@ -30,7 +30,8 @@ tests/                      pruebas de apiClient, reglas de arquitectura y compo
 ## Secciones
 
 Equipo: Panel · Redes · Dispositivos · Mediciones · Historial · Análisis · Anomalías · Alertas · Reportes · Usuarios
-(solo administrador). Usuario final: **Mi Wi-Fi** (`/mi-wifi`).
+(solo administrador). Usuario final: **Mi Wi-Fi** (`/mi-wifi`), con su propio encabezado y colores claros: registra,
+edita y elimina sus redes (hasta 3, con proveedor y velocidad contratada). Nunca ve el menú ni las rutas del equipo.
 Las acciones se muestran según el rol (Observador consulta; Analista recolecta, analiza y gestiona alertas;
 Administrador además registra redes).
 
@@ -56,7 +57,7 @@ Administrador además registra redes).
 npm install
 cp .env.example .env        # VITE_API_URL=http://localhost:8080
 npm run dev                 # http://localhost:5173
-npm test                    # 38 pruebas
+npm test                    # 42 pruebas
 npm run build               # tipos + build de producción en dist/
 ```
 
