@@ -1,21 +1,29 @@
 import { useState } from 'react';
 import { useAuth } from '../auth/AuthContext';
+import { ConnectionPanel } from '../components/ConnectionPanel';
 import { EndUserShell } from '../components/EndUserShell';
 import { HomeNetworkForm } from '../components/HomeNetworkForm';
+import { StatusStrip } from '../components/StatusStrip';
+import { TopBar } from '../components/TopBar';
 import { formatDateTime } from '../format';
 import { useApi } from '../hooks/useApi';
+import { useOnline } from '../hooks/useOnline';
 import { api } from '../services/api';
-import type { HomeNetwork, HomeNetworkInput } from '../types';
+import type { ConnectionTest, HomeNetwork, HomeNetworkInput } from '../types';
 
 const MAX_NETWORKS = 3;
 
-/** End-user home: their own networks. The connection test and its gauges arrive in the next advance. */
+/** End-user home: quality dashboard and connection test of each of their networks, and the networks themselves. */
 export function EndUserHomePage() {
   const { user } = useAuth();
+  const online = useOnline();
   const networks = useApi(api.myNetworks);
   const [editing, setEditing] = useState<HomeNetwork | 'new' | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [chosen, setChosen] = useState<number | null>(null);
+  const [lastTest, setLastTest] = useState<ConnectionTest | null>(null);
   const count = networks.data?.length ?? 0;
+  const selected = networks.data?.find((n) => n.id === chosen) ?? networks.data?.[0] ?? null;
 
   async function save(input: HomeNetworkInput) {
     if (editing === 'new') await api.createMyNetwork(input);
@@ -37,12 +45,29 @@ export function EndUserHomePage() {
 
   return (
     <EndUserShell>
-      <section className="eu-hero">
-        <h1>Hola, {user?.username}</h1>
-        <p>Registra las redes Wi-Fi que usas y muy pronto podrás medir su latencia, estabilidad y velocidad.</p>
-      </section>
+      <TopBar title={`Hola, ${user?.username ?? ''}`} status={{ label: online ? 'Conectado' : 'Sin conexión', ok: online }} />
 
-      <section aria-labelledby="my-networks">
+      {networks.data && count === 0 && (
+        <section className="eu-hero">
+          <h2>Empieza registrando tu red</h2>
+          <p>Agrega tu Wi-Fi abajo y podrás medir su latencia, estabilidad y velocidad, y saber para qué te alcanza.</p>
+        </section>
+      )}
+
+      {selected && (
+        <section aria-label="Calidad de tu conexión">
+          {count > 1 && (
+            <div className="eu-networks" role="group" aria-label="Elige la red">
+              {networks.data!.map((n) => (
+                <button key={n.id} aria-pressed={n.id === selected.id} onClick={() => setChosen(n.id)}>{n.name}</button>
+              ))}
+            </div>
+          )}
+          <ConnectionPanel key={selected.id} network={selected} onTested={setLastTest} />
+        </section>
+      )}
+
+      <section className="eu-section" aria-labelledby="my-networks">
         <div className="eu-section__head">
           <h2 id="my-networks">Mis redes</h2>
           <span className="muted">{count} de {MAX_NETWORKS}</span>
@@ -85,6 +110,14 @@ export function EndUserHomePage() {
           </div>
         )}
       </section>
+
+      <StatusStrip label="Tu cuenta" items={[
+        { icon: 'wifi', label: 'Tus redes', detail: `${count} de ${MAX_NETWORKS}`, state: count > 0 ? 'ok' : 'off' },
+        { icon: 'clock', label: 'Última prueba', detail: lastTest ? formatDateTime(lastTest.createdAt) : 'En esta visita, ninguna',
+          state: lastTest ? 'ok' : 'off' },
+        { icon: 'server', label: 'Servidor', detail: online ? 'Conectado' : 'Sin conexión', state: online ? 'ok' : 'down' },
+        { icon: 'gauge', label: 'Pruebas', detail: 'Hasta 5 cada 10 minutos', state: 'ok' },
+      ]} />
     </EndUserShell>
   );
 }
