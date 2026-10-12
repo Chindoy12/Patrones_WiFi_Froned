@@ -2,7 +2,8 @@ import { apiClient } from './apiClient';
 import { sealPassword } from './passwordCipher';
 import type {
   AiPrediction, Alert, AlertStatus, AnalysisResult, AnalysisType, AuthResponse, DashboardSummary, Device,
-  Measurement, Network, NetworkReport, ProtocolStatistic, StaffRole, Strategy, TrafficSession, User, Zone,
+  HomeNetwork, HomeNetworkInput, Measurement, Network, NetworkReport, ProtocolStatistic, StaffRole, Strategy,
+  TrafficSession, User, Zone,
 } from '../types';
 
 export interface NetworkInput {
@@ -28,6 +29,12 @@ export const api = {
     apiClient.post<User>('/api/users', { username, role, ...(await sealPassword(password)) }),
   changeUserRole: (id: number, role: StaffRole) => apiClient.patch<User>(`/api/users/${id}/role`, { role }),
   deleteUser: (id: number) => apiClient.delete(`/api/users/${id}`),
+
+  // End-user area: the backend scopes every call to the signed-in owner.
+  myNetworks: () => apiClient.get<HomeNetwork[]>('/api/my/networks'),
+  createMyNetwork: (input: HomeNetworkInput) => apiClient.post<HomeNetwork>('/api/my/networks', input),
+  updateMyNetwork: (id: number, input: HomeNetworkInput) => apiClient.put<HomeNetwork>(`/api/my/networks/${id}`, input),
+  deleteMyNetwork: (id: number) => apiClient.delete(`/api/my/networks/${id}`),
 
   dashboard: () => apiClient.get<DashboardSummary>('/api/dashboard/summary'),
 
