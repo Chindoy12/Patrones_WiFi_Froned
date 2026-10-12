@@ -277,3 +277,61 @@ a { color: var(--accent); }
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }
 }
+
+/* End-user area: light, airy layout with the same blue accents as the login */
+.eu { min-height: 100vh; background: linear-gradient(180deg, #e8f1ff 0, #f4f7fc 260px); color: var(--ink); }
+.eu__bar {
+  position: sticky; top: 0; z-index: 5; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 12px clamp(16px, 4vw, 40px); background: rgba(255, 255, 255, .85); backdrop-filter: blur(10px);
+  border-bottom: 1px solid #dde6f3;
+}
+.eu__brand { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; font-size: 1.15rem; color: #0d2f6e; }
+.eu__account { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.eu__user { font-weight: 500; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 40vw; }
+.eu__main { width: min(1100px, 100%); margin: 0 auto; padding: 28px clamp(16px, 4vw, 40px) 56px; }
+.eu-hero {
+  border-radius: 18px; padding: 26px 28px; margin-bottom: 28px; color: #fff;
+  background: linear-gradient(120deg, #12408f, #1d63c9 55%, #4c9bf5); box-shadow: 0 12px 32px rgba(18, 64, 143, .22);
+}
+.eu-hero h1 { margin: 0 0 6px; font-size: clamp(1.4rem, 3vw, 1.9rem); overflow-wrap: anywhere; }
+.eu-hero p { margin: 0; color: rgba(255, 255, 255, .88); max-width: 60ch; }
+.eu-section__head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.eu-section__head h2 { margin: 0; font-size: 1.2rem; }
+.eu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+.eu-card {
+  background: #fff; border: 1px solid #dde6f3; border-radius: 16px; padding: 18px 20px; min-width: 0;
+  box-shadow: 0 4px 14px rgba(13, 47, 110, .06); text-align: left;
+}
+.eu-card h3 { margin: 0 0 10px; font-size: 1.1rem; overflow-wrap: anywhere; }
+.eu-card__facts { margin: 0 0 12px; display: grid; gap: 6px; }
+.eu-card__facts div { display: flex; justify-content: space-between; gap: 12px; font-size: .92rem; }
+.eu-card__facts dt { color: var(--muted); }
+.eu-card__facts dd { margin: 0; font-weight: 500; text-align: right; overflow-wrap: anywhere; }
+.eu-card__actions { display: flex; gap: 8px; }
+.eu-card--add {
+  display: grid; place-items: center; min-height: 160px; font: inherit; font-weight: 600; color: #1d63c9; cursor: pointer;
+  border: 2px dashed #a9c6ef; background: rgba(255, 255, 255, .6); box-shadow: none;
+}
+.eu-card--add:hover { background: #fff; border-color: #1d63c9; }
+.eu-card--add span { font-size: 1.6rem; display: block; text-align: center; }
+.eu-form .field input { width: 100%; }
+.eu-form__actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.wifi-logo--on-light .wifi-logo__dot { fill: rgba(13, 47, 110, .18); }
+.wifi-logo--on-light .wifi-logo__arc { stroke: rgba(13, 47, 110, .18); }
+.wifi-logo--on-light .wifi-logo__dot, .wifi-logo--on-light .wifi-logo__arc { animation-name: wifi-arc-light; }
+.wifi-logo--on-light .wifi-logo__dot { animation-name: wifi-dot-light; }
+@keyframes wifi-arc-light {
+  0%, 5% { stroke: rgba(13, 47, 110, .18); }
+  18%, 70% { stroke: #1d63c9; }
+  90%, 100% { stroke: rgba(13, 47, 110, .18); }
+}
+@keyframes wifi-dot-light {
+  0%, 5% { fill: rgba(13, 47, 110, .18); }
+  18%, 70% { fill: #1d63c9; }
+  90%, 100% { fill: rgba(13, 47, 110, .18); }
+}
+@media (max-width: 520px) {
+  .eu__user { display: none; }
+  .eu-hero { padding: 20px; }
+}
