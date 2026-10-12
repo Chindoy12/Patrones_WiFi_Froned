@@ -25,6 +25,12 @@ describe('frontend security rules', () => {
 
   it('lets visitors sign up without ever choosing a role', () => {
     const api = readFileSync('src/services/api.ts', 'utf8');
-    expect(api).toMatch(/'\/api\/auth\/register', \{ username, password \}/);
+    expect(api).toMatch(/'\/api\/auth\/register', \{ username, \.\.\.\(await sealPassword\(password\)\) \}/);
+  });
+
+  it('never sends a password as readable text', () => {
+    const api = readFileSync('src/services/api.ts', 'utf8');
+    expect(api).not.toMatch(/\bpassword\s*[,}]/);
+    expect(api.match(/sealPassword\(password\)/g)).toHaveLength(3);
   });
 });

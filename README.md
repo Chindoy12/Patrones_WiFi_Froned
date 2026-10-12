@@ -44,6 +44,9 @@ Administrador además registra redes).
 - **Equipo:** el administrador crea hasta 3 cuentas en **Usuarios**, con los mismos requisitos de contraseña.
 - Usuario (nombre o correo) limitado a 40 caracteres y contraseña a 12: pegar textos enormes no tiene efecto.
 - Botón con ícono de ojo para mostrar u ocultar la contraseña.
+- **La contraseña nunca sale legible del navegador.** Antes de enviarla, `services/passwordCipher.ts` pide al backend
+  un reto de un solo uso y la cifra con Web Crypto (RSA-OAEP, SHA-256). En F12 → Red solo se ve
+  `{username, challengeId, encryptedPassword}`; aplica a login, registro y creación de cuentas del equipo.
 - Cualquier error de login muestra solo `Datos incorrectos.`
 - `vercel.json` agrega cabeceras de seguridad (CSP, no embeber en iframes, sin referer).
 
@@ -53,7 +56,7 @@ Administrador además registra redes).
 npm install
 cp .env.example .env        # VITE_API_URL=http://localhost:8080
 npm run dev                 # http://localhost:5173
-npm test                    # 34 pruebas
+npm test                    # 38 pruebas
 npm run build               # tipos + build de producción en dist/
 ```
 
