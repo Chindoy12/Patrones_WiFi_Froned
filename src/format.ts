@@ -1,4 +1,4 @@
-import type { Role } from './types';
+import type { AnomalyCauseCount, Role } from './types';
 
 const dateTime = new Intl.DateTimeFormat('es-CO', { dateStyle: 'short', timeStyle: 'short' });
 const time = new Intl.DateTimeFormat('es-CO', { hour: '2-digit', minute: '2-digit' });
@@ -33,3 +33,13 @@ export const statusLabel: Record<string, string> = {
 export const roleLabel: Record<Role, string> = {
   ADMIN: 'Administrador', ANALYST: 'Analista', VIEWER: 'Observador', USER: 'Usuario',
 };
+
+/** Probable cause of an anomaly, as the AI diagnoses it. */
+export const anomalyTypeLabel: Record<AnomalyCauseCount['anomalyType'], string> = {
+  NONE: 'Sin anomalía', CONGESTION: 'Congestión', INTERFERENCE: 'Interferencia', WEAK_COVERAGE: 'Cobertura débil',
+  PROVIDER_ISSUE: 'Falla del proveedor', SUSPICIOUS_TRAFFIC: 'Tráfico sospechoso', UNKNOWN: 'No identificada',
+  UNCLASSIFIED: 'Sin clasificar',
+};
+
+export const formatPercent = (ratio: number, digits = 1) =>
+  `${(ratio * 100).toLocaleString('es-CO', { maximumFractionDigits: digits })} %`;

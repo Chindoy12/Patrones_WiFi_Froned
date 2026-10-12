@@ -1,9 +1,9 @@
 import { apiClient } from './apiClient';
 import { sealPassword } from './passwordCipher';
 import type {
-  AiPrediction, Alert, AlertStatus, AnalysisResult, AnalysisType, AuthResponse, DashboardSummary, Device,
-  HomeNetwork, HomeNetworkInput, Measurement, Network, NetworkReport, ProtocolStatistic, StaffRole, Strategy,
-  TrafficSession, User, Zone,
+  AiModelOverview, AiPrediction, Alert, AlertStatus, AnalysisResult, AnalysisType, AnomalyCauseCount, AuthResponse,
+  DashboardSummary, Device, HomeNetwork, HomeNetworkInput, Measurement, Network, NetworkReport, ProtocolStatistic,
+  StaffRole, Strategy, TrafficSession, User, Zone,
 } from '../types';
 
 export interface NetworkInput {
@@ -56,6 +56,8 @@ export const api = {
     apiClient.post<AnalysisResult>(`/api/networks/${networkId}/analyses`, { type }),
   analyses: (networkId?: number, limit = 50) => apiClient.get<AnalysisResult[]>('/api/analyses', { networkId, limit }),
   anomalies: () => apiClient.get<AiPrediction[]>('/api/anomalies'),
+  anomalyCauses: (days = 30) => apiClient.get<AnomalyCauseCount[]>('/api/anomalies/causes', { days }),
+  aiModel: () => apiClient.get<AiModelOverview>('/api/ai/model'),
 
   alerts: (status?: AlertStatus) => apiClient.get<Alert[]>('/api/alerts', { status }),
   acknowledgeAlert: (id: number) => apiClient.patch<Alert>(`/api/alerts/${id}/acknowledge`),
