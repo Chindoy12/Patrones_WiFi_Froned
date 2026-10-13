@@ -6,12 +6,15 @@ import { useAuth } from '../src/auth/AuthContext';
 import { EndUserHomePage } from '../src/pages/EndUserHomePage';
 import { api } from '../src/services/api';
 import { ApiError } from '../src/services/apiClient';
-import type { HomeNetwork } from '../src/types';
+import { runSpeedTest } from '../src/services/speedTest';
+import type { ConnectionTest, HomeNetwork } from '../src/types';
 
 vi.mock('../src/auth/AuthContext', () => ({ useAuth: vi.fn() }));
 vi.mock('../src/services/api', () => ({
-  api: { myNetworks: vi.fn(), createMyNetwork: vi.fn(), updateMyNetwork: vi.fn(), deleteMyNetwork: vi.fn() },
+  api: { myNetworks: vi.fn(), createMyNetwork: vi.fn(), updateMyNetwork: vi.fn(), deleteMyNetwork: vi.fn(),
+         myTests: vi.fn(), saveMyTest: vi.fn() },
 }));
+vi.mock('../src/services/speedTest', () => ({ runSpeedTest: vi.fn() }));
 
 const casa: HomeNetwork = { id: 1, name: 'Casa', provider: 'Claro', contractedMbps: 300, createdAt: '2026-10-11T12:00:00Z' };
 
@@ -24,7 +27,27 @@ beforeEach(() => {
   });
   vi.mocked(api.myNetworks).mockReset();
   vi.mocked(api.createMyNetwork).mockReset();
+  vi.mocked(api.myTests).mockReset().mockResolvedValue([]);
+  vi.mocked(api.saveMyTest).mockReset();
+  vi.mocked(runSpeedTest).mockReset();
 });
+
+const graded: ConnectionTest = {
+  id: 5, networkId: 1, latencyMs: 24, jitterMs: 3, downloadMbps: 180, uploadMbps: 40, qualityScore: 88,
+  qualityGrade: 'EXCELLENT', createdAt: '2026-10-12T21:00:00Z',
+  quality: {
+    score: 88, grade: 'EXCELLENT', gradeLabel: 'Excelente', contractedRatio: 0.6, modelVersion: 'quality-1.0',
+    tips: ['La subida es baja: afecta videollamadas.'],
+    metrics: [
+      { metric: 'latency', label: 'Latencia', value: 24, unit: 'ms', score: 92, status: 'GOOD' },
+      { metric: 'jitter', label: 'Jitter', value: 3, unit: 'ms', score: 100, status: 'GOOD' },
+    ],
+    activities: [
+      { activity: 'VIDEO_CALLS', label: 'Videollamadas y clases', suitable: true },
+      { activity: 'GAMING', label: 'Juegos en línea', suitable: false },
+    ],
+  },
+};
 
 describe('Mi Wi-Fi', () => {
   it('lists only what the backend returns for this user', async () => {
@@ -33,7 +56,7 @@ describe('Mi Wi-Fi', () => {
 
     expect(await screen.findByRole('heading', { name: 'Casa' })).toBeInTheDocument();
     expect(screen.getByText('300 Mbps')).toBeInTheDocument();
-    expect(screen.getByText('1 de 3')).toBeInTheDocument();
+    expect(screen.getAllByText('1 de 3').length).toBeGreaterThan(0);
   });
 
   it('adds a network and reloads the list', async () => {
@@ -69,5 +92,52 @@ describe('Mi Wi-Fi', () => {
 
     const grid = await screen.findByRole('heading', { name: 'Finca' });
     expect(within(grid.closest('.eu-grid') as HTMLElement).queryByRole('button', { name: /Agregar red/ })).toBeNull();
+  });
+
+  it('runs the connection test on the network and shows the grade of the AI', async () => {
+    vi.mocked(api.myNetworks).mockResolvedValue([casa]);
+    vi.mocked(api.myTests).mockResolvedValueOnce([]).mockResolvedValue([graded]);
+    vi.mocked(runSpeedTest).mockResolvedValue({ latencyMs: 24, jitterMs: 3, downloadMbps: 180, uploadMbps: 40 });
+    vi.mocked(api.saveMyTest).mockResolvedValue(graded);
+    renderPage();
+
+    expect(await screen.findByRole('img', { name: 'Calidad de 0 a 100: sin datos' })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: /Probar mi conexión/ }));
+
+    expect(await screen.findByRole('img', { name: 'Calidad de 0 a 100: 88, Excelente' })).toBeInTheDocument();
+    expect(api.saveMyTest).toHaveBeenCalledWith(1, { latencyMs: 24, jitterMs: 3, downloadMbps: 180, uploadMbps: 40 });
+    expect(screen.getByText('60 % de los 300 Mbps contratados')).toBeInTheDocument();
+    expect(screen.getByText('Juegos en línea').closest('li')).toHaveTextContent('No');
+    expect(screen.getByText('La subida es baja: afecta videollamadas.')).toBeInTheDocument();
+  });
+
+  it('keeps the measurement and says so when the AI could not grade it', async () => {
+    vi.mocked(api.myNetworks).mockResolvedValue([casa]);
+    vi.mocked(api.myTests).mockResolvedValue([{ ...graded, quality: null, qualityScore: null, qualityGrade: null }]);
+    renderPage();
+
+    expect(await screen.findByText(/La IA no estaba disponible/)).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'Latencia: 24 ms, Sin datos' })).toBeInTheDocument();
+  });
+
+  it('shows the error in Spanish when the user ran too many tests', async () => {
+    vi.mocked(api.myNetworks).mockResolvedValue([casa]);
+    vi.mocked(runSpeedTest).mockRejectedValue(new ApiError(429, 'Hiciste muchas pruebas seguidas. Espera unos minutos e inténtalo de nuevo.'));
+    renderPage();
+
+    await userEvent.click(await screen.findByRole('button', { name: /Probar mi conexión/ }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Hiciste muchas pruebas seguidas');
+    expect(api.saveMyTest).not.toHaveBeenCalled();
+  });
+
+  it('switches the dashboard between the user networks', async () => {
+    vi.mocked(api.myNetworks).mockResolvedValue([casa, { ...casa, id: 2, name: 'Oficina' }]);
+    renderPage();
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Oficina' }));
+
+    expect(await screen.findByRole('heading', { name: /Calidad de «Oficina»/ })).toBeInTheDocument();
+    expect(api.myTests).toHaveBeenLastCalledWith(2);
   });
 });
