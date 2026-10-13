@@ -30,8 +30,24 @@ tests/                      pruebas de apiClient, reglas de arquitectura y compo
 ## Secciones
 
 Equipo: Panel · Redes · Dispositivos · Mediciones · Historial · Análisis · Anomalías · Modelo de IA · Alertas ·
-Reportes · Usuarios (solo administrador). Usuario final: **Mi Wi-Fi** (`/mi-wifi`), con su propio encabezado y colores claros: registra,
-edita y elimina sus redes (hasta 3, con proveedor y velocidad contratada). Nunca ve el menú ni las rutas del equipo.
+Reportes · Usuarios (solo administrador). Usuario final: **Mi Wi-Fi** (`/mi-wifi`), con su propio encabezado: prueba su conexión,
+ve la calidad de cada red y registra, edita y elimina sus redes (hasta 3). Nunca ve el menú ni las rutas del equipo.
+
+## Dashboards
+
+Los dos paneles comparten el mismo diseño: barra con hora y fecha, **medidor en arco** de la calidad (0 a 100,
+calificada por la IA), medidores pequeños de latencia y jitter, tarjetas de cifras y una franja inferior con el estado
+de cada servicio. El color del medidor indica el estado y siempre va acompañado de la palabra (Buena, Regular,
+Mala) y un ícono, así que no depende solo del color.
+
+- **Equipo (Panel):** salud de la red elegida según su última medición, redes por estado, actividad (alertas,
+  anomalías, latencia media, dispositivos) y estado de la IA, la base de datos y el monitoreo.
+- **Mi Wi-Fi:** botón **Probar mi conexión** (`services/speedTest.ts`): 10 pings para latencia y jitter, y para bajada y
+  subida una prueba corta más una mayor que dura unos 2 segundos (máximo 8 MB cada una). El resultado se guarda y la
+  IA lo califica: calidad, para qué alcanza (videollamadas, video HD/4K, juegos) y consejos. Mide la conexión hasta
+  el servidor de WiFiSense, no solo el Wi-Fi; la señal o el canal requieren el agente.
+- **Modo claro y oscuro:** claro por defecto; el botón Modo oscuro cambia todos los colores (tokens en `index.css`)
+  y se recuerda en el navegador.
 Las acciones se muestran según el rol (Observador consulta; Analista recolecta, analiza y gestiona alertas;
 Administrador además registra redes).
 
@@ -66,7 +82,7 @@ Administrador además registra redes).
 npm install
 cp .env.example .env        # VITE_API_URL=http://localhost:8080
 npm run dev                 # http://localhost:5173
-npm test                    # 45 pruebas
+npm test                    # 67 pruebas
 npm run build               # tipos + build de producción en dist/
 ```
 
