@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { roleLabel } from '../format';
 import { Icon, type IconName } from './Icon';
+import { NetworkBackdrop } from './NetworkBackdrop';
 import { ThemeToggle } from './ThemeToggle';
 
 const SECTIONS: { to: string; label: string; icon: IconName }[] = [
@@ -25,6 +26,7 @@ export function Layout() {
 
   return (
     <div className="shell">
+      <NetworkBackdrop />
       <aside className={`sidebar ${open ? 'sidebar--open' : ''}`}>
         <div className="sidebar__top">
           <span className="brand">
@@ -53,7 +55,10 @@ export function Layout() {
         )}
       </aside>
       <main className="content">
-        <Outlet />
+        {/* Only the page changes while the next one loads; the menu stays in place. */}
+        <Suspense fallback={<p className="notice page-loading" role="status" aria-busy="true">Cargando…</p>}>
+          <Outlet />
+        </Suspense>
       </main>
     </div>
   );
