@@ -22,6 +22,12 @@ const PATHS = {
   minus: 'M6 12h12',
   arrowDown: 'M12 4v14M6 12l6 6 6-6',
   arrowUp: 'M12 20V6M6 12l6-6 6 6',
+  shield: 'M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6zM9 12l2 2 4-4',
+  key: 'M14 10a4 4 0 1 0-1.2 2.8L21 21M17 17l2-2M15 15l2-2',
+  download: 'M12 4v11M7 10l5 5 5-5M4 20h16',
+  copy: 'M9 9h11v11H9zM5 15H4V4h11v1',
+  router: 'M3 14h18v6H3zM7 17h.01M11 17h.01M8 10a6 6 0 0 1 8 0M5.5 7.5a10 10 0 0 1 13 0',
+  terminal: 'M3 5h18v14H3zM7 9l3 3-3 3M12 15h5',
 } as const;
 
 export type IconName = keyof typeof PATHS;
