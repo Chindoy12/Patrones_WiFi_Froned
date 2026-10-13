@@ -2,6 +2,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from './auth/AuthContext';
 import { RequireAdmin, RequireAuth, RequireEndUser, RequireStaff } from './auth/guards';
 import { Layout } from './components/Layout';
+import { AiModelPage } from './pages/AiModelPage';
 import { AlertsPage } from './pages/AlertsPage';
 import { AnalysisPage } from './pages/AnalysisPage';
 import { AnomaliesPage } from './pages/AnomaliesPage';
@@ -32,6 +33,7 @@ export function App() {
             <Route path="history" element={<HistoryPage />} />
             <Route path="analysis" element={<AnalysisPage />} />
             <Route path="anomalies" element={<AnomaliesPage />} />
+            <Route path="ai-model" element={<AiModelPage />} />
             <Route path="alerts" element={<AlertsPage />} />
             <Route path="reports" element={<ReportsPage />} />
             <Route path="users" element={<RequireAdmin><UsersPage /></RequireAdmin>} />
