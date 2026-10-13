@@ -296,3 +296,101 @@ export interface SystemStatus {
   openAlerts: number;
   checkedAt: string;
 }
+
+// WiFiSense agent (Mi Wi-Fi > Agente)
+export type WifiAuthentication = 'OPEN' | 'WEP' | 'WPA' | 'WPA2' | 'WPA3' | 'UNKNOWN';
+export type SecurityGrade = 'SECURE' | 'ACCEPTABLE' | 'AT_RISK' | 'CRITICAL';
+export type FindingSeverity = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW' | 'INFO';
+
+export interface SecurityFinding {
+  code: string;
+  severity: FindingSeverity;
+  title: string;
+  detail: string;
+  action: string;
+  penalty: number;
+}
+
+export interface SecurityAssessment {
+  score: number;
+  grade: SecurityGrade;
+  gradeLabel: string;
+  summary: string;
+  findings: SecurityFinding[];
+  modelVersion: string;
+}
+
+export interface AgentAnomaly {
+  detected: boolean;
+  severity: AiSeverity | null;
+  type: AnomalyType;
+  diagnosis: string | null;
+  message: string;
+  recommendation: string | null;
+  recommendationSource: 'RULES' | 'CLAUDE';
+}
+
+export interface AgentReportDetails {
+  wifi?: { cipher?: string | null; signalPercent?: number | null; rxRateMbps?: number | null; txRateMbps?: number | null;
+           neighborsSameChannel?: number | null; neighborsTotal?: number | null; note?: string | null;
+           platform?: string | null };
+  openPorts?: number[];
+  security?: SecurityAssessment | null;
+  quality?: Quality | null;
+  anomaly?: AgentAnomaly | null;
+}
+
+export interface AgentReport {
+  id: number;
+  receivedAt: string;
+  agentVersion: string;
+  ssid: string | null;
+  authentication: WifiAuthentication;
+  band: '2.4' | '5' | '6' | null;
+  channel: number | null;
+  signalDbm: number | null;
+  latencyMs: number | null;
+  jitterMs: number | null;
+  packetLossPct: number | null;
+  gatewayLatencyMs: number | null;
+  deviceCount: number;
+  newDeviceCount: number;
+  securityScore: number | null;
+  securityGrade: SecurityGrade | null;
+  qualityScore: number | null;
+  anomalyDetected: boolean | null;
+  anomalyType: AnomalyType | null;
+  details: AgentReportDetails;
+}
+
+export interface AgentHistoryPoint {
+  at: string;
+  latencyMs: number | null;
+  deviceCount: number;
+  securityScore: number | null;
+  qualityScore: number | null;
+  anomalyDetected: boolean | null;
+}
+
+export interface AgentDevice {
+  id: string;
+  label: string | null;
+  firstSeenAt: string;
+  lastSeenAt: string;
+  online: boolean;
+  recent: boolean;
+}
+
+export interface AgentOverview {
+  key: { prefix: string; createdAt: string; lastSeenAt: string | null } | null;
+  online: boolean;
+  latest: AgentReport | null;
+  history: AgentHistoryPoint[];
+  devices: AgentDevice[];
+}
+
+export interface AgentKeyCreated {
+  key: string;
+  prefix: string;
+  createdAt: string;
+}
