@@ -1,7 +1,7 @@
 import { apiClient } from './apiClient';
 import { sealPassword } from './passwordCipher';
 import type {
-  AiModelOverview, AiPrediction, Alert, AlertStatus, AnalysisResult, AnalysisType, AnomalyCauseCount, AuthResponse,
+  AgentKeyCreated, AgentOverview, AiModelOverview, AiPrediction, Alert, AlertStatus, AnalysisResult, AnalysisType, AnomalyCauseCount, AuthResponse,
   ConnectionTest, ConnectionTestInput, DashboardSummary, Device, HomeNetwork, HomeNetworkInput, Measurement, Network,
   NetworkQuality, NetworkReport, ProtocolStatistic, StaffRole, Strategy, SystemStatus, TrafficSession, User, Zone,
 } from '../types';
@@ -39,6 +39,9 @@ export const api = {
   saveMyTest: (networkId: number, input: ConnectionTestInput) =>
     apiClient.post<ConnectionTest>(`/api/my/networks/${networkId}/tests`, input),
   deleteMyNetwork: (id: number) => apiClient.delete(`/api/my/networks/${id}`),
+  myAgent: (networkId: number) => apiClient.get<AgentOverview>(`/api/my/networks/${networkId}/agent`),
+  createAgentKey: (networkId: number) => apiClient.post<AgentKeyCreated>(`/api/my/networks/${networkId}/agent/key`),
+  revokeAgentKey: (networkId: number) => apiClient.delete(`/api/my/networks/${networkId}/agent/key`),
 
   dashboard: () => apiClient.get<DashboardSummary>('/api/dashboard/summary'),
   systemStatus: () => apiClient.get<SystemStatus>('/api/dashboard/status'),
