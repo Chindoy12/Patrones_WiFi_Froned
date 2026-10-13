@@ -76,7 +76,28 @@ function defaultMessage(status: number): string {
   return 'No se pudo completar la solicitud.';
 }
 
+/**
+ * Raw request for the connection test: the caller times it and reads the body as bytes. Same token and error
+ * messages as every other call.
+ */
+async function raw(method: 'GET' | 'POST', path: string, query?: Query, body?: Blob): Promise<Response> {
+  const headers: Record<string, string> = {};
+  const token = tokenStore.get();
+  if (token) headers.Authorization = `Bearer ${token}`;
+  if (body) headers['Content-Type'] = 'application/octet-stream';
+  let response: Response;
+  try {
+    response = await fetch(buildUrl(path, query), { method, headers, body, cache: 'no-store' });
+  } catch {
+    throw new ApiError(0, 'Se perdió la conexión durante la prueba. Revisa tu Wi-Fi e inténtalo de nuevo.');
+  }
+  if (response.status === 401 && token) onUnauthorized();
+  if (!response.ok) throw await toApiError(response);
+  return response;
+}
+
 export const apiClient = {
+  raw,
   get: <T>(path: string, query?: Query) => request<T>('GET', path, undefined, query),
   post: <T>(path: string, body?: unknown) => request<T>('POST', path, body ?? {}),
   put: <T>(path: string, body: unknown) => request<T>('PUT', path, body),

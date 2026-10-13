@@ -2,8 +2,8 @@ import { apiClient } from './apiClient';
 import { sealPassword } from './passwordCipher';
 import type {
   AiModelOverview, AiPrediction, Alert, AlertStatus, AnalysisResult, AnalysisType, AnomalyCauseCount, AuthResponse,
-  DashboardSummary, Device, HomeNetwork, HomeNetworkInput, Measurement, Network, NetworkReport, ProtocolStatistic,
-  StaffRole, Strategy, TrafficSession, User, Zone,
+  ConnectionTest, ConnectionTestInput, DashboardSummary, Device, HomeNetwork, HomeNetworkInput, Measurement, Network,
+  NetworkQuality, NetworkReport, ProtocolStatistic, StaffRole, Strategy, SystemStatus, TrafficSession, User, Zone,
 } from '../types';
 
 export interface NetworkInput {
@@ -34,9 +34,15 @@ export const api = {
   myNetworks: () => apiClient.get<HomeNetwork[]>('/api/my/networks'),
   createMyNetwork: (input: HomeNetworkInput) => apiClient.post<HomeNetwork>('/api/my/networks', input),
   updateMyNetwork: (id: number, input: HomeNetworkInput) => apiClient.put<HomeNetwork>(`/api/my/networks/${id}`, input),
+  myTests: (networkId: number, limit = 10) =>
+    apiClient.get<ConnectionTest[]>(`/api/my/networks/${networkId}/tests`, { limit }),
+  saveMyTest: (networkId: number, input: ConnectionTestInput) =>
+    apiClient.post<ConnectionTest>(`/api/my/networks/${networkId}/tests`, input),
   deleteMyNetwork: (id: number) => apiClient.delete(`/api/my/networks/${id}`),
 
   dashboard: () => apiClient.get<DashboardSummary>('/api/dashboard/summary'),
+  systemStatus: () => apiClient.get<SystemStatus>('/api/dashboard/status'),
+  networkQuality: (networkId: number) => apiClient.get<NetworkQuality>(`/api/networks/${networkId}/quality`),
 
   zones: () => apiClient.get<Zone[]>('/api/zones'),
   networks: () => apiClient.get<Network[]>('/api/networks'),

@@ -241,3 +241,58 @@ export interface AiModelOverview {
   evaluation: ModelEvaluation | null;
   evaluationReady: boolean;
 }
+
+export type QualityGrade = 'EXCELLENT' | 'GOOD' | 'FAIR' | 'POOR';
+export type MetricStatus = 'GOOD' | 'FAIR' | 'POOR';
+
+/** 0-100 grade the AI gives a connection test or a measurement. */
+export interface Quality {
+  score: number;
+  grade: QualityGrade;
+  gradeLabel: string;
+  metrics: { metric: string; label: string; value: number; unit: string; score: number; status: MetricStatus }[];
+  activities: { activity: string; label: string; suitable: boolean | null }[];
+  tips: string[];
+  contractedRatio: number | null;
+  modelVersion: string;
+}
+
+export interface ConnectionTest {
+  id: number;
+  networkId: number;
+  latencyMs: number;
+  jitterMs: number;
+  downloadMbps: number;
+  uploadMbps: number;
+  /** null when the AI could not grade the test. */
+  qualityScore: number | null;
+  qualityGrade: QualityGrade | null;
+  quality: Quality | null;
+  createdAt: string;
+}
+
+export interface ConnectionTestInput {
+  latencyMs: number;
+  jitterMs: number;
+  downloadMbps: number;
+  uploadMbps: number;
+}
+
+export interface NetworkQuality {
+  networkId: number;
+  ssid: string;
+  measuredAt: string;
+  source: string;
+  simulatedData: boolean;
+  connectedDevices: number | null;
+  quality: Quality;
+}
+
+export interface SystemStatus {
+  aiService: 'UP' | 'DOWN';
+  database: 'UP';
+  monitoringEnabled: boolean;
+  lastMeasurementAt: string | null;
+  openAlerts: number;
+  checkedAt: string;
+}
