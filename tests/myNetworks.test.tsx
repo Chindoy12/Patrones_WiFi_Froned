@@ -12,7 +12,7 @@ import type { ConnectionTest, HomeNetwork } from '../src/types';
 vi.mock('../src/auth/AuthContext', () => ({ useAuth: vi.fn() }));
 vi.mock('../src/services/api', () => ({
   api: { myNetworks: vi.fn(), createMyNetwork: vi.fn(), updateMyNetwork: vi.fn(), deleteMyNetwork: vi.fn(),
-         myTests: vi.fn(), saveMyTest: vi.fn() },
+         myTests: vi.fn(), saveMyTest: vi.fn(), myAgent: vi.fn(), createAgentKey: vi.fn(), revokeAgentKey: vi.fn() },
 }));
 vi.mock('../src/services/speedTest', () => ({ runSpeedTest: vi.fn() }));
 
@@ -29,6 +29,7 @@ beforeEach(() => {
   vi.mocked(api.createMyNetwork).mockReset();
   vi.mocked(api.myTests).mockReset().mockResolvedValue([]);
   vi.mocked(api.saveMyTest).mockReset();
+  vi.mocked(api.myAgent).mockReset().mockResolvedValue({ key: null, online: false, latest: null, history: [], devices: [] });
   vi.mocked(runSpeedTest).mockReset();
 });
 

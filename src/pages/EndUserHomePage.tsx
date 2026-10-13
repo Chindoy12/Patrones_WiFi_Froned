@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../auth/AuthContext';
+import { AgentPanel } from '../components/AgentPanel';
 import { ConnectionPanel } from '../components/ConnectionPanel';
 import { EndUserShell } from '../components/EndUserShell';
 import { HomeNetworkForm } from '../components/HomeNetworkForm';
@@ -66,6 +67,8 @@ export function EndUserHomePage() {
           <ConnectionPanel key={selected.id} network={selected} onTested={setLastTest} />
         </section>
       )}
+
+      {selected && <AgentPanel key={`agent-${selected.id}`} network={selected} />}
 
       <section className="eu-section" aria-labelledby="my-networks">
         <div className="eu-section__head">
