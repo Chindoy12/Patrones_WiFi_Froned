@@ -30,7 +30,7 @@ tests/                      pruebas de apiClient, reglas de arquitectura y compo
 ## Secciones
 
 Equipo: Panel · Redes · Dispositivos · Mediciones · Historial · Análisis · Anomalías · Modelo de IA · Alertas ·
-Reportes · Usuarios (solo administrador). Usuario final: **Mi Wi-Fi** (`/mi-wifi`), con su propio encabezado: prueba su conexión,
+Reportes · Usuarios (solo administrador). Públicas: inicio de sesión, registro (pide correo de recuperación y celular opcional), `/recuperar` y `/restablecer`. Usuario final: **Mi Wi-Fi** (`/mi-wifi`), con su propio encabezado: prueba su conexión,
 ve la calidad de cada red y registra, edita y elimina sus redes (hasta 3). Nunca ve el menú ni las rutas del equipo.
 
 ## Dashboards
@@ -46,6 +46,13 @@ Mala) y un ícono, así que no depende solo del color.
   subida una prueba corta más una mayor que dura unos 2 segundos (máximo 8 MB cada una). El resultado se guarda y la
   IA lo califica: calidad, para qué alcanza (videollamadas, video HD/4K, juegos) y consejos. Mide la conexión hasta
   el servidor de WiFiSense, no solo el Wi-Fi; la señal o el canal requieren el agente.
+- **Instalar el agente:** «Instalar el agente» pide un código de 8 caracteres (15 min, un uso) y ofrece el instalador
+  `WiFiSenseAgente.exe` (versión `agente` del repositorio de IA). Mientras el código está en pantalla la página
+  revisa cada 10 s, así que el primer reporte aparece solo. Para Linux sigue el `.py` con `pair` o con la clave.
+- **Mi cuenta:** correo de recuperación y celular (con la contraseña actual para confirmar) y cambio de contraseña;
+  después del cambio la página sigue con la sesión nueva que devuelve el backend.
+- **Recuperar la contraseña:** «¿Olvidaste tu contraseña?» (`/recuperar`) pide el correo; el enlace del correo abre
+  `/restablecer#t=…`, que lee el token y lo quita de la barra de direcciones y del historial.
 - **Agente (Mi Wi-Fi):** crea la clave del agente (se muestra una sola vez), descarga `public/downloads/wifisense_agent.py`
   y, cuando reporta, muestra cuántos equipos hay conectados, aviso de equipos nuevos, la auditoría de seguridad de la
   IA (puntaje, vulnerabilidades y qué hacer), los datos del Wi-Fi y si hay anomalías. Se actualiza cada minuto.
@@ -89,7 +96,7 @@ Administrador además registra redes).
 npm install
 cp .env.example .env        # VITE_API_URL=http://localhost:8080
 npm run dev                 # http://localhost:5173
-npm test                    # 74 pruebas
+npm test                    # 87 pruebas
 npm run build               # tipos + build de producción en dist/
 ```
 

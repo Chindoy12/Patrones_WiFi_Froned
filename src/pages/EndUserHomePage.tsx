@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../auth/AuthContext';
+import { AccountPanel } from '../components/AccountPanel';
 import { AgentPanel } from '../components/AgentPanel';
 import { ConnectionPanel } from '../components/ConnectionPanel';
 import { EndUserShell } from '../components/EndUserShell';
@@ -113,6 +114,8 @@ export function EndUserHomePage() {
           </div>
         )}
       </section>
+
+      <AccountPanel />
 
       <StatusStrip label="Tu cuenta" items={[
         { icon: 'wifi', label: 'Tus redes', detail: `${count} de ${MAX_NETWORKS}`, state: count > 0 ? 'ok' : 'off' },
