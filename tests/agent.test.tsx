@@ -1,12 +1,12 @@
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { AgentPanel, Sparkline } from '../src/components/AgentPanel';
+import { AGENT_INSTALLER, AgentPanel, Sparkline } from '../src/components/AgentPanel';
 import { api } from '../src/services/api';
 import type { AgentOverview, HomeNetwork } from '../src/types';
 
 vi.mock('../src/services/api', () => ({
-  api: { myAgent: vi.fn(), createAgentKey: vi.fn(), revokeAgentKey: vi.fn() },
+  api: { myAgent: vi.fn(), createAgentKey: vi.fn(), revokeAgentKey: vi.fn(), createAgentPairingCode: vi.fn() },
 }));
 
 const casa: HomeNetwork = { id: 1, name: 'Casa', provider: 'Claro', contractedMbps: 300, createdAt: '2026-10-11T12:00:00Z' };
@@ -54,12 +54,39 @@ beforeEach(() => {
 });
 
 describe('Agent panel', () => {
-  it('explains the agent and offers the key and the download when there is none', async () => {
+  it('explains the agent and installs it with a short code instead of a key', async () => {
+    vi.mocked(api.myAgent).mockResolvedValue(empty);
+    vi.mocked(api.createAgentPairingCode).mockResolvedValue({ code: 'K7QM-4RZD',
+      expiresAt: new Date(Date.now() + 15 * 60_000).toISOString() });
+    render(<AgentPanel network={casa} />);
+
+    await userEvent.click(await screen.findByRole('button', { name: /Instalar el agente/ }));
+
+    const box = await screen.findByRole('region', { name: 'Instalar el agente' });
+    expect(within(box).getByText('K7QM-4RZD')).toBeInTheDocument();
+    expect(within(box).getByRole('timer')).toHaveTextContent(/Vence en 1[45]:\d\d y sirve una sola vez/);
+    expect(within(box).getByRole('link', { name: /Descargar instalador/ })).toHaveAttribute('href', AGENT_INSTALLER);
+    expect(AGENT_INSTALLER).toMatch(/^https:\/\/github\.com\/.+\/releases\/download\/agente\/WiFiSenseAgente\.exe$/);
+    expect(api.createAgentPairingCode).toHaveBeenCalledWith(1);
+  });
+
+  it('says when the code expired and offers a new one', async () => {
+    vi.mocked(api.myAgent).mockResolvedValue(empty);
+    vi.mocked(api.createAgentPairingCode).mockResolvedValue({ code: 'K7QM-4RZD', expiresAt: '2026-01-01T00:00:00Z' });
+    render(<AgentPanel network={casa} />);
+
+    await userEvent.click(await screen.findByRole('button', { name: /Instalar el agente/ }));
+
+    expect(await screen.findByText('Este código venció.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Generar otro código' })).toBeInTheDocument();
+  });
+
+  it('still offers Python and the long key for Linux', async () => {
     vi.mocked(api.myAgent).mockResolvedValue(empty);
     render(<AgentPanel network={casa} />);
 
-    expect(await screen.findByRole('button', { name: /Crear clave del agente/ })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /Descargar agente/ })).toHaveAttribute('href', '/downloads/wifisense_agent.py');
+    expect(await screen.findByRole('link', { name: 'wifisense_agent.py' })).toHaveAttribute('href', '/downloads/wifisense_agent.py');
+    expect(screen.getByRole('button', { name: 'Crear clave del agente' })).toBeInTheDocument();
   });
 
   it('shows the new key once with the steps, and then only its prefix', async () => {

@@ -1,16 +1,21 @@
 import { useEffect, useState } from 'react';
 import { anomalyTypeLabel, formatDateTime, formatNumber } from '../format';
 import { errorMessage, useApi } from '../hooks/useApi';
+import { useNow } from '../hooks/useNow';
 import { api } from '../services/api';
 import type {
-  AgentDevice, AgentKeyCreated, AgentOverview, AgentReport, FindingSeverity, HomeNetwork, SecurityAssessment,
+  AgentDevice, AgentKeyCreated, AgentOverview, AgentPairingCode, AgentReport, FindingSeverity, HomeNetwork, SecurityAssessment,
   SecurityGrade, WifiAuthentication,
 } from '../types';
 import { Gauge, type GaugeStatus } from './Gauge';
 import { Icon, type IconName } from './Icon';
 
 export const AGENT_DOWNLOAD = '/downloads/wifisense_agent.py';
+/** Windows installer built by GitHub Actions in the AI repository (release "agente"). */
+export const AGENT_INSTALLER =
+  'https://github.com/davidcampino06/Patrones_WiFi_-Artificial_Intelligence/releases/download/agente/WiFiSenseAgente.exe';
 const REFRESH_MS = 60_000;
+const PAIRING_REFRESH_MS = 10_000;
 
 export const securityStatus: Record<SecurityGrade, GaugeStatus> = {
   SECURE: 'good', ACCEPTABLE: 'fair', AT_RISK: 'poor', CRITICAL: 'poor',
@@ -33,16 +38,39 @@ const SEVERITY: Record<FindingSeverity, { label: string; icon: IconName }> = {
 export function AgentPanel({ network }: { network: HomeNetwork }) {
   const overview = useApi(() => api.myAgent(network.id), [network.id]);
   const [created, setCreated] = useState<AgentKeyCreated | null>(null);
+  const [pairing, setPairing] = useState<AgentPairingCode | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { reload } = overview;
+  const lastSeen = overview.data?.key?.lastSeenAt ?? null;
 
+  // While a code is on screen the page checks more often, so the first report shows up right away.
   useEffect(() => {
     const timer = window.setInterval(() => {
       if (!document.hidden) reload();
-    }, REFRESH_MS);
+    }, pairing ? PAIRING_REFRESH_MS : REFRESH_MS);
     return () => window.clearInterval(timer);
-  }, [reload]);
+  }, [reload, pairing]);
+
+  // The installer used the code and the agent reported: the code has done its job.
+  useEffect(() => {
+    if (pairing && lastSeen && new Date(lastSeen) > new Date(new Date(pairing.expiresAt).getTime() - 15 * 60_000)) {
+      setPairing(null);
+    }
+  }, [pairing, lastSeen]);
+
+  async function startPairing() {
+    setBusy(true);
+    setError(null);
+    try {
+      setCreated(null);
+      setPairing(await api.createAgentPairingCode(network.id));
+    } catch (e) {
+      setError(errorMessage(e));
+    } finally {
+      setBusy(false);
+    }
+  }
 
   async function createKey() {
     if (overview.data?.key && !window.confirm('La clave actual dejará de funcionar y tendrás que configurar el agente otra vez. ¿Continuar?')) return;
@@ -82,15 +110,16 @@ export function AgentPanel({ network }: { network: HomeNetwork }) {
       </div>
       {error && <p className="notice notice--error" role="alert">{error}</p>}
       {overview.error && <p className="notice notice--error" role="alert">{overview.error}</p>}
+      {pairing && <Pairing pairing={pairing} onRenew={startPairing} onClose={() => setPairing(null)} busy={busy} />}
       {created && <NewKey created={created} onDone={() => setCreated(null)} />}
-      {data && !data.key && !created && <Intro onCreate={createKey} busy={busy} />}
-      {data?.key && !data.latest && !created && <Waiting prefix={data.key.prefix} />}
+      {data && !data.key && !created && !pairing && <Intro onInstall={startPairing} onCreateKey={createKey} busy={busy} />}
+      {data?.key && !data.latest && !created && !pairing && <Waiting prefix={data.key.prefix} />}
       {data?.latest && <Reports overview={data} latest={data.latest} />}
       {data?.key && (
         <p className="agent__keybar">
           <Icon name="key" size={16} /> Clave <code>{data.key.prefix}…</code> creada el {formatDateTime(data.key.createdAt)}
           <span className="agent__keyactions">
-            <a className="link-button" href={AGENT_DOWNLOAD} download>Descargar agente</a>
+            <button className="link-button" onClick={startPairing} disabled={busy}>Instalar en otro computador</button>
             <button className="link-button" onClick={createKey} disabled={busy}>Nueva clave</button>
             <button className="link-button link-button--danger" onClick={revokeKey} disabled={busy}>Revocar</button>
           </span>
@@ -109,15 +138,15 @@ function AgentState({ overview }: { overview: AgentOverview }) {
   );
 }
 
-function Intro({ onCreate, busy }: { onCreate: () => void; busy: boolean }) {
+function Intro({ onInstall, onCreateKey, busy }: { onInstall: () => void; onCreateKey: () => void; busy: boolean }) {
   return (
     <div className="dash__card agent__intro">
       <div>
         <h3>Mira cuántos equipos hay en tu Wi-Fi y qué tan segura es</h3>
         <p className="muted">
-          El agente es un pequeño programa que corre en un computador de tu casa. Cada 5 minutos cuenta los equipos
-          conectados, revisa la seguridad del Wi-Fi y del router, y mide la conexión. La IA te avisa si aparece un
-          equipo nuevo, si hay una vulnerabilidad o si la red se comporta raro.
+          El agente es un pequeño programa que se instala en un computador de tu casa. Cada 5 minutos cuenta los
+          equipos conectados, revisa la seguridad del Wi-Fi y del router, y mide la conexión. La IA te avisa si
+          aparece un equipo nuevo, si hay una vulnerabilidad o si la red se comporta raro.
         </p>
         <ul className="agent__features">
           <li><Icon name="devices" size={18} /> Equipos conectados y aviso de equipos nuevos</li>
@@ -126,14 +155,54 @@ function Intro({ onCreate, busy }: { onCreate: () => void; busy: boolean }) {
         </ul>
       </div>
       <div className="agent__cta">
-        <button className="button button--big" onClick={onCreate} disabled={busy}>
-          <Icon name="key" size={16} /> Crear clave del agente
+        <button className="button button--big" onClick={onInstall} disabled={busy}>
+          <Icon name="download" size={16} /> Instalar el agente
         </button>
-        <a className="button button--quiet button--big" href={AGENT_DOWNLOAD} download>
-          <Icon name="download" size={16} /> Descargar agente
-        </a>
-        <p className="muted small">Necesitas Python 3.9 o superior. Las direcciones MAC nunca salen de tu computador.</p>
+        <p className="muted small">Para Windows 10 y 11. No necesitas Python ni usar comandos.</p>
+        <details className="agent__python">
+          <summary>¿Linux o prefieres Python?</summary>
+          <p className="small">
+            Descarga <a href={AGENT_DOWNLOAD} download>wifisense_agent.py</a> y conéctalo con el código de
+            «Instalar el agente» (<code>python wifisense_agent.py pair CÓDIGO</code>) o con una clave:
+          </p>
+          <button className="link-button" onClick={onCreateKey} disabled={busy}>Crear clave del agente</button>
+        </details>
       </div>
+    </div>
+  );
+}
+
+/** The 8-character code, how long it lasts and the three steps of the installer. */
+function Pairing({ pairing, onRenew, onClose, busy }: {
+  pairing: AgentPairingCode; onRenew: () => void; onClose: () => void; busy: boolean;
+}) {
+  const now = useNow(1000);
+  const left = Math.max(0, Math.floor((new Date(pairing.expiresAt).getTime() - now.getTime()) / 1000));
+  const expired = left === 0;
+  const clock = `${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}`;
+  return (
+    <div className="dash__card agent__pairing" role="region" aria-label="Instalar el agente">
+      <div className="agent__code">
+        <span className="muted small">Código de instalación</span>
+        <strong className={expired ? 'is-expired' : undefined} aria-live="polite">{pairing.code}</strong>
+        <span className="muted small" role="timer">
+          {expired ? 'Este código venció.' : `Vence en ${clock} y sirve una sola vez.`}
+        </span>
+        {expired && <button className="button" onClick={onRenew} disabled={busy}>Generar otro código</button>}
+      </div>
+      <ol className="agent__steps">
+        <li>
+          <a className="button button--quiet" href={AGENT_INSTALLER}><Icon name="download" size={16} /> Descargar instalador</a>
+          {' '}y ábrelo. Si Windows muestra «Windows protegió su PC», pulsa <strong>Más información → Ejecutar de todas formas</strong>.
+        </li>
+        <li>Escribe este código en la ventana del agente.</li>
+        <li>Pulsa <strong>Instalar</strong>. En unos segundos verás aquí tus equipos conectados y la seguridad de tu red.</li>
+      </ol>
+      <p className="muted small">
+        El agente queda en Configuración → Aplicaciones como «Agente WiFiSense»; desde ahí lo puedes desinstalar.
+        Puedes elegir si arranca solo al encender el computador.
+      </p>
+      <button className="link-button" onClick={onClose}>Cerrar</button>
     </div>
   );
 }
