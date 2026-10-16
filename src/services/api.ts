@@ -1,7 +1,7 @@
 import { apiClient } from './apiClient';
 import { sealPassword } from './passwordCipher';
 import type {
-  Account, AgentKeyCreated, AgentOverview, AgentPairingCode, AiModelOverview, AiPrediction, Alert, AlertStatus, AnalysisResult, AnalysisType, AnomalyCauseCount, AuthResponse,
+  Account, AgentKeyCreated, AgentDevice, AgentOverview, AgentPairingCode, AlertPreferences, AiModelOverview, AiPrediction, Alert, AlertStatus, AnalysisResult, AnalysisType, AnomalyCauseCount, AuthResponse,
   ConnectionTest, ConnectionTestInput, DashboardSummary, Device, HomeNetwork, HomeNetworkInput, Measurement, Network,
   NetworkQuality, NetworkReport, ProtocolStatistic, StaffRole, Strategy, SystemStatus, TrafficSession, User, Zone,
 } from '../types';
@@ -61,6 +61,10 @@ export const api = {
   },
   createAgentPairingCode: (networkId: number) =>
     apiClient.post<AgentPairingCode>(`/api/my/networks/${networkId}/agent/pairing`),
+  updateAgentDevice: (networkId: number, fingerprint: string, change: { label?: string | null; authorized?: boolean }) =>
+    apiClient.put<AgentDevice>(`/api/my/networks/${networkId}/agent/devices/${fingerprint}`, change),
+  alertPreferences: () => apiClient.get<AlertPreferences>('/api/my/alerts'),
+  updateAlertPreferences: (prefs: AlertPreferences) => apiClient.put<AlertPreferences>('/api/my/alerts', prefs),
   myAgent: (networkId: number) => apiClient.get<AgentOverview>(`/api/my/networks/${networkId}/agent`),
   createAgentKey: (networkId: number) => apiClient.post<AgentKeyCreated>(`/api/my/networks/${networkId}/agent/key`),
   revokeAgentKey: (networkId: number) => apiClient.delete(`/api/my/networks/${networkId}/agent/key`),
