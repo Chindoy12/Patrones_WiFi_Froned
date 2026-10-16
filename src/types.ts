@@ -374,11 +374,26 @@ export interface AgentHistoryPoint {
 
 export interface AgentDevice {
   id: string;
+  /** Name the user gave the device; takes priority over the one it announces. */
   label: string | null;
+  /** Maker from the MAC OUI (Apple, Samsung…); null when unknown. */
+  vendor: string | null;
+  /** Name the device announces on the network ("iPhone-de-Ana"); null when none. */
+  hostname: string | null;
+  /** False when the user marked it as not theirs: shown in red and it keeps raising an alert. */
+  authorized: boolean;
   firstSeenAt: string;
   lastSeenAt: string;
   online: boolean;
   recent: boolean;
+}
+
+export type AgentAlertType = 'NEW_DEVICE' | 'UNAUTHORIZED_DEVICE' | 'SECURITY' | 'ANOMALY';
+
+export interface AgentAlert {
+  type: AgentAlertType;
+  detail: string;
+  at: string;
 }
 
 export interface AgentOverview {
@@ -387,6 +402,14 @@ export interface AgentOverview {
   latest: AgentReport | null;
   history: AgentHistoryPoint[];
   devices: AgentDevice[];
+  alerts: AgentAlert[];
+}
+
+/** Which email alerts the end user wants. */
+export interface AlertPreferences {
+  newDevice: boolean;
+  security: boolean;
+  anomaly: boolean;
 }
 
 export interface AgentKeyCreated {

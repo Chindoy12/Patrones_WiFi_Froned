@@ -13,7 +13,7 @@ vi.mock('../src/auth/AuthContext', () => ({ useAuth: vi.fn() }));
 vi.mock('../src/services/api', () => ({
   api: { myNetworks: vi.fn(), createMyNetwork: vi.fn(), updateMyNetwork: vi.fn(), deleteMyNetwork: vi.fn(),
          myTests: vi.fn(), saveMyTest: vi.fn(), myAgent: vi.fn(), createAgentKey: vi.fn(), revokeAgentKey: vi.fn(),
-         createAgentPairingCode: vi.fn(), myAccount: vi.fn() },
+         createAgentPairingCode: vi.fn(), updateAgentDevice: vi.fn(), alertPreferences: vi.fn(), updateAlertPreferences: vi.fn(), myAccount: vi.fn() },
 }));
 vi.mock('../src/services/speedTest', () => ({ runSpeedTest: vi.fn() }));
 
@@ -31,7 +31,7 @@ beforeEach(() => {
   vi.mocked(api.myTests).mockReset().mockResolvedValue([]);
   vi.mocked(api.saveMyTest).mockReset();
   vi.mocked(api.myAccount).mockReset().mockResolvedValue({ username: 'ana', email: 'ana@gmail.com', phone: null });
-  vi.mocked(api.myAgent).mockReset().mockResolvedValue({ key: null, online: false, latest: null, history: [], devices: [] });
+  vi.mocked(api.myAgent).mockReset().mockResolvedValue({ key: null, online: false, latest: null, history: [], devices: [], alerts: [] });
   vi.mocked(runSpeedTest).mockReset();
 });
 

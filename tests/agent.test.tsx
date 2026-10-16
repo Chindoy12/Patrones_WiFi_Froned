@@ -6,11 +6,12 @@ import { api } from '../src/services/api';
 import type { AgentOverview, HomeNetwork } from '../src/types';
 
 vi.mock('../src/services/api', () => ({
-  api: { myAgent: vi.fn(), createAgentKey: vi.fn(), revokeAgentKey: vi.fn(), createAgentPairingCode: vi.fn() },
+  api: { myAgent: vi.fn(), createAgentKey: vi.fn(), revokeAgentKey: vi.fn(), createAgentPairingCode: vi.fn(),
+         updateAgentDevice: vi.fn(), alertPreferences: vi.fn(), updateAlertPreferences: vi.fn() },
 }));
 
 const casa: HomeNetwork = { id: 1, name: 'Casa', provider: 'Claro', contractedMbps: 300, createdAt: '2026-10-11T12:00:00Z' };
-const empty: AgentOverview = { key: null, online: false, latest: null, history: [], devices: [] };
+const empty: AgentOverview = { key: null, online: false, latest: null, history: [], devices: [], alerts: [] };
 const key = { prefix: 'wsa_AbC1', createdAt: '2026-10-12T20:00:00Z', lastSeenAt: '2026-10-12T21:00:00Z' };
 
 const reporting: AgentOverview = {
@@ -41,9 +42,10 @@ const reporting: AgentOverview = {
     { at: '2026-10-12T20:50:00Z', latencyMs: 20, deviceCount: 6, securityScore: 60, qualityScore: 96, anomalyDetected: false },
     { at: '2026-10-12T21:00:00Z', latencyMs: 22, deviceCount: 7, securityScore: 50, qualityScore: 95, anomalyDetected: false },
   ],
+  alerts: [],
   devices: [
-    { id: 'aaaaaaaaaaaaaaaaaaaaaaaa', label: null, firstSeenAt: '2026-10-10T12:00:00Z', lastSeenAt: '2026-10-12T21:00:00Z', online: true, recent: false },
-    { id: 'bbbbbbbbbbbbbbbbbbbbbbbb', label: 'Celular de Ana', firstSeenAt: '2026-10-12T21:00:00Z', lastSeenAt: '2026-10-12T21:00:00Z', online: true, recent: true },
+    { id: 'aaaaaaaaaaaaaaaaaaaaaaaa', label: null, vendor: 'TP-Link', hostname: 'router-sala', authorized: true, firstSeenAt: '2026-10-10T12:00:00Z', lastSeenAt: '2026-10-12T21:00:00Z', online: true, recent: false },
+    { id: 'bbbbbbbbbbbbbbbbbbbbbbbb', label: 'Celular de Ana', vendor: 'Apple', hostname: 'iPhone-de-Ana', authorized: true, firstSeenAt: '2026-10-12T21:00:00Z', lastSeenAt: '2026-10-12T21:00:00Z', online: true, recent: true },
   ],
 };
 
@@ -51,6 +53,10 @@ beforeEach(() => {
   vi.mocked(api.myAgent).mockReset();
   vi.mocked(api.createAgentKey).mockReset();
   vi.mocked(api.revokeAgentKey).mockReset();
+  vi.mocked(api.updateAgentDevice).mockReset();
+  vi.mocked(api.updateAlertPreferences).mockReset();
+  vi.mocked(api.alertPreferences).mockReset()
+    .mockResolvedValue({ newDevice: true, security: true, anomaly: true });
 });
 
 describe('Agent panel', () => {
@@ -141,5 +147,62 @@ describe('Sparkline', () => {
 
     rerender(<Sparkline values={[3, 5, 4]} label="Equipos" />);
     expect(screen.getByRole('img', { name: 'Equipos: entre 3 y 5' })).toBeInTheDocument();
+  });
+});
+
+describe('Devices like a Bluetooth list', () => {
+  it('shows name, maker and lets the user rename a device', async () => {
+    vi.mocked(api.myAgent).mockResolvedValue(reporting);
+    vi.mocked(api.updateAgentDevice).mockResolvedValue({ ...reporting.devices[1], label: 'iPad de Ana' });
+    render(<AgentPanel network={casa} />);
+
+    const row = (await screen.findByText('Celular de Ana')).closest('.devrow') as HTMLElement;
+    expect(within(row).getByText(/Apple/)).toBeInTheDocument();
+    await userEvent.click(within(row).getByRole('button', { name: 'Cambiar el nombre' }));
+    const input = within(row).getByRole('textbox', { name: 'Nombre del equipo' });
+    await userEvent.clear(input);
+    await userEvent.type(input, 'iPad de Ana{Enter}');
+
+    expect(api.updateAgentDevice).toHaveBeenCalledWith(casa.id, 'bbbbbbbbbbbbbbbbbbbbbbbb', { label: 'iPad de Ana' });
+  });
+
+  it('marks a device as not mine and shows how to remove it in the router', async () => {
+    vi.mocked(api.myAgent).mockResolvedValue(reporting);
+    vi.mocked(api.updateAgentDevice).mockResolvedValue({ ...reporting.devices[1], authorized: false });
+    render(<AgentPanel network={casa} />);
+
+    const row = (await screen.findByText('Celular de Ana')).closest('.devrow') as HTMLElement;
+    await userEvent.click(within(row).getByRole('button', { name: 'Marcar como no autorizado' }));
+
+    expect(api.updateAgentDevice).toHaveBeenCalledWith(casa.id, 'bbbbbbbbbbbbbbbbbbbbbbbb', { authorized: false });
+    const dialog = await screen.findByRole('dialog');
+    expect(dialog).toHaveTextContent('cambia la contraseña de tu Wi-Fi');
+    expect(within(dialog).getByText(/Filtrado MAC/)).toBeInTheDocument();
+  });
+
+  it('warns when a device marked as not mine is still connected', async () => {
+    const blocked = {
+      ...reporting,
+      devices: [{ ...reporting.devices[1], authorized: false, recent: false }],
+    };
+    vi.mocked(api.myAgent).mockResolvedValue(blocked);
+    render(<AgentPanel network={casa} />);
+
+    expect(await screen.findByRole('alert'))
+      .toHaveTextContent('Un equipo que marcaste como no autorizado está conectado');
+    const row = (await screen.findByText('Celular de Ana')).closest('.devrow') as HTMLElement;
+    expect(within(row).getByText('No autorizado')).toBeInTheDocument();
+  });
+
+  it('turns an email alert off', async () => {
+    vi.mocked(api.myAgent).mockResolvedValue(reporting);
+    vi.mocked(api.alertPreferences).mockResolvedValue({ newDevice: true, security: true, anomaly: true });
+    vi.mocked(api.updateAlertPreferences).mockResolvedValue({ newDevice: false, security: true, anomaly: true });
+    render(<AgentPanel network={casa} />);
+
+    const toggle = await screen.findByRole('checkbox', { name: /Equipo nuevo o no autorizado/ });
+    await userEvent.click(toggle);
+
+    expect(api.updateAlertPreferences).toHaveBeenCalledWith({ newDevice: false, security: true, anomaly: true });
   });
 });

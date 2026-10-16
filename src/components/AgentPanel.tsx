@@ -4,7 +4,8 @@ import { errorMessage, useApi } from '../hooks/useApi';
 import { useNow } from '../hooks/useNow';
 import { api } from '../services/api';
 import type {
-  AgentDevice, AgentKeyCreated, AgentOverview, AgentPairingCode, AgentReport, FindingSeverity, HomeNetwork, SecurityAssessment,
+  AgentAlert, AgentAlertType, AgentDevice, AgentKeyCreated, AgentOverview, AgentPairingCode, AgentReport,
+  AlertPreferences, FindingSeverity, HomeNetwork, SecurityAssessment,
   SecurityGrade, WifiAuthentication,
 } from '../types';
 import { Gauge, type GaugeStatus } from './Gauge';
@@ -114,7 +115,7 @@ export function AgentPanel({ network }: { network: HomeNetwork }) {
       {created && <NewKey created={created} onDone={() => setCreated(null)} />}
       {data && !data.key && !created && !pairing && <Intro onInstall={startPairing} onCreateKey={createKey} busy={busy} />}
       {data?.key && !data.latest && !created && !pairing && <Waiting prefix={data.key.prefix} />}
-      {data?.latest && <Reports overview={data} latest={data.latest} />}
+      {data?.latest && <Reports overview={data} latest={data.latest} networkId={network.id} onChange={reload} />}
       {data?.key && (
         <p className="agent__keybar">
           <Icon name="key" size={16} /> Clave <code>{data.key.prefix}…</code> creada el {formatDateTime(data.key.createdAt)}
@@ -251,30 +252,38 @@ function Waiting({ prefix }: { prefix: string }) {
   );
 }
 
-function Reports({ overview, latest }: { overview: AgentOverview; latest: AgentReport }) {
+function Reports({ overview, latest, networkId, onChange }:
+                { overview: AgentOverview; latest: AgentReport; networkId: number; onChange: () => void }) {
   const security = latest.details.security ?? null;
   const anomaly = latest.details.anomaly ?? null;
-  const newDevices = overview.devices.filter((d) => d.recent);
+  const unauthorizedOnline = overview.devices.filter((d) => !d.authorized && d.online);
   return (
     <>
-      {latest.newDeviceCount > 0 && (
+      {unauthorizedOnline.length > 0 && (
+        <p className="notice notice--error agent__alert" role="alert">
+          <Icon name="ban" size={18} />
+          {unauthorizedOnline.length === 1
+            ? 'Un equipo que marcaste como no autorizado está conectado'
+            : `${unauthorizedOnline.length} equipos que marcaste como no autorizados están conectados`}.
+          Cambia la contraseña del Wi-Fi para sacarlo.
+        </p>
+      )}
+      {latest.newDeviceCount > 0 && unauthorizedOnline.length === 0 && (
         <p className="notice notice--error agent__alert" role="alert">
           <Icon name="anomaly" size={18} />
           {latest.newDeviceCount === 1 ? 'Apareció 1 equipo nuevo' : `Aparecieron ${latest.newDeviceCount} equipos nuevos`} en tu red.
-          Si no lo reconoces, cambia la contraseña del Wi-Fi.
+          Si no lo reconoces, márcalo abajo como «No es mío».
         </p>
       )}
       <div className="dash">
-        <section className="dash__card dash__card--hero" aria-labelledby="devices-title">
-          <h3 className="dash__title" id="devices-title"><Icon name="devices" size={18} /> Equipos conectados</h3>
-          <div className="agent__count">
-            <strong className="num">{latest.deviceCount}</strong>
-            <span>{latest.deviceCount === 1 ? 'equipo en tu red' : 'equipos en tu red'}</span>
-          </div>
-          <Sparkline values={overview.history.map((h) => h.deviceCount)} label="Equipos conectados en los últimos reportes" />
-          <DeviceList devices={overview.devices} />
-          <p className="dash__foot"><Icon name="clock" size={16} /> Último reporte: {formatDateTime(latest.receivedAt)}
-            {newDevices.length > 0 && <span className="tag tag--accent">{newDevices.length} nuevo(s) hoy</span>}</p>
+        <section className="dash__card dash__card--full" aria-labelledby="devices-title">
+          <h3 className="dash__title" id="devices-title">
+            <Icon name="devices" size={18} /> Equipos conectados
+            <span className="agent__countpill num">{latest.deviceCount}</span>
+          </h3>
+          <p className="muted small">Como en la lista de Bluetooth: cada equipo con su nombre y marca. Si uno no es tuyo, márcalo «No es mío».</p>
+          <DeviceList devices={overview.devices} networkId={networkId} onChange={onChange} />
+          <p className="dash__foot"><Icon name="clock" size={16} /> Último reporte: {formatDateTime(latest.receivedAt)}</p>
         </section>
 
         <section className="dash__card" aria-labelledby="security-title">
@@ -310,8 +319,85 @@ function Reports({ overview, latest }: { overview: AgentOverview; latest: AgentR
         </section>
 
         {security && <Findings security={security} />}
+        <AlertsCard alerts={overview.alerts} />
+        <AlertPreferencesCard />
       </div>
     </>
+  );
+}
+
+const ALERT_ICON: Record<AgentAlertType, IconName> = {
+  NEW_DEVICE: 'devices', UNAUTHORIZED_DEVICE: 'ban', SECURITY: 'shield', ANOMALY: 'anomaly',
+};
+
+/** Short history of what WiFiSense noticed and (when the user wants it) emailed. */
+function AlertsCard({ alerts }: { alerts: AgentAlert[] }) {
+  return (
+    <section className="dash__card" aria-labelledby="alerts-title">
+      <h3 className="dash__title" id="alerts-title"><Icon name="bell" size={18} /> Avisos recientes</h3>
+      {alerts.length === 0 ? (
+        <p className="muted">Sin avisos todavía. Aquí verás los equipos nuevos, bajones de seguridad y anomalías.</p>
+      ) : (
+        <ul className="agent__alerts">
+          {alerts.slice(0, 8).map((a, i) => (
+            <li key={`${a.at}-${i}`} className={`agent__alerts-item agent__alerts-item--${a.type.toLowerCase()}`}>
+              <Icon name={ALERT_ICON[a.type]} size={16} />
+              <span>{a.detail}</span>
+              <time dateTime={a.at}>{formatDateTime(a.at)}</time>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
+/** The three email-alert switches; shared by all of the user's networks. */
+function AlertPreferencesCard() {
+  const prefs = useApi(api.alertPreferences);
+  const [saving, setSaving] = useState<keyof AlertPreferences | null>(null);
+
+  async function toggle(key: keyof AlertPreferences, value: boolean) {
+    if (!prefs.data) return;
+    setSaving(key);
+    try {
+      await api.updateAlertPreferences({ ...prefs.data, [key]: value });
+      prefs.reload();
+    } finally {
+      setSaving(null);
+    }
+  }
+
+  const rows: { key: keyof AlertPreferences; icon: IconName; label: string; help: string }[] = [
+    { key: 'newDevice', icon: 'devices', label: 'Equipo nuevo o no autorizado', help: 'Cuando se conecta un equipo que no habíamos visto o uno que marcaste como no tuyo.' },
+    { key: 'security', icon: 'shield', label: 'Seguridad en riesgo', help: 'Cuando la seguridad de tu red baja a crítica (por ejemplo, Wi-Fi sin contraseña).' },
+    { key: 'anomaly', icon: 'anomaly', label: 'Comportamiento raro', help: 'Cuando la IA detecta una anomalía en tu conexión.' },
+  ];
+
+  return (
+    <section className="dash__card" aria-labelledby="prefs-title">
+      <h3 className="dash__title" id="prefs-title"><Icon name="bell" size={18} /> Avisos por correo</h3>
+      {prefs.data ? (
+        <ul className="agent__prefs">
+          {rows.map((row) => (
+            <li key={row.key}>
+              <Icon name={row.icon} size={18} />
+              <span className="agent__prefs-text">
+                <strong>{row.label}</strong>
+                <small className="muted">{row.help}</small>
+              </span>
+              <label className="switch">
+                <input type="checkbox" checked={prefs.data![row.key]} disabled={saving !== null}
+                       onChange={(e) => toggle(row.key, e.target.checked)}
+                       aria-label={`Avisarme por correo: ${row.label}`} />
+                <i aria-hidden="true" />
+              </label>
+            </li>
+          ))}
+        </ul>
+      ) : <p className="muted">{prefs.loading ? 'Cargando…' : 'No se pudieron cargar tus avisos.'}</p>}
+      <p className="muted small">Los avisos llegan al correo de tu cuenta. Puedes cambiarlo en Mi cuenta.</p>
+    </section>
   );
 }
 
@@ -360,19 +446,125 @@ function Findings({ security }: { security: SecurityAssessment }) {
   );
 }
 
-function DeviceList({ devices }: { devices: AgentDevice[] }) {
-  if (devices.length === 0) return null;
+/** Guesses an icon from the device's name or maker, like a phone's Bluetooth list does. */
+export function deviceIcon(device: AgentDevice): IconName {
+  const text = `${device.label ?? ''} ${device.hostname ?? ''} ${device.vendor ?? ''}`.toLowerCase();
+  if (/iphone|galaxy|phone|redmi|moto|celular|android|pixel/.test(text)) return 'phone';
+  if (/macbook|laptop|portatil|pc|desktop|windows|thinkpad|notebook/.test(text)) return 'laptop';
+  if (/tv|roku|chromecast|firestick|smart.?tv|lg|samsung.?tv/.test(text)) return 'tv';
+  if (/playstation|ps4|ps5|xbox|nintendo|switch/.test(text)) return 'console';
+  if (/print|epson|canon|hp /.test(text)) return 'printer';
+  if (/echo|alexa|speaker|sonos|home|nest/.test(text)) return 'speaker';
+  return 'devices';
+}
+
+/** Name shown for a device: what the user typed, else what it announces, else its maker, else a number. */
+export function deviceName(device: AgentDevice, index: number): string {
+  return device.label || device.hostname || (device.vendor ? `Equipo ${device.vendor}` : `Equipo ${index + 1}`);
+}
+
+function DeviceList({ devices, networkId, onChange }:
+                    { devices: AgentDevice[]; networkId: number; onChange: () => void }) {
+  const [guide, setGuide] = useState<AgentDevice | null>(null);
+  if (devices.length === 0) return <p className="muted">Aún no hay equipos. Aparecen con el primer reporte del agente.</p>;
   return (
-    <ul className="devices">
-      {devices.slice(0, 12).map((d, i) => (
-        <li key={d.id} className={d.online ? 'is-online' : undefined}>
-          <i aria-hidden="true" />
-          <span className="devices__name">{d.label ?? `Equipo ${i + 1}`} <code>{d.id.slice(0, 6)}</code></span>
-          <span className="devices__state">{d.online ? 'Conectado' : `Visto ${formatDateTime(d.lastSeenAt)}`}</span>
-          {d.recent && <span className="tag tag--accent">Nuevo</span>}
-        </li>
-      ))}
-    </ul>
+    <>
+      <ul className="devlist">
+        {devices.map((d, i) => (
+          <DeviceRow key={d.id} device={d} index={i} networkId={networkId} onChange={onChange}
+                     onBlocked={() => setGuide(d)} />
+        ))}
+      </ul>
+      {guide && <RouterGuide device={guide} index={devices.indexOf(guide)} onClose={() => setGuide(null)} />}
+    </>
+  );
+}
+
+function DeviceRow({ device, index, networkId, onChange, onBlocked }:
+                   { device: AgentDevice; index: number; networkId: number; onChange: () => void; onBlocked: () => void }) {
+  const [editing, setEditing] = useState(false);
+  const [name, setName] = useState(device.label ?? '');
+  const [busy, setBusy] = useState(false);
+
+  async function save(change: { label?: string | null; authorized?: boolean }) {
+    setBusy(true);
+    try {
+      await api.updateAgentDevice(networkId, device.id, change);
+      onChange();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function rename() {
+    const trimmed = name.trim();
+    setEditing(false);
+    if (trimmed !== (device.label ?? '')) await save({ label: trimmed || null });
+  }
+
+  async function block() {
+    await save({ authorized: false });
+    onBlocked();
+  }
+
+  return (
+    <li className={`devrow${device.online ? ' is-online' : ''}${device.authorized ? '' : ' is-blocked'}`}>
+      <span className="devrow__icon"><Icon name={device.authorized ? deviceIcon(device) : 'ban'} size={22} /></span>
+      <div className="devrow__main">
+        {editing ? (
+          <input className="devrow__input" value={name} maxLength={40} autoFocus aria-label="Nombre del equipo"
+                 onChange={(e) => setName(e.target.value)} onBlur={rename}
+                 onKeyDown={(e) => { if (e.key === 'Enter') rename(); if (e.key === 'Escape') setEditing(false); }} />
+        ) : (
+          <span className="devrow__name">
+            {deviceName(device, index)}
+            {device.recent && <span className="tag tag--accent">Nuevo</span>}
+            {!device.authorized && <span className="tag tag--danger">No autorizado</span>}
+          </span>
+        )}
+        <span className="devrow__sub">
+          {device.vendor ?? 'Sin identificar'} · {device.online ? 'Conectado ahora' : `Visto ${formatDateTime(device.lastSeenAt)}`}
+        </span>
+      </div>
+      <span className="devrow__dot" aria-hidden="true" />
+      <div className="devrow__actions">
+        {!editing && (
+          <button className="iconbtn" onClick={() => { setName(device.label ?? ''); setEditing(true); }}
+                  disabled={busy} title="Cambiar el nombre" aria-label="Cambiar el nombre"><Icon name="pencil" size={16} /></button>
+        )}
+        {device.authorized ? (
+          <button className="iconbtn iconbtn--danger" onClick={block} disabled={busy}
+                  title="No es mío / quitar acceso" aria-label="Marcar como no autorizado"><Icon name="ban" size={16} /></button>
+        ) : (
+          <button className="iconbtn" onClick={() => save({ authorized: true })} disabled={busy}
+                  title="Sí es mío" aria-label="Volver a autorizar"><Icon name="check" size={16} /></button>
+        )}
+      </div>
+    </li>
+  );
+}
+
+/** How to actually remove a device: an app cannot change the router, so we guide the user to do it there. */
+function RouterGuide({ device, index, onClose }: { device: AgentDevice; index: number; onClose: () => void }) {
+  return (
+    <div className="modal" role="dialog" aria-modal="true" aria-labelledby="guide-title" onClick={onClose}>
+      <div className="modal__box" onClick={(e) => e.stopPropagation()}>
+        <h3 id="guide-title"><Icon name="router" size={18} /> Cómo sacar «{deviceName(device, index)}» de tu red</h3>
+        <p className="muted small">
+          WiFiSense no puede desconectar equipos por sí solo (eso lo manda el router). Ya lo marcamos como no
+          autorizado: te avisaremos si se vuelve a conectar. Para sacarlo de verdad, haz una de estas dos:
+        </p>
+        <ol className="agent__steps">
+          <li><strong>Lo más fácil y seguro:</strong> cambia la contraseña de tu Wi-Fi. Entra al router (suele ser
+            <code> 192.168.0.1</code> o <code>192.168.1.1</code> en el navegador), ve a la configuración del Wi-Fi y
+            ponle una contraseña nueva. Todos tus equipos tendrán que volver a conectarse con la nueva.</li>
+          <li><strong>Si tu router lo permite:</strong> en su configuración busca «Control de acceso», «Filtrado MAC»
+            o «Dispositivos bloqueados» y bloquea ese equipo desde la lista.</li>
+        </ol>
+        <p className="muted small">Tu proveedor (Claro, Movistar, Tigo…) también puede cambiar la contraseña por ti si llamas a soporte.</p>
+        <button className="button" onClick={onClose}>Entendido</button>
+      </div>
+    </div>
   );
 }
 
