@@ -12,7 +12,8 @@ import type { ConnectionTest, HomeNetwork } from '../src/types';
 vi.mock('../src/auth/AuthContext', () => ({ useAuth: vi.fn() }));
 vi.mock('../src/services/api', () => ({
   api: { myNetworks: vi.fn(), createMyNetwork: vi.fn(), updateMyNetwork: vi.fn(), deleteMyNetwork: vi.fn(),
-         myTests: vi.fn(), saveMyTest: vi.fn(), myAgent: vi.fn(), createAgentKey: vi.fn(), revokeAgentKey: vi.fn() },
+         myTests: vi.fn(), saveMyTest: vi.fn(), myAgent: vi.fn(), createAgentKey: vi.fn(), revokeAgentKey: vi.fn(),
+         createAgentPairingCode: vi.fn(), myAccount: vi.fn() },
 }));
 vi.mock('../src/services/speedTest', () => ({ runSpeedTest: vi.fn() }));
 
@@ -23,12 +24,13 @@ const renderPage = () => render(<MemoryRouter><EndUserHomePage /></MemoryRouter>
 beforeEach(() => {
   vi.mocked(useAuth).mockReturnValue({
     user: { id: 9, username: 'ana', role: 'USER' }, ready: true,
-    login: vi.fn(), register: vi.fn(), logout: vi.fn(), can: () => false,
+    login: vi.fn(), register: vi.fn(), renew: vi.fn(), logout: vi.fn(), can: () => false,
   });
   vi.mocked(api.myNetworks).mockReset();
   vi.mocked(api.createMyNetwork).mockReset();
   vi.mocked(api.myTests).mockReset().mockResolvedValue([]);
   vi.mocked(api.saveMyTest).mockReset();
+  vi.mocked(api.myAccount).mockReset().mockResolvedValue({ username: 'ana', email: 'ana@gmail.com', phone: null });
   vi.mocked(api.myAgent).mockReset().mockResolvedValue({ key: null, online: false, latest: null, history: [], devices: [] });
   vi.mocked(runSpeedTest).mockReset();
 });

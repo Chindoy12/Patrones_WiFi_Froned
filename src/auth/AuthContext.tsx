@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { api } from '../services/api';
+import { api, type RegisterContact } from '../services/api';
 import { setUnauthorizedHandler, tokenStore } from '../services/apiClient';
 import type { AuthResponse, Role, User } from '../types';
 
@@ -7,7 +7,9 @@ interface AuthContextValue {
   user: User | null;
   ready: boolean;
   login: (username: string, password: string) => Promise<void>;
-  register: (username: string, password: string) => Promise<void>;
+  register: (username: string, password: string, contact?: RegisterContact) => Promise<void>;
+  /** Keeps the user signed in with the new session the backend returns after a password change. */
+  renew: (response: AuthResponse) => void;
   logout: () => void;
   can: (...roles: Role[]) => boolean;
 }
@@ -42,14 +44,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [start]);
 
   // A new account is signed in right away.
-  const register = useCallback(async (username: string, password: string) => {
-    start(await api.register(username, password));
+  const register = useCallback(async (username: string, password: string, contact?: RegisterContact) => {
+    start(await api.register(username, password, contact));
   }, [start]);
 
   // UI hint only: the backend enforces the real authorization rules.
   const can = useCallback((...roles: Role[]) => !!user && roles.includes(user.role), [user]);
 
-  const value = useMemo(() => ({ user, ready, login, register, logout, can }), [user, ready, login, register, logout, can]);
+  const value = useMemo(() => ({ user, ready, login, register, renew: start, logout, can }),
+    [user, ready, login, register, start, logout, can]);
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 

@@ -10,7 +10,7 @@ vi.mock('../src/auth/AuthContext', () => ({ useAuth: vi.fn() }));
 function signedInAs(role: Role | null) {
   vi.mocked(useAuth).mockReturnValue({
     user: role ? { id: 1, username: 'ana', role } : null,
-    ready: true, login: vi.fn(), register: vi.fn(), logout: vi.fn(), can: (...roles) => !!role && roles.includes(role),
+    ready: true, login: vi.fn(), register: vi.fn(), renew: vi.fn(), logout: vi.fn(), can: (...roles) => !!role && roles.includes(role),
   });
 }
 
