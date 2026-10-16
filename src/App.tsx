@@ -13,6 +13,8 @@ const page = <K extends string>(load: () => Promise<Record<K, ComponentType>>, n
   lazy(() => load().then((module) => ({ default: module[name] })));
 
 const Layout = page(() => import('./components/Layout'), 'Layout');
+const ForgotPasswordPage = page(() => import('./pages/ForgotPasswordPage'), 'ForgotPasswordPage');
+const ResetPasswordPage = page(() => import('./pages/ResetPasswordPage'), 'ResetPasswordPage');
 const EndUserHomePage = page(() => import('./pages/EndUserHomePage'), 'EndUserHomePage');
 const DashboardPage = page(() => import('./pages/DashboardPage'), 'DashboardPage');
 const NetworksPage = page(() => import('./pages/NetworksPage'), 'NetworksPage');
@@ -38,6 +40,8 @@ export function App() {
           <Routes>
             <Route path="/login" element={<LoginPage />} />
             <Route path="/registro" element={<RegisterPage />} />
+            <Route path="/recuperar" element={<ForgotPasswordPage />} />
+            <Route path="/restablecer" element={<ResetPasswordPage />} />
             <Route path="/mi-wifi" element={<RequireAuth><RequireEndUser><EndUserHomePage /></RequireEndUser></RequireAuth>} />
             <Route element={<RequireAuth><RequireStaff><Layout /></RequireStaff></RequireAuth>}>
               <Route index element={<DashboardPage />} />

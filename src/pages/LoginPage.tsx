@@ -45,6 +45,7 @@ export function LoginPage() {
                  onChange={(e) => setUsername(e.target.value.slice(0, USERNAME_MAX))} />
         </div>
         <PasswordInput label="Contraseña" value={password} onChange={setPassword} autoComplete="current-password" />
+        <p className="auth-card__forgot"><Link to="/recuperar">¿Olvidaste tu contraseña?</Link></p>
         {error && <p className="notice notice--error" role="alert">{error}</p>}
         <button className="button" disabled={busy || !username.trim() || !password}>
           {busy ? 'Ingresando…' : 'Ingresar'}
