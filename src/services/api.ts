@@ -1,7 +1,7 @@
 import { apiClient } from './apiClient';
 import { sealPassword } from './passwordCipher';
 import type {
-  AgentKeyCreated, AgentOverview, AiModelOverview, AiPrediction, Alert, AlertStatus, AnalysisResult, AnalysisType, AnomalyCauseCount, AuthResponse,
+  Account, AgentKeyCreated, AgentOverview, AgentPairingCode, AiModelOverview, AiPrediction, Alert, AlertStatus, AnalysisResult, AnalysisType, AnomalyCauseCount, AuthResponse,
   ConnectionTest, ConnectionTestInput, DashboardSummary, Device, HomeNetwork, HomeNetworkInput, Measurement, Network,
   NetworkQuality, NetworkReport, ProtocolStatistic, StaffRole, Strategy, SystemStatus, TrafficSession, User, Zone,
 } from '../types';
@@ -16,12 +16,21 @@ export interface NetworkInput {
   dataSourceType: string;
 }
 
+export interface RegisterContact {
+  email?: string;
+  phone?: string;
+}
+
 export const api = {
   // Passwords always leave the browser sealed (see passwordCipher), never as readable text.
   login: async (username: string, password: string) =>
     apiClient.post<AuthResponse>('/api/auth/login', { username, ...(await sealPassword(password)) }),
-  register: async (username: string, password: string) =>
-    apiClient.post<AuthResponse>('/api/auth/register', { username, ...(await sealPassword(password)) }),
+  register: async (username: string, password: string, contact: RegisterContact = {}) =>
+    apiClient.post<AuthResponse>('/api/auth/register', { username, ...contact, ...(await sealPassword(password)) }),
+  // Recovery: the answer never says whether the email has an account.
+  forgotPassword: (email: string) => apiClient.post<{ message: string }>('/api/auth/password/forgot', { email }),
+  resetPassword: async (token: string, password: string) =>
+    apiClient.post<void>('/api/auth/password/reset', { token, ...(await sealPassword(password)) }),
   me: () => apiClient.get<User>('/api/auth/me'),
 
   users: () => apiClient.get<User[]>('/api/users'),
@@ -39,6 +48,19 @@ export const api = {
   saveMyTest: (networkId: number, input: ConnectionTestInput) =>
     apiClient.post<ConnectionTest>(`/api/my/networks/${networkId}/tests`, input),
   deleteMyNetwork: (id: number) => apiClient.delete(`/api/my/networks/${id}`),
+  myAccount: () => apiClient.get<Account>('/api/my/account'),
+  updateMyContact: async (email: string, phone: string | null, password: string) =>
+    apiClient.put<Account>('/api/my/account/contact', { email, phone, ...(await sealPassword(password)) }),
+  changeMyPassword: async (current: string, next: string) => {
+    const sealedCurrent = await sealPassword(current);
+    const sealedNext = await sealPassword(next);
+    return apiClient.put<AuthResponse>('/api/my/account/password', {
+      currentChallengeId: sealedCurrent.challengeId, currentEncryptedPassword: sealedCurrent.encryptedPassword,
+      newChallengeId: sealedNext.challengeId, newEncryptedPassword: sealedNext.encryptedPassword,
+    });
+  },
+  createAgentPairingCode: (networkId: number) =>
+    apiClient.post<AgentPairingCode>(`/api/my/networks/${networkId}/agent/pairing`),
   myAgent: (networkId: number) => apiClient.get<AgentOverview>(`/api/my/networks/${networkId}/agent`),
   createAgentKey: (networkId: number) => apiClient.post<AgentKeyCreated>(`/api/my/networks/${networkId}/agent/key`),
   revokeAgentKey: (networkId: number) => apiClient.delete(`/api/my/networks/${networkId}/agent/key`),

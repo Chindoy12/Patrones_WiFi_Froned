@@ -394,3 +394,15 @@ export interface AgentKeyCreated {
   prefix: string;
   createdAt: string;
 }
+
+export interface AgentPairingCode {
+  code: string;
+  expiresAt: string;
+}
+
+/** The end user's own account; email is null while it has no recovery email. */
+export interface Account {
+  username: string;
+  email: string | null;
+  phone: string | null;
+}
