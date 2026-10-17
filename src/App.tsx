@@ -1,7 +1,7 @@
 import { type ComponentType, lazy, Suspense } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from './auth/AuthContext';
-import { RequireAdmin, RequireAuth, RequireEndUser, RequireStaff } from './auth/guards';
+import { RequireAdmin, RequireAnalyst, RequireAuth, RequireEndUser, RequireStaff } from './auth/guards';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 
@@ -27,6 +27,7 @@ const AiModelPage = page(() => import('./pages/AiModelPage'), 'AiModelPage');
 const AlertsPage = page(() => import('./pages/AlertsPage'), 'AlertsPage');
 const ReportsPage = page(() => import('./pages/ReportsPage'), 'ReportsPage');
 const UsersPage = page(() => import('./pages/UsersPage'), 'UsersPage');
+const UserNetworksPage = page(() => import('./pages/UserNetworksPage'), 'UserNetworksPage');
 
 function Loading() {
   return <p className="notice page-loading" role="status" aria-busy="true">Cargando…</p>;
@@ -54,6 +55,7 @@ export function App() {
               <Route path="ai-model" element={<AiModelPage />} />
               <Route path="alerts" element={<AlertsPage />} />
               <Route path="reports" element={<ReportsPage />} />
+              <Route path="user-networks" element={<RequireAnalyst><UserNetworksPage /></RequireAnalyst>} />
               <Route path="users" element={<RequireAdmin><UsersPage /></RequireAdmin>} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
