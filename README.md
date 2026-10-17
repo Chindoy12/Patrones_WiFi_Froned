@@ -48,14 +48,19 @@ Mala) y un ícono, así que no depende solo del color.
   el servidor de WiFiSense, no solo el Wi-Fi; la señal o el canal requieren el agente.
 - **Instalar el agente:** «Instalar el agente» pide un código de 8 caracteres (15 min, un uso) y ofrece el instalador
   `WiFiSenseAgente.exe` (versión `agente` del repositorio de IA). Mientras el código está en pantalla la página
-  revisa cada 10 s, así que el primer reporte aparece solo. Para Linux sigue el `.py` con `pair` o con la clave.
+  revisa cada 10 s, así que el primer reporte aparece solo. Es la única forma de instalarlo que ofrece la página
+  (nadie tiene que abrir CMD); el script de Python sigue en el repositorio de IA para Linux o desarrollo.
 - **Mi cuenta:** correo de recuperación y celular (con la contraseña actual para confirmar) y cambio de contraseña;
   después del cambio la página sigue con la sesión nueva que devuelve el backend.
 - **Recuperar la contraseña:** «¿Olvidaste tu contraseña?» (`/recuperar`) pide el correo; el enlace del correo abre
   `/restablecer#t=…`, que lee el token y lo quita de la barra de direcciones y del historial.
-- **Agente (Mi Wi-Fi):** crea la clave del agente (se muestra una sola vez), descarga `public/downloads/wifisense_agent.py`
-  y, cuando reporta, muestra cuántos equipos hay conectados, aviso de equipos nuevos, la auditoría de seguridad de la
-  IA (puntaje, vulnerabilidades y qué hacer), los datos del Wi-Fi y si hay anomalías. Se actualiza cada minuto.
+- **Agente (Mi Wi-Fi):** cuando reporta, muestra los equipos conectados como en la lista de Bluetooth (nombre,
+  fabricante y, si usan dirección privada, «celular o tableta»), aviso de equipos nuevos, la auditoría de seguridad de
+  la IA (puntaje, vulnerabilidades y qué hacer), el **mejor canal Wi-Fi** con la interferencia de cada canal, los
+  datos del Wi-Fi y si hay anomalías. Se actualiza cada minuto.
+- **Redes de usuarios (ADMIN y ANALYST):** el panel del equipo con datos reales: usuarios, agentes conectados, redes
+  en riesgo y con anomalías, y una tabla de cada red con su último reporte. Nada de sus equipos; el analista ve el
+  usuario enmascarado. Un VIEWER no la ve.
 - **Diseño:** fondo azul cielo con tarjetas de vidrio blanco y un fondo animado (`NetworkBackdrop`): ondas y una red
   de nodos con paquetes que viajan entre ellos y se acercan al puntero. Con «reducir movimiento» queda quieto.
 - **Carga por áreas:** cada página se descarga al entrar (`React.lazy`); un usuario final no descarga las páginas del
