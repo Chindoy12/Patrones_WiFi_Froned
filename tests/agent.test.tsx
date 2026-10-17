@@ -1,12 +1,12 @@
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { AGENT_INSTALLER, AgentPanel, Sparkline } from '../src/components/AgentPanel';
+import { AGENT_INSTALLER, AgentPanel, deviceIcon, deviceName, deviceNames, Sparkline } from '../src/components/AgentPanel';
 import { api } from '../src/services/api';
-import type { AgentOverview, HomeNetwork } from '../src/types';
+import type { AgentChannel, AgentDevice, AgentOverview, HomeNetwork } from '../src/types';
 
 vi.mock('../src/services/api', () => ({
-  api: { myAgent: vi.fn(), createAgentKey: vi.fn(), revokeAgentKey: vi.fn(), createAgentPairingCode: vi.fn(),
+  api: { myAgent: vi.fn(), revokeAgentKey: vi.fn(), createAgentPairingCode: vi.fn(),
          updateAgentDevice: vi.fn(), alertPreferences: vi.fn(), updateAlertPreferences: vi.fn() },
 }));
 
@@ -44,14 +44,14 @@ const reporting: AgentOverview = {
   ],
   alerts: [],
   devices: [
-    { id: 'aaaaaaaaaaaaaaaaaaaaaaaa', label: null, vendor: 'TP-Link', hostname: 'router-sala', authorized: true, firstSeenAt: '2026-10-10T12:00:00Z', lastSeenAt: '2026-10-12T21:00:00Z', online: true, recent: false },
-    { id: 'bbbbbbbbbbbbbbbbbbbbbbbb', label: 'Celular de Ana', vendor: 'Apple', hostname: 'iPhone-de-Ana', authorized: true, firstSeenAt: '2026-10-12T21:00:00Z', lastSeenAt: '2026-10-12T21:00:00Z', online: true, recent: true },
+    { id: 'aaaaaaaaaaaaaaaaaaaaaaaa', label: null, vendor: 'TP-Link', hostname: 'router-sala', privateMac: false, authorized: true, firstSeenAt: '2026-10-10T12:00:00Z', lastSeenAt: '2026-10-12T21:00:00Z', online: true, recent: false },
+    { id: 'bbbbbbbbbbbbbbbbbbbbbbbb', label: 'Celular de Ana', vendor: 'Apple', hostname: 'iPhone-de-Ana', privateMac: false, authorized: true, firstSeenAt: '2026-10-12T21:00:00Z', lastSeenAt: '2026-10-12T21:00:00Z', online: true, recent: true },
   ],
 };
 
 beforeEach(() => {
   vi.mocked(api.myAgent).mockReset();
-  vi.mocked(api.createAgentKey).mockReset();
+  vi.mocked(api.createAgentPairingCode).mockReset();
   vi.mocked(api.revokeAgentKey).mockReset();
   vi.mocked(api.updateAgentDevice).mockReset();
   vi.mocked(api.updateAlertPreferences).mockReset();
@@ -87,28 +87,29 @@ describe('Agent panel', () => {
     expect(screen.getByRole('button', { name: 'Generar otro código' })).toBeInTheDocument();
   });
 
-  it('still offers Python and the long key for Linux', async () => {
+  it('only offers the installer: no Python, no console, no long key', async () => {
     vi.mocked(api.myAgent).mockResolvedValue(empty);
-    render(<AgentPanel network={casa} />);
+    const { container } = render(<AgentPanel network={casa} />);
 
-    expect(await screen.findByRole('link', { name: 'wifisense_agent.py' })).toHaveAttribute('href', '/downloads/wifisense_agent.py');
-    expect(screen.getByRole('button', { name: 'Crear clave del agente' })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: /Instalar el agente/ })).toBeInTheDocument();
+    expect(screen.getByText(/No necesitas Python ni usar comandos/)).toBeInTheDocument();
+    expect(container).not.toHaveTextContent(/wifisense_agent\.py|python wifisense|CMD/);
+    expect(screen.queryByRole('button', { name: /clave/i })).not.toBeInTheDocument();
+    expect(container.querySelector('a[href$=".py"]')).toBeNull();
   });
 
-  it('shows the new key once with the steps, and then only its prefix', async () => {
-    vi.mocked(api.myAgent).mockResolvedValueOnce(empty).mockResolvedValue({ ...empty, key: { ...key, lastSeenAt: null } });
-    vi.mocked(api.createAgentKey).mockResolvedValue({ key: 'wsa_' + 'x'.repeat(43), prefix: 'wsa_xxxx', createdAt: key.createdAt });
-    render(<AgentPanel network={casa} />);
+  it('while waiting for the first report it offers a new installation code, never a console', async () => {
+    vi.mocked(api.myAgent).mockResolvedValue({ ...empty, key: { ...key, lastSeenAt: null } });
+    vi.mocked(api.createAgentPairingCode).mockResolvedValue({ code: 'P4ZX-82KD',
+      expiresAt: new Date(Date.now() + 15 * 60_000).toISOString() });
+    const { container } = render(<AgentPanel network={casa} />);
 
-    await userEvent.click(await screen.findByRole('button', { name: /Crear clave del agente/ }));
+    expect(await screen.findByText(/Esperando el primer reporte del agente/)).toBeInTheDocument();
+    expect(container).not.toHaveTextContent(/python wifisense|setup|CMD/);
+    await userEvent.click(screen.getByRole('button', { name: /Obtener código de instalación/ }));
 
-    const box = await screen.findByRole('region', { name: 'Clave nueva del agente' });
-    expect(within(box).getByText('wsa_' + 'x'.repeat(43))).toBeInTheDocument();
-    expect(within(box).getByText(/no se vuelve a mostrar/)).toBeInTheDocument();
-    expect(within(box).getByText('python wifisense_agent.py setup')).toBeInTheDocument();
-    await userEvent.click(within(box).getByRole('button', { name: 'Ya la guardé' }));
-    expect(screen.queryByText('wsa_' + 'x'.repeat(43))).not.toBeInTheDocument();
-    expect(await screen.findByText(/Esperando el primer reporte/)).toBeInTheDocument();
+    expect(await screen.findByText('P4ZX-82KD')).toBeInTheDocument();
+    expect(api.createAgentPairingCode).toHaveBeenCalledWith(1);
   });
 
   it('shows connected devices, the new-device alert and the vulnerabilities the AI found', async () => {
@@ -128,15 +129,17 @@ describe('Agent panel', () => {
     expect(screen.getByRole('status')).toHaveTextContent('Agente conectado');
   });
 
-  it('revokes the key after confirming', async () => {
+  it('disconnects the agent after confirming, and has no "new key" option', async () => {
     vi.mocked(api.myAgent).mockResolvedValue(reporting);
     vi.spyOn(window, 'confirm').mockReturnValue(true);
     vi.mocked(api.revokeAgentKey).mockResolvedValue(undefined);
     render(<AgentPanel network={casa} />);
 
-    await userEvent.click(await screen.findByRole('button', { name: 'Revocar' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Desconectar' }));
 
     expect(api.revokeAgentKey).toHaveBeenCalledWith(1);
+    expect(screen.queryByRole('button', { name: 'Nueva clave' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Instalar en otro computador' })).toBeInTheDocument();
   });
 });
 
@@ -206,3 +209,75 @@ describe('Devices like a Bluetooth list', () => {
     expect(api.updateAlertPreferences).toHaveBeenCalledWith({ newDevice: false, security: true, anomaly: true });
   });
 });
+
+const phone: AgentDevice = {
+  id: 'cccccccccccccccccccccccc', label: null, vendor: null, hostname: null, privateMac: true, authorized: true,
+  firstSeenAt: '2026-10-10T12:00:00Z', lastSeenAt: '2026-10-12T21:00:00Z', online: true, recent: false,
+};
+
+describe('Devices with a private MAC', () => {
+  it('calls them a phone or tablet instead of an unknown device, and suggests naming them', async () => {
+    vi.mocked(api.myAgent).mockResolvedValue({ ...reporting, devices: [...reporting.devices, phone] });
+    render(<AgentPanel network={casa} />);
+
+    const row = (await screen.findByText('Celular o tableta 1')).closest('.devrow') as HTMLElement;
+    expect(within(row).getByText('Dirección privada')).toBeInTheDocument();
+    expect(screen.getByText(/ponles un nombre con el lápiz/)).toBeInTheDocument();
+  });
+
+  it('prefers the name the user gave, then the announced one, then the maker', () => {
+    expect(deviceName({ ...phone, label: 'Tablet niños' }, 0)).toBe('Tablet niños');
+    expect(deviceName({ ...phone, hostname: 'Galaxy-Tab' }, 0)).toBe('Galaxy-Tab');
+    expect(deviceName({ ...phone, privateMac: false, vendor: 'Sony' }, 0)).toBe('Equipo Sony');
+    expect(deviceName({ ...phone, privateMac: false }, 4)).toBe('Equipo 5');
+    expect(deviceIcon(phone)).toBe('phone');
+    const unknown = { ...phone, id: 'd'.repeat(24), privateMac: false };
+    expect(deviceNames([reporting.devices[0], phone, unknown, { ...phone, id: 'e'.repeat(24) }, unknown]))
+      .toEqual(['router-sala', 'Celular o tableta 1', 'Equipo 1', 'Celular o tableta 2', 'Equipo 2']);
+    expect(deviceIcon({ ...phone, privateMac: false })).toBe('devices');
+  });
+});
+
+const channel: AgentChannel = {
+  band: '2.4', currentChannel: 6, currentLoad: 4, recommendedChannel: 11, recommendedLoad: 0, shouldChange: true,
+  summary: 'Tu router usa el canal 6 y ahí interfieren 4 redes vecinas.',
+  action: 'Entra a la configuración del router, busca Wi-Fi 2.4 GHz → Canal y elige 11.',
+  options: [{ channel: 1, networks: 0, load: 0.4 }, { channel: 6, networks: 4, load: 4.4 }, { channel: 11, networks: 0, load: 0 }],
+  modelVersion: 'channel-1.0',
+};
+
+describe('Best Wi-Fi channel', () => {
+  it('recommends a calmer channel, shows how crowded each one is and how to change it', async () => {
+    const withChannel = { ...reporting, latest: { ...reporting.latest!, details: { ...reporting.latest!.details, channel } } };
+    vi.mocked(api.myAgent).mockResolvedValue(withChannel);
+    render(<AgentPanel network={casa} />);
+
+    const card = (await screen.findByRole('heading', { name: /Mejor canal Wi-Fi/ })).closest('section')!;
+    expect(within(card).getByText('Cambia al canal 11')).toBeInTheDocument();
+    expect(within(card).getByText(channel.summary)).toBeInTheDocument();
+    expect(within(card).getByText(/elige 11/)).toBeInTheDocument();
+    const options = within(card).getByRole('list', { name: /Interferencia por canal en 2.4 GHz/ });
+    expect(within(options).getAllByRole('listitem')).toHaveLength(3);
+    expect(within(options).getByText(/4 redes · el tuyo/)).toBeInTheDocument();
+    expect(within(options).getByText('libre')).toBeInTheDocument();
+    expect(within(options).getByText('solo redes encimadas')).toBeInTheDocument();
+  });
+
+  it('says the channel is fine when there is no reason to move', async () => {
+    const fine = { ...channel, shouldChange: false, recommendedChannel: 6, action: null, summary: 'Tu router ya está en un buen canal (6).' };
+    vi.mocked(api.myAgent).mockResolvedValue({ ...reporting, latest: { ...reporting.latest!, details: { ...reporting.latest!.details, channel: fine } } });
+    render(<AgentPanel network={casa} />);
+
+    expect(await screen.findByText('Canal 6: bien')).toBeInTheDocument();
+    expect(screen.queryByText(/Cambia al canal/)).not.toBeInTheDocument();
+  });
+
+  it('is not shown for older agents that do not send the neighbours', async () => {
+    vi.mocked(api.myAgent).mockResolvedValue(reporting);
+    render(<AgentPanel network={casa} />);
+
+    expect(await screen.findByText('Celular de Ana')).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: /Mejor canal Wi-Fi/ })).not.toBeInTheDocument();
+  });
+});
+
