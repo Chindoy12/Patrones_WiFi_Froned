@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 import { useAuth } from '../src/auth/AuthContext';
-import { RequireAuth, RequireEndUser, RequireStaff, homePath } from '../src/auth/guards';
+import { RequireAnalyst, RequireAuth, RequireEndUser, RequireStaff, homePath } from '../src/auth/guards';
 import type { Role } from '../src/types';
 
 vi.mock('../src/auth/AuthContext', () => ({ useAuth: vi.fn() }));
@@ -20,6 +20,7 @@ const renderAt = (path: string) => render(
       <Route path="/login" element={<p>Pantalla de login</p>} />
       <Route path="/mi-wifi" element={<RequireAuth><RequireEndUser><p>Área del usuario</p></RequireEndUser></RequireAuth>} />
       <Route path="/" element={<RequireAuth><RequireStaff><p>Panel del equipo</p></RequireStaff></RequireAuth>} />
+      <Route path="/user-networks" element={<RequireAuth><RequireStaff><RequireAnalyst><p>Redes de usuarios</p></RequireAnalyst></RequireStaff></RequireAuth>} />
     </Routes>
   </MemoryRouter>,
 );
@@ -42,6 +43,19 @@ describe('route guards', () => {
     signedInAs('VIEWER');
     renderAt('/mi-wifi');
     expect(screen.getByText('Panel del equipo')).toBeInTheDocument();
+  });
+
+  it('let administrators and analysts see the users\' real networks', () => {
+    signedInAs('ANALYST');
+    renderAt('/user-networks');
+    expect(screen.getByText('Redes de usuarios')).toBeInTheDocument();
+  });
+
+  it('keep a viewer away from the users\' real networks', () => {
+    signedInAs('VIEWER');
+    renderAt('/user-networks');
+    expect(screen.getByText('Panel del equipo')).toBeInTheDocument();
+    expect(screen.queryByText('Redes de usuarios')).not.toBeInTheDocument();
   });
 
   it('pick the home page by role', () => {
