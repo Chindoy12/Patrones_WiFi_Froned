@@ -1,19 +1,25 @@
 import { Link } from 'react-router-dom';
+import { useAuth } from '../auth/AuthContext';
 import { DataState } from '../components/DataState';
 import { Gauge } from '../components/Gauge';
 import { Icon } from '../components/Icon';
 import { StatusBadge } from '../components/StatusBadge';
 import { StatusStrip, type StripItem } from '../components/StatusStrip';
+import { Tile } from '../components/Tile';
 import { TopBar } from '../components/TopBar';
 import { formatDateTime, formatNumber, formatTime } from '../format';
 import { useApi } from '../hooks/useApi';
 import { useNetworkSelection } from '../hooks/useNetworkSelection';
 import { gradeStatus, metricOf, metricStatus, metricWord } from '../quality';
 import { api } from '../services/api';
-import type { DashboardSummary, NetworkQuality, SystemStatus } from '../types';
+import type { DashboardSummary, NetworkQuality, SystemStatus, TeamNetworks } from '../types';
 
-/** Team dashboard: health gauge of one network, its response gauges, totals and the state of each service. */
+/**
+ * Team dashboard: health gauge of one network, its response gauges, totals and the state of each service. For ADMIN
+ * and ANALYST it also shows the real end-user networks reported by the agents (the university ones are simulated).
+ */
 export function DashboardPage() {
+  const { can } = useAuth();
   const summary = useApi(api.dashboard);
   const status = useApi(api.systemStatus);
   const { networks, networkId, setNetworkId } = useNetworkSelection();
@@ -60,6 +66,8 @@ export function DashboardPage() {
           <h2 className="dash__title" id="activity-title"><Icon name="analysis" size={18} /> Actividad</h2>
           <DataState {...summary}>{(data) => <Activity data={data} />}</DataState>
         </section>
+
+        {can('ADMIN', 'ANALYST') && <RealUsersCard />}
       </div>
 
       <div className="grid-2 dash__lists">
@@ -168,11 +176,28 @@ function Activity({ data }: { data: DashboardSummary }) {
   );
 }
 
-function Tile({ icon, label, value, unit }: { icon: Parameters<typeof Icon>[0]['name']; label: string; value: string; unit?: string }) {
+/** Real data at a glance: what the agents installed in the users' homes are reporting. */
+function RealUsersCard() {
+  const team = useApi(api.teamNetworks);
   return (
-    <div className="tile">
-      <span className="tile__label"><Icon name={icon} size={15} /> {label}</span>
-      <strong className="tile__value">{value}{unit && value !== '—' && <small>{unit}</small>}</strong>
+    <section className="dash__card dash__card--full" aria-labelledby="real-title">
+      <div className="dash__head">
+        <h2 className="dash__title" id="real-title"><Icon name="router" size={18} /> Redes reales de los usuarios</h2>
+        <Link to="/user-networks">Ver todas</Link>
+      </div>
+      <DataState {...team}>{(data) => <RealUsers data={data} />}</DataState>
+    </section>
+  );
+}
+
+function RealUsers({ data }: { data: TeamNetworks }) {
+  const t = data.totals;
+  return (
+    <div className="tiles tiles--4">
+      <Tile icon="users" label="Usuarios" value={String(t.endUsers)} note={`${t.networks} redes registradas`} />
+      <Tile icon="router" label="Agentes conectados" value={String(t.agentsOnline)} note={`de ${t.withAgent} instalados`} />
+      <Tile icon="shield" label="Redes en riesgo" value={String(t.atRisk)} note="seguridad en riesgo o crítica" />
+      <Tile icon="anomaly" label="Con anomalía (24 h)" value={String(t.anomaliesLast24h)} note={`${t.devices} equipos vistos`} />
     </div>
   );
 }

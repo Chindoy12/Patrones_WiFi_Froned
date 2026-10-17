@@ -1,14 +1,28 @@
 import { render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { useAuth } from '../src/auth/AuthContext';
 import { DashboardPage } from '../src/pages/DashboardPage';
 import { api } from '../src/services/api';
 import { ApiError } from '../src/services/apiClient';
-import type { DashboardSummary, NetworkQuality, SystemStatus } from '../src/types';
+import type { DashboardSummary, NetworkQuality, Role, SystemStatus, TeamNetworks } from '../src/types';
 
 vi.mock('../src/services/api', () => ({
-  api: { dashboard: vi.fn(), systemStatus: vi.fn(), networks: vi.fn(), networkQuality: vi.fn() },
+  api: { dashboard: vi.fn(), systemStatus: vi.fn(), networks: vi.fn(), networkQuality: vi.fn(), teamNetworks: vi.fn() },
 }));
+vi.mock('../src/auth/AuthContext', () => ({ useAuth: vi.fn() }));
+
+function signedInAs(role: Role) {
+  vi.mocked(useAuth).mockReturnValue({
+    user: { id: 1, username: 'equipo', role }, ready: true, login: vi.fn(), register: vi.fn(), renew: vi.fn(),
+    logout: vi.fn(), can: (...roles) => roles.includes(role),
+  });
+}
+
+const team: TeamNetworks = {
+  totals: { endUsers: 12, networks: 9, withAgent: 6, agentsOnline: 4, atRisk: 2, anomaliesLast24h: 1, devices: 57 },
+  networks: [], generatedAt: '2026-10-17T15:00:00Z',
+};
 
 const summary: DashboardSummary = {
   totalNetworks: 4, networksByStatus: { NORMAL: 3, WARNING: 1, CRITICAL: 0 }, totalDevices: 7, openAlerts: 1,
@@ -31,6 +45,8 @@ const quality: NetworkQuality = {
 };
 
 beforeEach(() => {
+  signedInAs('VIEWER');
+  vi.mocked(api.teamNetworks).mockReset().mockResolvedValue(team);
   vi.mocked(api.dashboard).mockResolvedValue(summary);
   vi.mocked(api.systemStatus).mockResolvedValue(status);
   vi.mocked(api.networks).mockResolvedValue([{ id: 1, ssid: 'WiFiSense-Guest', zoneName: 'Cafetería' } as never]);
@@ -64,5 +80,23 @@ describe('Panel del equipo', () => {
 
     expect(await screen.findByText('La red aún no tiene mediciones.')).toBeInTheDocument();
     expect(await screen.findByRole('img', { name: 'Latencia: sin datos' })).toBeInTheDocument();
+  });
+
+  it('shows the real networks of the users to an administrator or analyst', async () => {
+    signedInAs('ANALYST');
+    renderPage();
+
+    const card = (await screen.findByRole('heading', { name: /Redes reales de los usuarios/ })).closest('section')!;
+    expect(await within(card).findByText('12')).toBeInTheDocument();
+    expect(within(card).getByText('de 6 instalados')).toBeInTheDocument();
+    expect(within(card).getByRole('link', { name: 'Ver todas' })).toHaveAttribute('href', '/user-networks');
+  });
+
+  it('a viewer does not even ask for them', async () => {
+    renderPage();
+
+    expect(await screen.findByRole('img', { name: /Calidad de 0 a 100/ })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: /Redes reales de los usuarios/ })).not.toBeInTheDocument();
+    expect(api.teamNetworks).not.toHaveBeenCalled();
   });
 });
