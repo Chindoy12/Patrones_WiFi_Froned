@@ -21,7 +21,11 @@ const SECTIONS: { to: string; label: string; icon: IconName }[] = [
 
 export function Layout() {
   const { user, logout, can } = useAuth();
-  const sections = can('ADMIN') ? [...SECTIONS, { to: '/users', label: 'Usuarios', icon: 'users' as const }] : SECTIONS;
+  const sections = [
+    ...SECTIONS,
+    ...(can('ADMIN', 'ANALYST') ? [{ to: '/user-networks', label: 'Redes de usuarios', icon: 'router' as const }] : []),
+    ...(can('ADMIN') ? [{ to: '/users', label: 'Usuarios', icon: 'users' as const }] : []),
+  ];
   const [open, setOpen] = useState(false);
 
   return (
