@@ -27,3 +27,9 @@ export function RequireAdmin({ children }: { children: ReactNode }) {
   const { can } = useAuth();
   return can('ADMIN') ? <>{children}</> : <Navigate to="/" replace />;
 }
+
+/** Team members who may see the users' real networks: ADMIN and ANALYST (never VIEWER). */
+export function RequireAnalyst({ children }: { children: ReactNode }) {
+  const { can } = useAuth();
+  return can('ADMIN', 'ANALYST') ? <>{children}</> : <Navigate to="/" replace />;
+}
