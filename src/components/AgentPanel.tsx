@@ -4,14 +4,13 @@ import { errorMessage, useApi } from '../hooks/useApi';
 import { useNow } from '../hooks/useNow';
 import { api } from '../services/api';
 import type {
-  AgentAlert, AgentAlertType, AgentDevice, AgentKeyCreated, AgentOverview, AgentPairingCode, AgentReport,
+  AgentAlert, AgentAlertType, AgentChannel, AgentDevice, AgentOverview, AgentPairingCode, AgentReport,
   AlertPreferences, FindingSeverity, HomeNetwork, SecurityAssessment,
   SecurityGrade, WifiAuthentication,
 } from '../types';
 import { Gauge, type GaugeStatus } from './Gauge';
 import { Icon, type IconName } from './Icon';
 
-export const AGENT_DOWNLOAD = '/downloads/wifisense_agent.py';
 /** Windows installer built by GitHub Actions in the AI repository (release "agente"). */
 export const AGENT_INSTALLER =
   'https://github.com/davidcampino06/Patrones_WiFi_-Artificial_Intelligence/releases/download/agente/WiFiSenseAgente.exe';
@@ -35,10 +34,12 @@ const SEVERITY: Record<FindingSeverity, { label: string; icon: IconName }> = {
   INFO: { label: 'Consejo', icon: 'ai' },
 };
 
-/** Agent of one network: how to connect it and, once it reports, devices, security audit and anomalies. */
+/**
+ * Agent of one network: how to install it and, once it reports, devices, security audit, channel and anomalies.
+ * The only way offered to install it is the Windows installer with a short code: nobody has to open a console.
+ */
 export function AgentPanel({ network }: { network: HomeNetwork }) {
   const overview = useApi(() => api.myAgent(network.id), [network.id]);
-  const [created, setCreated] = useState<AgentKeyCreated | null>(null);
   const [pairing, setPairing] = useState<AgentPairingCode | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -64,7 +65,6 @@ export function AgentPanel({ network }: { network: HomeNetwork }) {
     setBusy(true);
     setError(null);
     try {
-      setCreated(null);
       setPairing(await api.createAgentPairingCode(network.id));
     } catch (e) {
       setError(errorMessage(e));
@@ -73,27 +73,13 @@ export function AgentPanel({ network }: { network: HomeNetwork }) {
     }
   }
 
-  async function createKey() {
-    if (overview.data?.key && !window.confirm('La clave actual dejará de funcionar y tendrás que configurar el agente otra vez. ¿Continuar?')) return;
-    setBusy(true);
-    setError(null);
-    try {
-      setCreated(await api.createAgentKey(network.id));
-      reload();
-    } catch (e) {
-      setError(errorMessage(e));
-    } finally {
-      setBusy(false);
-    }
-  }
-
   async function revokeKey() {
-    if (!window.confirm('El agente dejará de enviar reportes de esta red. ¿Revocar la clave?')) return;
+    if (!window.confirm('El agente dejará de enviar reportes de esta red. ¿Desconectarlo?')) return;
     setBusy(true);
     setError(null);
     try {
       await api.revokeAgentKey(network.id);
-      setCreated(null);
+      setPairing(null);
       reload();
     } catch (e) {
       setError(errorMessage(e));
@@ -112,17 +98,15 @@ export function AgentPanel({ network }: { network: HomeNetwork }) {
       {error && <p className="notice notice--error" role="alert">{error}</p>}
       {overview.error && <p className="notice notice--error" role="alert">{overview.error}</p>}
       {pairing && <Pairing pairing={pairing} onRenew={startPairing} onClose={() => setPairing(null)} busy={busy} />}
-      {created && <NewKey created={created} onDone={() => setCreated(null)} />}
-      {data && !data.key && !created && !pairing && <Intro onInstall={startPairing} onCreateKey={createKey} busy={busy} />}
-      {data?.key && !data.latest && !created && !pairing && <Waiting prefix={data.key.prefix} />}
+      {data && !data.key && !pairing && <Intro onInstall={startPairing} busy={busy} />}
+      {data?.key && !data.latest && !pairing && <Waiting onInstall={startPairing} busy={busy} />}
       {data?.latest && <Reports overview={data} latest={data.latest} networkId={network.id} onChange={reload} />}
       {data?.key && (
         <p className="agent__keybar">
-          <Icon name="key" size={16} /> Clave <code>{data.key.prefix}…</code> creada el {formatDateTime(data.key.createdAt)}
+          <Icon name="key" size={16} /> Agente instalado el {formatDateTime(data.key.createdAt)}
           <span className="agent__keyactions">
             <button className="link-button" onClick={startPairing} disabled={busy}>Instalar en otro computador</button>
-            <button className="link-button" onClick={createKey} disabled={busy}>Nueva clave</button>
-            <button className="link-button link-button--danger" onClick={revokeKey} disabled={busy}>Revocar</button>
+            <button className="link-button link-button--danger" onClick={revokeKey} disabled={busy}>Desconectar</button>
           </span>
         </p>
       )}
@@ -139,7 +123,7 @@ function AgentState({ overview }: { overview: AgentOverview }) {
   );
 }
 
-function Intro({ onInstall, onCreateKey, busy }: { onInstall: () => void; onCreateKey: () => void; busy: boolean }) {
+function Intro({ onInstall, busy }: { onInstall: () => void; busy: boolean }) {
   return (
     <div className="dash__card agent__intro">
       <div>
@@ -152,6 +136,7 @@ function Intro({ onInstall, onCreateKey, busy }: { onInstall: () => void; onCrea
         <ul className="agent__features">
           <li><Icon name="devices" size={18} /> Equipos conectados y aviso de equipos nuevos</li>
           <li><Icon name="shield" size={18} /> Auditoría de seguridad con puntaje y qué hacer</li>
+          <li><Icon name="wifi" size={18} /> El canal Wi-Fi con menos interferencia</li>
           <li><Icon name="anomaly" size={18} /> Detección de anomalías con Isolation Forest</li>
         </ul>
       </div>
@@ -160,14 +145,6 @@ function Intro({ onInstall, onCreateKey, busy }: { onInstall: () => void; onCrea
           <Icon name="download" size={16} /> Instalar el agente
         </button>
         <p className="muted small">Para Windows 10 y 11. No necesitas Python ni usar comandos.</p>
-        <details className="agent__python">
-          <summary>¿Linux o prefieres Python?</summary>
-          <p className="small">
-            Descarga <a href={AGENT_DOWNLOAD} download>wifisense_agent.py</a> y conéctalo con el código de
-            «Instalar el agente» (<code>python wifisense_agent.py pair CÓDIGO</code>) o con una clave:
-          </p>
-          <button className="link-button" onClick={onCreateKey} disabled={busy}>Crear clave del agente</button>
-        </details>
       </div>
     </div>
   );
@@ -208,46 +185,17 @@ function Pairing({ pairing, onRenew, onClose, busy }: {
   );
 }
 
-function NewKey({ created, onDone }: { created: AgentKeyCreated; onDone: () => void }) {
-  const [copied, setCopied] = useState(false);
-
-  async function copy() {
-    try {
-      await navigator.clipboard.writeText(created.key);
-      setCopied(true);
-    } catch {
-      setCopied(false);
-    }
-  }
-
-  return (
-    <div className="dash__card agent__newkey" role="region" aria-label="Clave nueva del agente">
-      <p className="notice notice--info"><strong>Copia la clave ahora:</strong> por seguridad no se vuelve a mostrar.</p>
-      <div className="agent__key">
-        <code>{created.key}</code>
-        <button className="button button--quiet" onClick={copy}><Icon name="copy" size={16} /> {copied ? 'Copiada' : 'Copiar'}</button>
-      </div>
-      <Steps />
-      <button className="link-button" onClick={onDone}>Ya la guardé</button>
-    </div>
-  );
-}
-
-function Steps() {
-  return (
-    <ol className="agent__steps">
-      <li><a href={AGENT_DOWNLOAD} download>Descarga <code>wifisense_agent.py</code></a> en el computador de tu casa.</li>
-      <li>Abre CMD en esa carpeta y ejecuta <code>python wifisense_agent.py setup</code>; pega la clave cuando la pida.</li>
-      <li>Inícialo con <code>python wifisense_agent.py run</code> y deja la ventana abierta. El primer reporte llega en segundos.</li>
-    </ol>
-  );
-}
-
-function Waiting({ prefix }: { prefix: string }) {
+/** Connected but no report yet: usually the installer was not opened, or the code was not typed in time. */
+function Waiting({ onInstall, busy }: { onInstall: () => void; busy: boolean }) {
   return (
     <div className="dash__card">
-      <p className="agent__waiting"><span className="agent__pulse" aria-hidden="true" /> Esperando el primer reporte del agente con la clave <code>{prefix}…</code></p>
-      <Steps />
+      <p className="agent__waiting"><span className="agent__pulse" aria-hidden="true" /> Esperando el primer reporte del agente.</p>
+      <p className="muted">
+        Si todavía no abriste el instalador en el computador de tu casa, o el código venció, genera uno nuevo:
+      </p>
+      <button className="button" onClick={onInstall} disabled={busy}>
+        <Icon name="download" size={16} /> Obtener código de instalación
+      </button>
     </div>
   );
 }
@@ -281,7 +229,12 @@ function Reports({ overview, latest, networkId, onChange }:
             <Icon name="devices" size={18} /> Equipos conectados
             <span className="agent__countpill num">{latest.deviceCount}</span>
           </h3>
-          <p className="muted small">Como en la lista de Bluetooth: cada equipo con su nombre y marca. Si uno no es tuyo, márcalo «No es mío».</p>
+          <p className="muted small">
+            Como en la lista de Bluetooth: cada equipo con su nombre y marca. Si uno no es tuyo, márcalo «No es mío».
+            {overview.devices.some((d) => d.privateMac && !d.label && !d.hostname) && (
+              <> Los celulares y tabletas con <strong>dirección privada</strong> no dicen su marca: ponles un nombre con el lápiz para reconocerlos.</>
+            )}
+          </p>
           <DeviceList devices={overview.devices} networkId={networkId} onChange={onChange} />
           <p className="dash__foot"><Icon name="clock" size={16} /> Último reporte: {formatDateTime(latest.receivedAt)}</p>
         </section>
@@ -298,6 +251,8 @@ function Reports({ overview, latest, networkId, onChange }:
           <h3 className="dash__title" id="wifi-title"><Icon name="wifi" size={18} /> Tu Wi-Fi</h3>
           <WifiTiles report={latest} />
         </section>
+
+        {latest.details.channel && <ChannelCard channel={latest.details.channel} />}
 
         <section className="dash__card" aria-labelledby="anomaly-title">
           <h3 className="dash__title" id="anomaly-title"><Icon name="ai" size={18} /> Comportamiento de la red</h3>
@@ -446,6 +401,57 @@ function Findings({ security }: { security: SecurityAssessment }) {
   );
 }
 
+/** The channel with the least interference, how crowded each option is and how to move the router to it. */
+export function ChannelCard({ channel }: { channel: AgentChannel }) {
+  const busiest = Math.max(1, ...channel.options.map((o) => o.load));
+  return (
+    <section className="dash__card" aria-labelledby="channel-title">
+      <h3 className="dash__title" id="channel-title"><Icon name="router" size={18} /> Mejor canal Wi-Fi</h3>
+      {channel.recommendedChannel !== null && (
+        <div className={`agent__verdict agent__verdict--${channel.shouldChange ? 'bad' : 'ok'}`}>
+          <Icon name={channel.shouldChange ? 'arrowUp' : 'check'} size={22} />
+          <div>
+            <strong>
+              {channel.shouldChange
+                ? `Cambia al canal ${channel.recommendedChannel}`
+                : `Canal ${channel.currentChannel ?? channel.recommendedChannel}: bien`}
+            </strong>
+            <p className="small">{channel.summary}</p>
+          </div>
+        </div>
+      )}
+      {channel.recommendedChannel === null && <p className="small">{channel.summary}</p>}
+      {channel.options.length > 0 && (
+        <ul className="channels" aria-label={`Interferencia por canal en ${channel.band} GHz`}>
+          {channel.options.map((o) => (
+            <li key={o.channel} className={[
+              o.channel === channel.currentChannel ? 'is-current' : '',
+              o.channel === channel.recommendedChannel ? 'is-best' : '',
+            ].join(' ').trim() || undefined}>
+              <span className="channels__num num">{o.channel}</span>
+              <span className="channels__bar" aria-hidden="true">
+                <i style={{ width: `${Math.max(4, (o.load / busiest) * 100)}%` }} />
+              </span>
+              <span className="channels__load small">
+                {channelLabel(o)}
+                {o.channel === channel.currentChannel && ' · el tuyo'}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+      {channel.action && <p className="finding__action small"><Icon name="check" size={14} /> {channel.action}</p>}
+    </section>
+  );
+}
+
+/** Whole networks for people; the bar length keeps the exact weighting of the overlapping ones. */
+function channelLabel(option: AgentChannel['options'][number]): string {
+  if (option.load === 0) return 'libre';
+  if (option.networks === 0) return 'solo redes encimadas';
+  return option.networks === 1 ? '1 red' : `${option.networks} redes`;
+}
+
 /** Guesses an icon from the device's name or maker, like a phone's Bluetooth list does. */
 export function deviceIcon(device: AgentDevice): IconName {
   const text = `${device.label ?? ''} ${device.hostname ?? ''} ${device.vendor ?? ''}`.toLowerCase();
@@ -455,33 +461,57 @@ export function deviceIcon(device: AgentDevice): IconName {
   if (/playstation|ps4|ps5|xbox|nintendo|switch/.test(text)) return 'console';
   if (/print|epson|canon|hp /.test(text)) return 'printer';
   if (/echo|alexa|speaker|sonos|home|nest/.test(text)) return 'speaker';
-  return 'devices';
+  return device.privateMac ? 'phone' : 'devices';
 }
 
-/** Name shown for a device: what the user typed, else what it announces, else its maker, else a number. */
+/**
+ * Name shown for a device: what the user typed, else what it announces, else its maker; a device with a private
+ * (random) MAC is almost surely a phone or tablet, so it says so instead of a bare number.
+ */
 export function deviceName(device: AgentDevice, index: number): string {
-  return device.label || device.hostname || (device.vendor ? `Equipo ${device.vendor}` : `Equipo ${index + 1}`);
+  if (device.label || device.hostname) return (device.label || device.hostname)!;
+  if (device.vendor) return `Equipo ${device.vendor}`;
+  return device.privateMac ? `Celular o tableta ${index + 1}` : `Equipo ${index + 1}`;
+}
+
+/**
+ * Names for a whole list: devices without any name are numbered within their kind ("Celular o tableta 1, 2…" and
+ * "Equipo 1, 2…"), not by their position in the list.
+ */
+export function deviceNames(devices: AgentDevice[]): string[] {
+  let phones = 0;
+  let others = 0;
+  return devices.map((d) => {
+    if (d.label || d.hostname || d.vendor) return deviceName(d, 0);
+    return deviceName(d, d.privateMac ? phones++ : others++);
+  });
+}
+
+/** Second line of a device: its maker, or why there is none. */
+export function deviceMaker(device: AgentDevice): string {
+  return device.vendor ?? (device.privateMac ? 'Dirección privada' : 'Sin identificar');
 }
 
 function DeviceList({ devices, networkId, onChange }:
                     { devices: AgentDevice[]; networkId: number; onChange: () => void }) {
   const [guide, setGuide] = useState<AgentDevice | null>(null);
   if (devices.length === 0) return <p className="muted">Aún no hay equipos. Aparecen con el primer reporte del agente.</p>;
+  const names = deviceNames(devices);
   return (
     <>
       <ul className="devlist">
         {devices.map((d, i) => (
-          <DeviceRow key={d.id} device={d} index={i} networkId={networkId} onChange={onChange}
+          <DeviceRow key={d.id} device={d} shownName={names[i]} networkId={networkId} onChange={onChange}
                      onBlocked={() => setGuide(d)} />
         ))}
       </ul>
-      {guide && <RouterGuide device={guide} index={devices.indexOf(guide)} onClose={() => setGuide(null)} />}
+      {guide && <RouterGuide name={names[devices.indexOf(guide)] ?? deviceName(guide, 0)} onClose={() => setGuide(null)} />}
     </>
   );
 }
 
-function DeviceRow({ device, index, networkId, onChange, onBlocked }:
-                   { device: AgentDevice; index: number; networkId: number; onChange: () => void; onBlocked: () => void }) {
+function DeviceRow({ device, shownName, networkId, onChange, onBlocked }:
+                   { device: AgentDevice; shownName: string; networkId: number; onChange: () => void; onBlocked: () => void }) {
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(device.label ?? '');
   const [busy, setBusy] = useState(false);
@@ -517,13 +547,16 @@ function DeviceRow({ device, index, networkId, onChange, onBlocked }:
                  onKeyDown={(e) => { if (e.key === 'Enter') rename(); if (e.key === 'Escape') setEditing(false); }} />
         ) : (
           <span className="devrow__name">
-            {deviceName(device, index)}
+            {shownName}
             {device.recent && <span className="tag tag--accent">Nuevo</span>}
             {!device.authorized && <span className="tag tag--danger">No autorizado</span>}
           </span>
         )}
         <span className="devrow__sub">
-          {device.vendor ?? 'Sin identificar'} · {device.online ? 'Conectado ahora' : `Visto ${formatDateTime(device.lastSeenAt)}`}
+          <span title={device.privateMac && !device.vendor
+            ? 'Los celulares y tabletas usan una dirección aleatoria en cada red para que no los rastreen.' : undefined}>
+            {deviceMaker(device)}
+          </span> · {device.online ? 'Conectado ahora' : `Visto ${formatDateTime(device.lastSeenAt)}`}
         </span>
       </div>
       <span className="devrow__dot" aria-hidden="true" />
@@ -545,11 +578,11 @@ function DeviceRow({ device, index, networkId, onChange, onBlocked }:
 }
 
 /** How to actually remove a device: an app cannot change the router, so we guide the user to do it there. */
-function RouterGuide({ device, index, onClose }: { device: AgentDevice; index: number; onClose: () => void }) {
+function RouterGuide({ name, onClose }: { name: string; onClose: () => void }) {
   return (
     <div className="modal" role="dialog" aria-modal="true" aria-labelledby="guide-title" onClick={onClose}>
       <div className="modal__box" onClick={(e) => e.stopPropagation()}>
-        <h3 id="guide-title"><Icon name="router" size={18} /> Cómo sacar «{deviceName(device, index)}» de tu red</h3>
+        <h3 id="guide-title"><Icon name="router" size={18} /> Cómo sacar «{name}» de tu red</h3>
         <p className="muted small">
           WiFiSense no puede desconectar equipos por sí solo (eso lo manda el router). Ya lo marcamos como no
           autorizado: te avisaremos si se vuelve a conectar. Para sacarlo de verdad, haz una de estas dos:

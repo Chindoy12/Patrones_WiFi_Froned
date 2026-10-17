@@ -1,9 +1,9 @@
 import { apiClient } from './apiClient';
 import { sealPassword } from './passwordCipher';
 import type {
-  Account, AgentKeyCreated, AgentDevice, AgentOverview, AgentPairingCode, AlertPreferences, AiModelOverview, AiPrediction, Alert, AlertStatus, AnalysisResult, AnalysisType, AnomalyCauseCount, AuthResponse,
+  Account, AgentDevice, AgentOverview, AgentPairingCode, AlertPreferences, AiModelOverview, AiPrediction, Alert, AlertStatus, AnalysisResult, AnalysisType, AnomalyCauseCount, AuthResponse,
   ConnectionTest, ConnectionTestInput, DashboardSummary, Device, HomeNetwork, HomeNetworkInput, Measurement, Network,
-  NetworkQuality, NetworkReport, ProtocolStatistic, StaffRole, Strategy, SystemStatus, TrafficSession, User, Zone,
+  NetworkQuality, NetworkReport, ProtocolStatistic, StaffRole, Strategy, SystemStatus, TeamNetworks, TrafficSession, User, Zone,
 } from '../types';
 
 export interface NetworkInput {
@@ -66,10 +66,11 @@ export const api = {
   alertPreferences: () => apiClient.get<AlertPreferences>('/api/my/alerts'),
   updateAlertPreferences: (prefs: AlertPreferences) => apiClient.put<AlertPreferences>('/api/my/alerts', prefs),
   myAgent: (networkId: number) => apiClient.get<AgentOverview>(`/api/my/networks/${networkId}/agent`),
-  createAgentKey: (networkId: number) => apiClient.post<AgentKeyCreated>(`/api/my/networks/${networkId}/agent/key`),
   revokeAgentKey: (networkId: number) => apiClient.delete(`/api/my/networks/${networkId}/agent/key`),
 
   dashboard: () => apiClient.get<DashboardSummary>('/api/dashboard/summary'),
+  /** Real home networks of the end users (ADMIN and ANALYST). */
+  teamNetworks: () => apiClient.get<TeamNetworks>('/api/home-networks'),
   systemStatus: () => apiClient.get<SystemStatus>('/api/dashboard/status'),
   networkQuality: (networkId: number) => apiClient.get<NetworkQuality>(`/api/networks/${networkId}/quality`),
 

@@ -330,6 +330,20 @@ export interface AgentAnomaly {
   recommendationSource: 'RULES' | 'CLAUDE';
 }
 
+/** Best Wi-Fi channel the AI found from the neighbouring networks the agent saw (load = interfering networks). */
+export interface AgentChannel {
+  band: '2.4' | '5' | '6' | null;
+  currentChannel: number | null;
+  currentLoad: number | null;
+  recommendedChannel: number | null;
+  recommendedLoad: number | null;
+  shouldChange: boolean;
+  summary: string;
+  action: string | null;
+  options: { channel: number; networks: number; load: number }[];
+  modelVersion: string;
+}
+
 export interface AgentReportDetails {
   wifi?: { cipher?: string | null; signalPercent?: number | null; rxRateMbps?: number | null; txRateMbps?: number | null;
            neighborsSameChannel?: number | null; neighborsTotal?: number | null; note?: string | null;
@@ -338,6 +352,8 @@ export interface AgentReportDetails {
   security?: SecurityAssessment | null;
   quality?: Quality | null;
   anomaly?: AgentAnomaly | null;
+  /** Missing for agents older than 1.3.0, which do not send the neighbours per channel. */
+  channel?: AgentChannel | null;
 }
 
 export interface AgentReport {
@@ -380,6 +396,8 @@ export interface AgentDevice {
   vendor: string | null;
   /** Name the device announces on the network ("iPhone-de-Ana"); null when none. */
   hostname: string | null;
+  /** Uses a random ("private") MAC, as phones and tablets do: its maker cannot be known. */
+  privateMac: boolean;
   /** False when the user marked it as not theirs: shown in red and it keeps raising an alert. */
   authorized: boolean;
   firstSeenAt: string;
@@ -412,12 +430,6 @@ export interface AlertPreferences {
   anomaly: boolean;
 }
 
-export interface AgentKeyCreated {
-  key: string;
-  prefix: string;
-  createdAt: string;
-}
-
 export interface AgentPairingCode {
   code: string;
   expiresAt: string;
@@ -428,4 +440,37 @@ export interface Account {
   username: string;
   email: string | null;
   phone: string | null;
+}
+
+/** One end user's home network as the team sees it (ADMIN / ANALYST). Never anything about their devices. */
+export interface TeamNetworkRow {
+  id: number;
+  name: string;
+  /** Complete for an administrator; masked ("an•••@gmail.com") for an analyst. */
+  owner: string;
+  provider: string | null;
+  contractedMbps: number | null;
+  createdAt: string;
+  hasAgent: boolean;
+  agentOnline: boolean;
+  lastReportAt: string | null;
+  agentVersion: string | null;
+  deviceCount: number | null;
+  securityScore: number | null;
+  securityGrade: SecurityGrade | null;
+  qualityScore: number | null;
+  anomalyDetected: boolean | null;
+  anomalyType: AnomalyType | null;
+  band: '2.4' | '5' | '6' | null;
+  channel: number | null;
+  recommendedChannel: number | null;
+  channelChangeSuggested: boolean;
+  needsAttention: boolean;
+}
+
+export interface TeamNetworks {
+  totals: { endUsers: number; networks: number; withAgent: number; agentsOnline: number; atRisk: number;
+            anomaliesLast24h: number; devices: number };
+  networks: TeamNetworkRow[];
+  generatedAt: string;
 }
