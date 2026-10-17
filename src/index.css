@@ -598,10 +598,6 @@ a { color: var(--accent); }
 .agent__features li { display: flex; align-items: center; gap: 10px; }
 .agent__features .icon, .agent__keybar .icon { color: var(--accent); }
 .agent__cta { display: grid; gap: 10px; }
-.agent__newkey { gap: 12px; }
-.agent__key { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-.agent__key code { flex: 1; min-width: 0; overflow-wrap: anywhere; padding: 10px 14px; border-radius: 12px; background: var(--surface-2); border: 1px solid var(--accent-line); font-size: .95rem; }
-.agent__key .button { display: inline-flex; align-items: center; gap: 6px; }
 .agent__steps { margin: 0; padding-left: 20px; display: grid; gap: 8px; }
 .agent code { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: .88em; }
 .agent__waiting { display: flex; align-items: center; gap: 10px; margin: 0; font-weight: 500; }
@@ -665,8 +661,6 @@ a { color: var(--accent); }
 .agent__code strong { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 2rem; letter-spacing: .08em; color: var(--accent); }
 .agent__code strong.is-expired { color: var(--muted); text-decoration: line-through; }
 .agent__steps .button { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; }
-.agent__python { margin-top: 6px; font-size: .9rem; }
-.agent__python summary { cursor: pointer; color: var(--accent); }
 .account .notice { margin-top: 0; }
 @media (max-width: 760px) {
   .agent__pairing { grid-template-columns: minmax(0, 1fr); }
@@ -722,3 +716,26 @@ a { color: var(--accent); }
   .devrow { grid-template-columns: auto 1fr auto; }
   .devrow__dot { display: none; }
 }
+
+/* Best Wi-Fi channel: one bar per candidate channel, longer = more interfering networks */
+.channels { list-style: none; margin: 12px 0 4px; padding: 0; display: grid; gap: 7px; }
+.channels li { display: grid; grid-template-columns: 2.4rem minmax(0, 1fr) auto; align-items: center; gap: 10px; }
+.channels__num { font-weight: 700; text-align: right; color: var(--muted); }
+.channels__bar { height: 8px; border-radius: 999px; background: var(--track); overflow: hidden; }
+.channels__bar i { display: block; height: 100%; border-radius: inherit; background: var(--warn); }
+.channels li.is-best .channels__bar i { background: var(--good); }
+.channels li.is-current .channels__num { color: var(--ink); }
+.channels li.is-best .channels__num { color: var(--good); }
+.channels__load { color: var(--muted); white-space: nowrap; }
+
+/* Team panel: real home networks of the end users */
+.unet__totals { margin-bottom: 18px; }
+.unet__filter { display: inline-flex; align-items: center; gap: 8px; font-size: .9rem; color: var(--muted); cursor: pointer; }
+.unet td { vertical-align: middle; }
+.unet tr.is-attention { background: var(--bad-soft); }
+.unet__sub { display: block; margin-top: 2px; }
+.unet__tag { margin-left: 8px; }
+.unet__bad { display: inline-flex; align-items: center; gap: 4px; color: var(--bad-ink); font-weight: 600; }
+.unet__ok { display: inline-flex; align-items: center; gap: 4px; color: var(--good); }
+.unet .agent__state { font-size: .85rem; }
+
