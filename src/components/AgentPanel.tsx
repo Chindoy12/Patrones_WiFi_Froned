@@ -100,7 +100,10 @@ export function AgentPanel({ network }: { network: HomeNetwork }) {
       {pairing && <Pairing pairing={pairing} onRenew={startPairing} onClose={() => setPairing(null)} busy={busy} />}
       {data && !data.key && !pairing && <Intro onInstall={startPairing} busy={busy} />}
       {data?.key && !data.latest && !pairing && <Waiting onInstall={startPairing} busy={busy} />}
-      {data?.latest && <Reports overview={data} latest={data.latest} networkId={network.id} onChange={reload} />}
+      {data?.latest && (
+        <AgentReports overview={data} latest={data.latest} onChange={reload}
+                      updateDevice={(id, change) => api.updateAgentDevice(network.id, id, change)} />
+      )}
       {data?.key && (
         <p className="agent__keybar">
           <Icon name="key" size={16} /> Agente instalado el {formatDateTime(data.key.createdAt)}
@@ -200,8 +203,17 @@ function Waiting({ onInstall, busy }: { onInstall: () => void; busy: boolean }) 
   );
 }
 
-function Reports({ overview, latest, networkId, onChange }:
-                { overview: AgentOverview; latest: AgentReport; networkId: number; onChange: () => void }) {
+export type DeviceChange = { label?: string | null; authorized?: boolean };
+
+/**
+ * What the agent saw in its latest report: devices, security audit, Wi-Fi, best channel and the connection. Mi Wi-Fi
+ * shows it for a home; the team panel (team) shows the same for the sensor of a team network, where only an
+ * administrator can name or block a device (canManage) and the alerts live in the Alerts page.
+ */
+export function AgentReports({ overview, latest, onChange, updateDevice, team = false, canManage = true }: {
+  overview: AgentOverview; latest: AgentReport; onChange: () => void;
+  updateDevice: (fingerprint: string, change: DeviceChange) => Promise<unknown>; team?: boolean; canManage?: boolean;
+}) {
   const security = latest.details.security ?? null;
   const anomaly = latest.details.anomaly ?? null;
   const unauthorizedOnline = overview.devices.filter((d) => !d.authorized && d.online);
@@ -210,17 +222,20 @@ function Reports({ overview, latest, networkId, onChange }:
       {unauthorizedOnline.length > 0 && (
         <p className="notice notice--error agent__alert" role="alert">
           <Icon name="ban" size={18} />
-          {unauthorizedOnline.length === 1
-            ? 'Un equipo que marcaste como no autorizado está conectado'
-            : `${unauthorizedOnline.length} equipos que marcaste como no autorizados están conectados`}.
+          {team
+            ? (unauthorizedOnline.length === 1 ? 'Un equipo marcado como no autorizado está conectado'
+              : `${unauthorizedOnline.length} equipos marcados como no autorizados están conectados`)
+            : (unauthorizedOnline.length === 1 ? 'Un equipo que marcaste como no autorizado está conectado'
+              : `${unauthorizedOnline.length} equipos que marcaste como no autorizados están conectados`)}.
           Cambia la contraseña del Wi-Fi para sacarlo.
         </p>
       )}
       {latest.newDeviceCount > 0 && unauthorizedOnline.length === 0 && (
         <p className="notice notice--error agent__alert" role="alert">
           <Icon name="anomaly" size={18} />
-          {latest.newDeviceCount === 1 ? 'Apareció 1 equipo nuevo' : `Aparecieron ${latest.newDeviceCount} equipos nuevos`} en tu red.
-          Si no lo reconoces, márcalo abajo como «No es mío».
+          {latest.newDeviceCount === 1 ? 'Apareció 1 equipo nuevo' : `Aparecieron ${latest.newDeviceCount} equipos nuevos`}
+          {team ? ' en esta red. Si nadie lo reconoce, márquenlo abajo como no autorizado.'
+            : ' en tu red. Si no lo reconoces, márcalo abajo como «No es mío».'}
         </p>
       )}
       <div className="dash">
@@ -230,12 +245,16 @@ function Reports({ overview, latest, networkId, onChange }:
             <span className="agent__countpill num">{latest.deviceCount}</span>
           </h3>
           <p className="muted small">
-            Como en la lista de Bluetooth: cada equipo con su nombre y marca. Si uno no es tuyo, márcalo «No es mío».
+            {team
+              ? 'Los equipos que ve el sensor en esta red, cada uno con su nombre y marca (nunca su dirección MAC).'
+              : 'Como en la lista de Bluetooth: cada equipo con su nombre y marca. Si uno no es tuyo, márcalo «No es mío».'}
             {overview.devices.some((d) => d.privateMac && !d.label && !d.hostname) && (
-              <> Los celulares y tabletas con <strong>dirección privada</strong> no dicen su marca: ponles un nombre con el lápiz para reconocerlos.</>
+              <> Los celulares y tabletas con <strong>dirección privada</strong> no dicen su marca{canManage
+                ? <>: ponles un nombre con el lápiz para reconocerlos.</> : '.'}</>
             )}
           </p>
-          <DeviceList devices={overview.devices} networkId={networkId} onChange={onChange} />
+          <DeviceList devices={overview.devices} onChange={onChange} updateDevice={updateDevice} team={team}
+                      canManage={canManage} />
           <p className="dash__foot"><Icon name="clock" size={16} /> Último reporte: {formatDateTime(latest.receivedAt)}</p>
         </section>
 
@@ -248,15 +267,19 @@ function Reports({ overview, latest, networkId, onChange }:
         </section>
 
         <section className="dash__card" aria-labelledby="wifi-title">
-          <h3 className="dash__title" id="wifi-title"><Icon name="wifi" size={18} /> Tu Wi-Fi</h3>
+          <h3 className="dash__title" id="wifi-title"><Icon name="wifi" size={18} /> {team ? 'El Wi-Fi' : 'Tu Wi-Fi'}</h3>
           <WifiTiles report={latest} />
         </section>
 
         {latest.details.channel && <ChannelCard channel={latest.details.channel} />}
 
         <section className="dash__card" aria-labelledby="anomaly-title">
-          <h3 className="dash__title" id="anomaly-title"><Icon name="ai" size={18} /> Comportamiento de la red</h3>
-          {anomaly ? (
+          <h3 className="dash__title" id="anomaly-title">
+            <Icon name="ai" size={18} /> {team ? 'Conexión' : 'Comportamiento de la red'}
+          </h3>
+          {team ? (
+            <p className="muted small">El estado de la red sale del análisis de cada medición: míralo en Panel y Alertas.</p>
+          ) : anomaly ? (
             <div className={`agent__verdict agent__verdict--${anomaly.detected ? 'bad' : 'ok'}`}>
               <Icon name={anomaly.detected ? 'anomaly' : 'check'} size={22} />
               <div>
@@ -273,9 +296,9 @@ function Reports({ overview, latest, networkId, onChange }:
           </dl>
         </section>
 
-        {security && <Findings security={security} />}
-        <AlertsCard alerts={overview.alerts} />
-        <AlertPreferencesCard />
+        {security && <Findings security={security} team={team} />}
+        {!team && <AlertsCard alerts={overview.alerts} />}
+        {!team && <AlertPreferencesCard />}
       </div>
     </>
   );
@@ -379,11 +402,11 @@ function WifiTiles({ report }: { report: AgentReport }) {
   );
 }
 
-function Findings({ security }: { security: SecurityAssessment }) {
+function Findings({ security, team }: { security: SecurityAssessment; team: boolean }) {
   return (
     <section className="dash__card dash__card--full" aria-labelledby="findings-title">
       <h3 className="dash__title" id="findings-title"><Icon name="shield" size={18} /> Vulnerabilidades y consejos</h3>
-      {security.findings.length === 0 ? <p>No encontramos problemas de seguridad en tu red.</p> : (
+      {security.findings.length === 0 ? <p>No encontramos problemas de seguridad en {team ? 'esta' : 'tu'} red.</p> : (
         <ul className="findings">
           {security.findings.map((f) => (
             <li key={f.code} className={`finding finding--${f.severity.toLowerCase()}`}>
@@ -492,17 +515,22 @@ export function deviceMaker(device: AgentDevice): string {
   return device.vendor ?? (device.privateMac ? 'Dirección privada' : 'Sin identificar');
 }
 
-function DeviceList({ devices, networkId, onChange }:
-                    { devices: AgentDevice[]; networkId: number; onChange: () => void }) {
+/** The devices of a network, as in a phone's Bluetooth list. Without canManage they can only be looked at. */
+export function DeviceList({ devices, onChange, updateDevice, team = false, canManage = true }: {
+  devices: AgentDevice[]; onChange: () => void; updateDevice: (fingerprint: string, change: DeviceChange) => Promise<unknown>;
+  team?: boolean; canManage?: boolean;
+}) {
   const [guide, setGuide] = useState<AgentDevice | null>(null);
-  if (devices.length === 0) return <p className="muted">Aún no hay equipos. Aparecen con el primer reporte del agente.</p>;
+  if (devices.length === 0) {
+    return <p className="muted">Aún no hay equipos. Aparecen con el primer reporte del {team ? 'sensor' : 'agente'}.</p>;
+  }
   const names = deviceNames(devices);
   return (
     <>
       <ul className="devlist">
         {devices.map((d, i) => (
-          <DeviceRow key={d.id} device={d} shownName={names[i]} networkId={networkId} onChange={onChange}
-                     onBlocked={() => setGuide(d)} />
+          <DeviceRow key={d.id} device={d} shownName={names[i]} onChange={onChange} updateDevice={updateDevice}
+                     team={team} canManage={canManage} onBlocked={() => setGuide(d)} />
         ))}
       </ul>
       {guide && <RouterGuide name={names[devices.indexOf(guide)] ?? deviceName(guide, 0)} onClose={() => setGuide(null)} />}
@@ -510,16 +538,19 @@ function DeviceList({ devices, networkId, onChange }:
   );
 }
 
-function DeviceRow({ device, shownName, networkId, onChange, onBlocked }:
-                   { device: AgentDevice; shownName: string; networkId: number; onChange: () => void; onBlocked: () => void }) {
+function DeviceRow({ device, shownName, onChange, updateDevice, team, canManage, onBlocked }: {
+  device: AgentDevice; shownName: string; onChange: () => void;
+  updateDevice: (fingerprint: string, change: DeviceChange) => Promise<unknown>; team: boolean; canManage: boolean;
+  onBlocked: () => void;
+}) {
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(device.label ?? '');
   const [busy, setBusy] = useState(false);
 
-  async function save(change: { label?: string | null; authorized?: boolean }) {
+  async function save(change: DeviceChange) {
     setBusy(true);
     try {
-      await api.updateAgentDevice(networkId, device.id, change);
+      await updateDevice(device.id, change);
       onChange();
     } finally {
       setBusy(false);
@@ -560,19 +591,20 @@ function DeviceRow({ device, shownName, networkId, onChange, onBlocked }:
         </span>
       </div>
       <span className="devrow__dot" aria-hidden="true" />
-      <div className="devrow__actions">
+      {canManage && <div className="devrow__actions">
         {!editing && (
           <button className="iconbtn" onClick={() => { setName(device.label ?? ''); setEditing(true); }}
                   disabled={busy} title="Cambiar el nombre" aria-label="Cambiar el nombre"><Icon name="pencil" size={16} /></button>
         )}
         {device.authorized ? (
           <button className="iconbtn iconbtn--danger" onClick={block} disabled={busy}
-                  title="No es mío / quitar acceso" aria-label="Marcar como no autorizado"><Icon name="ban" size={16} /></button>
+                  title={team ? 'No autorizado / quitar acceso' : 'No es mío / quitar acceso'}
+                  aria-label="Marcar como no autorizado"><Icon name="ban" size={16} /></button>
         ) : (
           <button className="iconbtn" onClick={() => save({ authorized: true })} disabled={busy}
-                  title="Sí es mío" aria-label="Volver a autorizar"><Icon name="check" size={16} /></button>
+                  title={team ? 'Autorizar' : 'Sí es mío'} aria-label="Volver a autorizar"><Icon name="check" size={16} /></button>
         )}
-      </div>
+      </div>}
     </li>
   );
 }
