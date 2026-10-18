@@ -64,6 +64,10 @@ Mala) y un ícono, así que no depende solo del color.
   de 8 caracteres y el mismo instalador de Mi Wi-Fi; el panel revisa cada 10 s y se pone verde con el primer reporte.
   La columna Sensor dice si está conectado, esperando la instalación o cuánto lleva sin reportar. En Mediciones, una
   red con sensor no tiene botón de recolectar: sus mediciones (con tráfico y protocolos) llegan solas.
+- **Lo que ve el sensor:** con el sensor conectado, su panel muestra lo mismo que Mi Wi-Fi (el mismo componente
+  `AgentReports`): equipos conectados con fabricante y nombre, auditoría de seguridad con sus consejos, datos del Wi-Fi,
+  mejor canal y la conexión. **Dispositivos** lista los equipos de cada red con sensor; solo el administrador puede
+  ponerles nombre o marcarlos como no autorizados. Nunca se muestra una MAC.
 - **Redes de usuarios (ADMIN y ANALYST):** el panel del equipo con datos reales: usuarios, agentes conectados, redes
   en riesgo y con anomalías, y una tabla de cada red con su último reporte. Nada de sus equipos; el analista ve el
   usuario enmascarado. Un VIEWER no la ve.
@@ -107,7 +111,7 @@ Administrador además registra redes).
 npm install
 cp .env.example .env        # VITE_API_URL=http://localhost:8080
 npm run dev                 # http://localhost:5173
-npm test                    # 111 pruebas
+npm test                    # 112 pruebas
 npm run build               # tipos + build de producción en dist/
 ```
 
