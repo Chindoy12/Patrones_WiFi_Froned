@@ -2,8 +2,9 @@ import { apiClient } from './apiClient';
 import { sealPassword } from './passwordCipher';
 import type {
   Account, AgentDevice, AgentOverview, AgentPairingCode, AlertPreferences, AiModelOverview, AiPrediction, Alert, AlertStatus, AnalysisResult, AnalysisType, AnomalyCauseCount, AuthResponse,
-  ConnectionTest, ConnectionTestInput, DashboardSummary, Device, HomeNetwork, HomeNetworkInput, Measurement, Network,
-  NetworkQuality, NetworkReport, ProtocolStatistic, StaffRole, Strategy, SystemStatus, TeamNetworks, TrafficSession, User, Zone,
+  ConnectionTest, ConnectionTestInput, DashboardSummary, DataSourceType, Device, HomeNetwork, HomeNetworkInput, Location,
+  Measurement, Network, NetworkQuality, NetworkReport, ProtocolStatistic, SensorStatus, StaffRole, Strategy, SystemStatus,
+  TeamNetworks, TrafficSession, User, Zone,
 } from '../types';
 
 export interface NetworkInput {
@@ -75,9 +76,18 @@ export const api = {
   networkQuality: (networkId: number) => apiClient.get<NetworkQuality>(`/api/networks/${networkId}/quality`),
 
   zones: () => apiClient.get<Zone[]>('/api/zones'),
+  locations: () => apiClient.get<Location[]>('/api/locations'),
+  createLocation: (input: { name: string; city?: string }) => apiClient.post<Location>('/api/locations', input),
+  createZone: (locationId: number, input: { name: string; floor?: number | null }) =>
+    apiClient.post<Zone>(`/api/locations/${locationId}/zones`, input),
   networks: () => apiClient.get<Network[]>('/api/networks'),
   createNetwork: (input: NetworkInput) => apiClient.post<Network>('/api/networks', input),
   deleteNetwork: (id: number) => apiClient.delete(`/api/networks/${id}`),
+  /** Data sources the form can offer: the sensor (and the demo ones only in a local demo). */
+  networkSources: () => apiClient.get<DataSourceType[]>('/api/networks/sources'),
+  sensor: (networkId: number) => apiClient.get<SensorStatus>(`/api/networks/${networkId}/sensor`),
+  sensorPairing: (networkId: number) => apiClient.post<AgentPairingCode>(`/api/networks/${networkId}/sensor/pairing`),
+  removeSensor: (networkId: number) => apiClient.delete(`/api/networks/${networkId}/sensor`),
 
   devices: (networkId?: number) => apiClient.get<Device[]>('/api/devices', { networkId }),
   deviceSessions: (deviceId: number) => apiClient.get<TrafficSession[]>(`/api/devices/${deviceId}/sessions`),
