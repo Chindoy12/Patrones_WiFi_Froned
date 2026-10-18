@@ -4,7 +4,8 @@ export type Role = StaffRole | 'USER';
 
 export const isStaff = (role: Role): role is StaffRole => role !== 'USER';
 export type NetworkStatus = 'NORMAL' | 'WARNING' | 'CRITICAL';
-export type DataSourceType = 'SIMULATION' | 'ROUTER_API' | 'SNMP' | 'SYSTEM' | 'TRAFFIC_CAPTURE';
+/** AGENT: the network's sensor (the WiFiSense agent installed there), the real source. The rest are demo or planned. */
+export type DataSourceType = 'AGENT' | 'SIMULATION' | 'ROUTER_API' | 'SNMP' | 'SYSTEM' | 'TRAFFIC_CAPTURE';
 export type AnalysisType = 'THRESHOLD' | 'STATISTICAL' | 'ANOMALY_DETECTION';
 export type AiSeverity = 'NONE' | 'LOW' | 'MEDIUM' | 'HIGH';
 export type AlertSeverity = 'INFO' | 'WARNING' | 'CRITICAL';
@@ -35,6 +36,25 @@ export interface Network {
   zoneName: string;
   locationName: string;
   lastCollectedAt: string | null;
+}
+
+export interface Location {
+  id: number;
+  name: string;
+  address: string | null;
+  city: string | null;
+}
+
+/** The sensor of a team network. online: it reported in the last minutes. The code itself is shown only once. */
+export interface SensorStatus {
+  installed: boolean;
+  online: boolean;
+  keyPrefix: string | null;
+  installedAt: string | null;
+  lastSeenAt: string | null;
+  agentVersion: string | null;
+  platform: string | null;
+  pendingCodeExpiresAt: string | null;
 }
 
 export interface Zone {
