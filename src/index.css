@@ -739,3 +739,15 @@ a { color: var(--accent); }
 .unet__ok { display: inline-flex; align-items: center; gap: 4px; color: var(--good); }
 .unet .agent__state { font-size: .85rem; }
 
+
+/* Sensor of a team network (Redes) */
+.table__actions { white-space: nowrap; }
+.table__actions .link-button + .link-button { margin-left: 14px; }
+.table tr.is-selected td { background: var(--accent-soft); }
+.sensor h2 { margin-top: 0; }
+.sensor__intro p { max-width: 70ch; }
+.sensor__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; margin-top: 14px; }
+.sensor__facts { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px 24px; margin: 0; }
+.sensor__facts dt { color: var(--muted); font-size: .85rem; }
+.sensor__facts dd { margin: 2px 0 0; }
+.field small { display: block; margin-top: 4px; line-height: 1.4; }
