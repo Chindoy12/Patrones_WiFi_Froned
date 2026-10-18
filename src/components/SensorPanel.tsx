@@ -4,7 +4,7 @@ import { errorMessage, useApi } from '../hooks/useApi';
 import { useNow } from '../hooks/useNow';
 import { api } from '../services/api';
 import type { AgentPairingCode, Network, SensorStatus } from '../types';
-import { AGENT_INSTALLER } from './AgentPanel';
+import { AGENT_INSTALLER, AgentReports } from './AgentPanel';
 import { Icon } from './Icon';
 
 /** How a network's sensor looks in the table: connected, quiet for a while, or not installed yet. */
@@ -101,7 +101,10 @@ export function SensorPanel({ network, canManage, onChange }: {
       {pairing ? (
         <SensorPairing pairing={pairing} onRenew={newCode} busy={busy} />
       ) : current?.installed ? (
-        <SensorState status={current} />
+        <>
+          <SensorState status={current} />
+          <SensorReport network={network} canManage={canManage} />
+        </>
       ) : (
         <div className="sensor__intro">
           <p>
@@ -123,6 +126,29 @@ export function SensorPanel({ network, canManage, onChange }: {
         </div>
       )}
     </section>
+  );
+}
+
+const REPORT_REFRESH_MS = 60_000;
+
+/** What the sensor saw in its latest report, with the same view Mi Wi-Fi uses for the agent of a home. */
+function SensorReport({ network, canManage }: { network: Network; canManage: boolean }) {
+  const overview = useApi(() => api.sensorOverview(network.id), [network.id, network.lastCollectedAt]);
+  const { reload } = overview;
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      if (!document.hidden) reload();
+    }, REPORT_REFRESH_MS);
+    return () => window.clearInterval(timer);
+  }, [reload]);
+  const data = overview.data;
+  if (overview.error) return <p className="notice notice--error" role="alert">{overview.error}</p>;
+  if (!data?.latest) return null;
+  return (
+    <div className="sensor__report">
+      <AgentReports overview={data} latest={data.latest} onChange={reload} team canManage={canManage}
+                    updateDevice={(id, change) => api.updateSensorDevice(network.id, id, change)} />
+    </div>
   );
 }
 
