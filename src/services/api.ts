@@ -88,6 +88,10 @@ export const api = {
   sensor: (networkId: number) => apiClient.get<SensorStatus>(`/api/networks/${networkId}/sensor`),
   sensorPairing: (networkId: number) => apiClient.post<AgentPairingCode>(`/api/networks/${networkId}/sensor/pairing`),
   removeSensor: (networkId: number) => apiClient.delete(`/api/networks/${networkId}/sensor`),
+  /** Latest report of the sensor with the AI verdicts, recent history and the devices it sees (as in Mi Wi-Fi). */
+  sensorOverview: (networkId: number) => apiClient.get<AgentOverview>(`/api/networks/${networkId}/sensor/overview`),
+  updateSensorDevice: (networkId: number, fingerprint: string, change: { label?: string | null; authorized?: boolean }) =>
+    apiClient.put<AgentDevice>(`/api/networks/${networkId}/sensor/devices/${fingerprint}`, change),
 
   devices: (networkId?: number) => apiClient.get<Device[]>('/api/devices', { networkId }),
   deviceSessions: (deviceId: number) => apiClient.get<TrafficSession[]>(`/api/devices/${deviceId}/sessions`),
