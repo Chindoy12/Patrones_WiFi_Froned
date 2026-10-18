@@ -32,6 +32,8 @@ export function MeasurementsPage() {
   }
 
   const totalPackets = (protocols.data ?? []).reduce((sum, p) => sum + p.packetCount, 0);
+  // A network with a sensor sends its readings by itself: there is nothing to collect from here.
+  const bySensor = networks.data?.find((n) => n.id === networkId)?.dataSourceType === 'AGENT';
 
   return (
     <>
@@ -39,7 +41,7 @@ export function MeasurementsPage() {
                   actions={
                     <>
                       <NetworkPicker networks={networks.data ?? []} value={networkId} onChange={setNetworkId} />
-                      {can('ADMIN', 'ANALYST') && (
+                      {can('ADMIN', 'ANALYST') && !bySensor && (
                         <button className="button" onClick={collect} disabled={busy || !networkId}>
                           {busy ? 'Recolectando…' : 'Recolectar ahora'}
                         </button>
@@ -47,6 +49,10 @@ export function MeasurementsPage() {
                     </>
                   } />
       {message && <p className="notice" role="status">{message}</p>}
+      {bySensor && (
+        <p className="muted">Las mediciones de esta red llegan solas desde su sensor, unas cada 5 minutos. El tráfico y
+          los protocolos son los del computador donde está instalado.</p>
+      )}
       <div className="grid-2 grid-2--wide-left">
         <section className="panel">
           <DataState {...measurements} empty="Esta red todavía no tiene mediciones.">

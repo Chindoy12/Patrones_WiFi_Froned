@@ -58,6 +58,12 @@ Mala) y un ícono, así que no depende solo del color.
   fabricante y, si usan dirección privada, «celular o tableta»), aviso de equipos nuevos, la auditoría de seguridad de
   la IA (puntaje, vulnerabilidades y qué hacer), el **mejor canal Wi-Fi** con la interferencia de cada canal, los
   datos del Wi-Fi y si hay anomalías. Se actualiza cada minuto.
+- **Redes del equipo con sensor:** la página Redes empieza vacía. «Registrar red» crea ahí mismo la sede y la zona,
+  y la fuente es siempre el **sensor** (el agente WiFiSense en un computador conectado a esa red; las fuentes
+  simuladas solo aparecen si el backend corre en modo demostración). «Sensor» → «Conectar sensor» muestra un código
+  de 8 caracteres y el mismo instalador de Mi Wi-Fi; el panel revisa cada 10 s y se pone verde con el primer reporte.
+  La columna Sensor dice si está conectado, esperando la instalación o cuánto lleva sin reportar. En Mediciones, una
+  red con sensor no tiene botón de recolectar: sus mediciones (con tráfico y protocolos) llegan solas.
 - **Redes de usuarios (ADMIN y ANALYST):** el panel del equipo con datos reales: usuarios, agentes conectados, redes
   en riesgo y con anomalías, y una tabla de cada red con su último reporte. Nada de sus equipos; el analista ve el
   usuario enmascarado. Un VIEWER no la ve.
@@ -101,7 +107,7 @@ Administrador además registra redes).
 npm install
 cp .env.example .env        # VITE_API_URL=http://localhost:8080
 npm run dev                 # http://localhost:5173
-npm test                    # 87 pruebas
+npm test                    # 111 pruebas
 npm run build               # tipos + build de producción en dist/
 ```
 
