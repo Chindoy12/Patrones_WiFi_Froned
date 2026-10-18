@@ -6,13 +6,13 @@ import { useAuth } from '../src/auth/AuthContext';
 import { sensorBadge } from '../src/components/SensorPanel';
 import { NetworksPage } from '../src/pages/NetworksPage';
 import { api } from '../src/services/api';
-import type { Network, Role, SensorStatus } from '../src/types';
+import type { AgentOverview, Network, Role, SensorStatus } from '../src/types';
 
 vi.mock('../src/services/api', () => ({
   api: {
     networks: vi.fn(), deleteNetwork: vi.fn(), createNetwork: vi.fn(), locations: vi.fn(), zones: vi.fn(),
     createLocation: vi.fn(), createZone: vi.fn(), networkSources: vi.fn(), sensor: vi.fn(), sensorPairing: vi.fn(),
-    removeSensor: vi.fn(),
+    removeSensor: vi.fn(), sensorOverview: vi.fn(), updateSensorDevice: vi.fn(),
   },
 }));
 vi.mock('../src/auth/AuthContext', () => ({ useAuth: vi.fn() }));
@@ -38,6 +38,28 @@ const online: SensorStatus = {
   lastSeenAt: '2026-10-18T10:00:00Z', agentVersion: '1.4.0', platform: 'Windows', pendingCodeExpiresAt: null,
 };
 
+const seen: AgentOverview = {
+  key: { prefix: 'wsa_AbC1', createdAt: '2026-10-17T10:00:00Z', lastSeenAt: '2026-10-18T10:00:00Z' },
+  online: true,
+  latest: {
+    id: 9, receivedAt: '2026-10-18T10:00:00Z', agentVersion: '1.5.0', ssid: 'Lab-Redes', authentication: 'WPA2',
+    band: '5', channel: 36, signalDbm: -58, latencyMs: 21, jitterMs: 2, packetLossPct: 0, gatewayLatencyMs: 1.2,
+    deviceCount: 2, newDeviceCount: 0, securityScore: 74, securityGrade: 'ACCEPTABLE', qualityScore: 88,
+    anomalyDetected: null, anomalyType: null,
+    details: {
+      openPorts: [80],
+      security: { score: 74, grade: 'ACCEPTABLE', gradeLabel: 'Aceptable', summary: 'El router expone su página web.',
+                  findings: [], modelVersion: 'security-1' },
+    },
+  },
+  history: [],
+  devices: [
+    { id: 'b'.repeat(24), label: null, vendor: 'Lenovo', hostname: 'PC-Lab', privateMac: false, authorized: true,
+      firstSeenAt: '2026-10-17T10:00:00Z', lastSeenAt: '2026-10-18T10:00:00Z', online: true, recent: false },
+  ],
+  alerts: [],
+};
+
 const renderPage = () => render(<MemoryRouter><NetworksPage /></MemoryRouter>);
 
 beforeEach(() => {
@@ -48,6 +70,7 @@ beforeEach(() => {
   vi.mocked(api.zones).mockResolvedValue([]);
   vi.mocked(api.networkSources).mockResolvedValue(['AGENT']);
   vi.mocked(api.sensor).mockResolvedValue(none);
+  vi.mocked(api.sensorOverview).mockResolvedValue(seen);
 });
 
 describe('Redes del equipo con sensor', () => {
@@ -114,6 +137,10 @@ describe('Redes del equipo con sensor', () => {
     const panel = await screen.findByRole('region', { name: 'Sensor de Lab-Redes' });
     await waitFor(() => expect(within(panel).getByText(/1\.4\.0 · Windows/)).toBeInTheDocument());
     expect(within(panel).queryByRole('button', { name: /Quitar sensor|Conectar sensor|Reinstalar/ })).not.toBeInTheDocument();
+    // what the sensor sees, as in Mi Wi-Fi, but a viewer cannot block a device
+    expect(await within(panel).findByText('PC-Lab')).toBeInTheDocument();
+    expect(within(panel).getByText('El router expone su página web.')).toBeInTheDocument();
+    expect(within(panel).queryByRole('button', { name: 'Marcar como no autorizado' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Registrar red' })).not.toBeInTheDocument();
   });
 
@@ -125,5 +152,20 @@ describe('Redes del equipo con sensor', () => {
       .toBe('Sin reportes hace 2 días');
     expect(sensorBadge({ ...none, pendingCodeExpiresAt: '2026-10-18T12:10:00Z' }, now).label)
       .toBe('Esperando instalación');
+  });
+
+  it('lets an admin mark a device the sensor sees as not authorized', async () => {
+    vi.mocked(api.networks).mockResolvedValue([lab]);
+    vi.mocked(api.sensor).mockResolvedValue(online);
+    vi.mocked(api.updateSensorDevice).mockResolvedValue(seen.devices[0]);
+    renderPage();
+
+    const row = (await screen.findByText('Lab-Redes')).closest('tr')!;
+    await userEvent.click(within(row).getByRole('button', { name: 'Sensor' }));
+    const panel = await screen.findByRole('region', { name: 'Sensor de Lab-Redes' });
+    await userEvent.click(await within(panel).findByRole('button', { name: 'Marcar como no autorizado' }));
+
+    expect(api.updateSensorDevice).toHaveBeenCalledWith(7, 'b'.repeat(24), { authorized: false });
+    expect(await screen.findByRole('dialog')).toBeInTheDocument();
   });
 });
