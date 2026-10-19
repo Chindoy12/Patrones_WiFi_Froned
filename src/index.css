@@ -681,6 +681,16 @@ a { color: var(--accent); }
 .devrow.is-online .devrow__dot { background: var(--good); opacity: 1; }
 .devrow.is-blocked { border-color: var(--bad-line); background: var(--bad-soft); }
 .devrow__actions { display: inline-flex; gap: 4px; }
+.devrow__history { grid-column: 1 / -1; padding: 6px 2px 2px; border-top: 1px dashed var(--line-soft); }
+.devhistory { display: grid; gap: 8px; text-align: left; }
+.devhistory p { margin: 0; }
+.devhistory__strip { position: relative; height: 14px; border-radius: 7px; background: var(--surface-3, var(--line-soft)); margin-bottom: 16px; }
+.devhistory__strip i { position: absolute; top: 0; bottom: 0; border-radius: 7px; background: var(--good); }
+.devhistory__ticks { position: absolute; left: 0; right: 0; top: 16px; display: flex; justify-content: space-between; font-size: .7rem; color: var(--muted); }
+.devhistory__ticks b { font-weight: 400; }
+.devhistory__list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: .85rem; }
+.devhistory__list li { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.devhistory__list li.is-ongoing { font-weight: 600; }
 .iconbtn { width: 34px; height: 34px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 9px; background: var(--surface); color: var(--muted); cursor: pointer; }
 .iconbtn:hover { border-color: var(--accent-line); color: var(--accent); }
 .iconbtn--danger:hover { border-color: var(--bad-line); color: var(--bad); }
@@ -751,3 +761,27 @@ a { color: var(--accent); }
 .sensor__facts dt { color: var(--muted); font-size: .85rem; }
 .sensor__facts dd { margin: 2px 0 0; }
 .field small { display: block; margin-top: 4px; line-height: 1.4; }
+
+/* Weekly report */
+.weekly__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.weekly__nav { display: flex; gap: 8px; flex-wrap: wrap; }
+.weekly__highlights { list-style: none; padding: 0; margin: 12px 0; display: grid; gap: 6px; }
+.weekly__highlights li { display: flex; gap: 8px; align-items: baseline; }
+.weekly__highlights li svg { color: var(--good); flex: none; }
+.weekly__totals { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 14px 0; }
+.weekly__total { display: grid; gap: 2px; padding: 10px 12px; border-radius: 12px; background: var(--surface-2); border: 1px solid var(--line-soft); }
+.weekly__total strong { font-size: 1.25rem; }
+.weekly__facts { display: grid; gap: 6px; margin: 14px 0; }
+.weekly__facts div { display: flex; gap: 8px; flex-wrap: wrap; }
+.weekly__facts dt { font-weight: 600; }
+.weekly__facts dd { margin: 0; }
+.weekly__actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.weekly__actions .button { display: inline-flex; align-items: center; gap: 6px; }
+
+/* Printing (or saving as PDF) a report: only the content, on white */
+@media print {
+  .no-print, .sidebar, .topbar, .backdrop, .page-header__actions { display: none !important; }
+  .shell { display: block; }
+  body { background: #fff !important; }
+  .panel { box-shadow: none !important; border: 1px solid #ccc; break-inside: avoid; }
+}
