@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { api, type RegisterContact } from '../services/api';
-import { setUnauthorizedHandler, tokenStore } from '../services/apiClient';
+import { endSession, setUnauthorizedHandler, tokenStore } from '../services/apiClient';
 import type { AuthResponse, Role, User } from '../types';
 
 interface AuthContextValue {
@@ -20,22 +20,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [ready, setReady] = useState(false);
 
-  const logout = useCallback(() => {
+  // The session already ended in the backend (a 401 that renewing could not fix): just forget it here.
+  const expire = useCallback(() => {
     tokenStore.clear();
     setUser(null);
   }, []);
 
+  // The user signs out: the backend also revokes the refresh token, so a copy of it is useless.
+  const logout = useCallback(() => {
+    void endSession();
+    setUser(null);
+  }, []);
+
   useEffect(() => {
-    setUnauthorizedHandler(logout);
+    setUnauthorizedHandler(expire);
     if (!tokenStore.get()) {
       setReady(true);
       return;
     }
-    api.me().then(setUser).catch(logout).finally(() => setReady(true));
-  }, [logout]);
+    api.me().then(setUser).catch(expire).finally(() => setReady(true));
+  }, [expire]);
 
   const start = useCallback((response: AuthResponse) => {
-    tokenStore.set(response.token);
+    tokenStore.set(response.token, response.refreshToken);
     setUser(response.user);
   }, []);
 
