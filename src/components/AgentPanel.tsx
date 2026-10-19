@@ -5,10 +5,11 @@ import { useNow } from '../hooks/useNow';
 import { api } from '../services/api';
 import type {
   AgentAlert, AgentAlertType, AgentChannel, AgentDevice, AgentOverview, AgentPairingCode, AgentReport,
-  AlertPreferences, DeviceSessionHistory, FindingSeverity, HomeNetwork, SecurityAssessment,
+  AlertPreferences, DeviceKind, DeviceSessionHistory, FindingSeverity, HomeNetwork, IdentifyMode, SecurityAssessment,
   SecurityGrade, WifiAuthentication,
 } from '../types';
 import { DeviceHistory } from './DeviceHistory';
+import { IdentifyWizard } from './IdentifyWizard';
 import { Gauge, type GaugeStatus } from './Gauge';
 import { Icon, type IconName } from './Icon';
 
@@ -104,7 +105,8 @@ export function AgentPanel({ network }: { network: HomeNetwork }) {
       {data?.latest && (
         <AgentReports overview={data} latest={data.latest} onChange={reload}
                       updateDevice={(id, change) => api.updateAgentDevice(network.id, id, change)}
-                      loadHistory={(id) => api.agentDeviceSessions(network.id, id)} />
+                      loadHistory={(id) => api.agentDeviceSessions(network.id, id)}
+                      identify={() => api.identifyAgentDevice(network.id)} />
       )}
       {data?.key && (
         <p className="agent__keybar">
@@ -213,10 +215,11 @@ export type HistoryLoader = (fingerprint: string) => Promise<DeviceSessionHistor
  * shows it for a home; the team panel (team) shows the same for the sensor of a team network, where only an
  * administrator can name or block a device (canManage) and the alerts live in the Alerts page.
  */
-export function AgentReports({ overview, latest, onChange, updateDevice, loadHistory, team = false, canManage = true }: {
+export function AgentReports({ overview, latest, onChange, updateDevice, loadHistory, identify, team = false,
+  canManage = true }: {
   overview: AgentOverview; latest: AgentReport; onChange: () => void;
   updateDevice: (fingerprint: string, change: DeviceChange) => Promise<unknown>; loadHistory?: HistoryLoader;
-  team?: boolean; canManage?: boolean;
+  identify?: () => Promise<IdentifyMode>; team?: boolean; canManage?: boolean;
 }) {
   const security = latest.details.security ?? null;
   const anomaly = latest.details.anomaly ?? null;
@@ -254,11 +257,11 @@ export function AgentReports({ overview, latest, onChange, updateDevice, loadHis
               : 'Como en la lista de Bluetooth: cada equipo con su nombre y marca. Si uno no es tuyo, márcalo «No es mío».'}
             {overview.devices.some((d) => d.privateMac && !d.label && !d.hostname) && (
               <> Los celulares y tabletas con <strong>dirección privada</strong> no dicen su marca{canManage
-                ? <>: ponles un nombre con el lápiz para reconocerlos.</> : '.'}</>
+                ? <>: usa «¿Cuál es este equipo?» o ponles un nombre con el lápiz para reconocerlos.</> : '.'}</>
             )}
           </p>
           <DeviceList devices={overview.devices} onChange={onChange} updateDevice={updateDevice} team={team}
-                      canManage={canManage} loadHistory={loadHistory} />
+                      canManage={canManage} loadHistory={loadHistory} identify={identify} latestAt={latest.receivedAt} />
           <p className="dash__foot"><Icon name="clock" size={16} /> Último reporte: {formatDateTime(latest.receivedAt)}</p>
         </section>
 
@@ -479,8 +482,22 @@ function channelLabel(option: AgentChannel['options'][number]): string {
   return option.networks === 1 ? '1 red' : `${option.networks} redes`;
 }
 
-/** Guesses an icon from the device's name or maker, like a phone's Bluetooth list does. */
+/** What each kind of device is called on the page. */
+export const KIND_LABELS: Record<DeviceKind, string> = {
+  PHONE: 'Celular o tableta', COMPUTER: 'Computador', TV: 'TV o Chromecast', PRINTER: 'Impresora', CAMERA: 'Cámara',
+  SPEAKER: 'Parlante', CONSOLE: 'Consola de juegos', IOT: 'Dispositivo inteligente',
+};
+
+const KIND_ICONS: Record<DeviceKind, IconName> = {
+  PHONE: 'phone', COMPUTER: 'laptop', TV: 'tv', PRINTER: 'printer', CAMERA: 'camera', SPEAKER: 'speaker',
+  CONSOLE: 'console', IOT: 'plug',
+};
+
+/** The router, the agent's own computer, then the kind the agent deduced, then a guess from the name or maker. */
 export function deviceIcon(device: AgentDevice): IconName {
+  if (device.role === 'ROUTER') return 'router';
+  if (device.role === 'SELF') return 'laptop';
+  if (device.kind) return KIND_ICONS[device.kind];
   const text = `${device.label ?? ''} ${device.hostname ?? ''} ${device.vendor ?? ''}`.toLowerCase();
   if (/iphone|galaxy|phone|redmi|moto|celular|android|pixel/.test(text)) return 'phone';
   if (/macbook|laptop|portatil|pc|desktop|windows|thinkpad|notebook/.test(text)) return 'laptop';
@@ -491,46 +508,80 @@ export function deviceIcon(device: AgentDevice): IconName {
   return device.privateMac ? 'phone' : 'devices';
 }
 
+/** What a device without any name is called: its kind, or a phone when it hides behind a private address. */
+function kindName(device: AgentDevice): string {
+  if (device.role === 'ROUTER') return 'Router';
+  if (device.role === 'SELF') return 'Este computador';
+  if (device.kind) return KIND_LABELS[device.kind];
+  return device.privateMac ? 'Celular o tableta' : 'Equipo';
+}
+
 /**
- * Name shown for a device: what the user typed, else what it announces, else its maker; a device with a private
- * (random) MAC is almost surely a phone or tablet, so it says so instead of a bare number.
+ * Name shown for a device: what the user typed, else what it announces, else its model or maker; without any of
+ * them, its kind ("Celular o tableta 2", "TV o Chromecast 1") instead of a bare number.
  */
 export function deviceName(device: AgentDevice, index: number): string {
   if (device.label || device.hostname) return (device.label || device.hostname)!;
-  if (device.vendor) return `Equipo ${device.vendor}`;
-  return device.privateMac ? `Celular o tableta ${index + 1}` : `Equipo ${index + 1}`;
+  if (device.role) return kindName(device);
+  if (device.model) return device.vendor && !device.model.toLowerCase().includes(device.vendor.toLowerCase())
+    ? `${device.vendor} ${device.model}` : device.model;
+  if (device.vendor) return device.kind ? `${KIND_LABELS[device.kind]} ${device.vendor}` : `Equipo ${device.vendor}`;
+  return `${kindName(device)} ${index + 1}`;
 }
 
-/**
- * Names for a whole list: devices without any name are numbered within their kind ("Celular o tableta 1, 2…" and
- * "Equipo 1, 2…"), not by their position in the list.
- */
+/** Names for a whole list: devices without any name are numbered within their kind, not by their position. */
 export function deviceNames(devices: AgentDevice[]): string[] {
-  let phones = 0;
-  let others = 0;
+  const counters = new Map<string, number>();
   return devices.map((d) => {
-    if (d.label || d.hostname || d.vendor) return deviceName(d, 0);
-    return deviceName(d, d.privateMac ? phones++ : others++);
+    if (d.label || d.hostname || d.vendor || d.model || d.role) return deviceName(d, 0);
+    const kind = kindName(d);
+    const n = counters.get(kind) ?? 0;
+    counters.set(kind, n + 1);
+    return deviceName(d, n);
   });
 }
 
-/** Second line of a device: its maker, or why there is none. */
-export function deviceMaker(device: AgentDevice): string {
-  return device.vendor ?? (device.privateMac ? 'Dirección privada' : 'Sin identificar');
+/** Second line of a device: its kind, model and maker (what the name does not already say), or why the maker is unknown. */
+export function deviceMaker(device: AgentDevice, shownName = ''): string {
+  const parts: string[] = [];
+  const said = shownName.toLowerCase();
+  if (device.kind && device.role !== 'ROUTER' && !said.startsWith(KIND_LABELS[device.kind].toLowerCase())) {
+    parts.push(KIND_LABELS[device.kind]);
+  }
+  if (device.model && !said.includes(device.model.toLowerCase())) parts.push(device.model);
+  const maker = device.vendor ?? (device.privateMac ? 'Dirección privada' : 'Sin identificar');
+  if (!device.vendor || !said.includes(device.vendor.toLowerCase())) parts.push(maker);
+  return parts.join(' · ') || maker;
 }
 
 /** The devices of a network, as in a phone's Bluetooth list. Without canManage they can only be looked at. */
-export function DeviceList({ devices, onChange, updateDevice, loadHistory, team = false, canManage = true }: {
+export function DeviceList({ devices, onChange, updateDevice, loadHistory, team = false, canManage = true, identify,
+  latestAt = null }: {
   devices: AgentDevice[]; onChange: () => void; updateDevice: (fingerprint: string, change: DeviceChange) => Promise<unknown>;
   loadHistory?: HistoryLoader; team?: boolean; canManage?: boolean;
+  /** Starts "Which device is this?" (the agent reports every minute); without it the button is not shown. */
+  identify?: () => Promise<IdentifyMode>;
+  /** When the latest report arrived: the wizard compares the reports that come after it. */
+  latestAt?: string | null;
 }) {
   const [guide, setGuide] = useState<AgentDevice | null>(null);
+  const [wizard, setWizard] = useState(false);
   if (devices.length === 0) {
     return <p className="muted">Aún no hay equipos. Aparecen con el primer reporte del {team ? 'sensor' : 'agente'}.</p>;
   }
   const names = deviceNames(devices);
   return (
     <>
+      {identify && canManage && !wizard && (
+        <button className="button button--quiet devlist__identify" onClick={() => setWizard(true)}>
+          <Icon name="search" size={16} /> ¿Cuál es este equipo?
+        </button>
+      )}
+      {identify && wizard && (
+        <IdentifyWizard devices={devices} names={names} latestAt={latestAt} start={identify} reload={onChange}
+                        rename={(id, label) => updateDevice(id, { label, authorized: true })} team={team}
+                        onClose={() => { setWizard(false); onChange(); }} />
+      )}
       <ul className="devlist">
         {devices.map((d, i) => (
           <DeviceRow key={d.id} device={d} shownName={names[i]} onChange={onChange} updateDevice={updateDevice}
@@ -585,13 +636,15 @@ function DeviceRow({ device, shownName, onChange, updateDevice, loadHistory, tea
           <span className="devrow__name">
             {shownName}
             {device.recent && <span className="tag tag--accent">Nuevo</span>}
+            {device.role === 'SELF' && <span className="tag">{team ? 'Computador del sensor' : 'Este computador (agente)'}</span>}
+            {device.role === 'ROUTER' && <span className="tag">Router</span>}
             {!device.authorized && <span className="tag tag--danger">No autorizado</span>}
           </span>
         )}
         <span className="devrow__sub">
           <span title={device.privateMac && !device.vendor
             ? 'Los celulares y tabletas usan una dirección aleatoria en cada red para que no los rastreen.' : undefined}>
-            {deviceMaker(device)}
+            {deviceMaker(device, shownName)}
           </span> · {device.online ? 'Conectado ahora' : `Visto ${formatDateTime(device.lastSeenAt)}`}
         </span>
       </div>
