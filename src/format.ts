@@ -43,3 +43,13 @@ export const anomalyTypeLabel: Record<AnomalyCauseCount['anomalyType'], string> 
 
 export const formatPercent = (ratio: number, digits = 1) =>
   `${(ratio * 100).toLocaleString('es-CO', { maximumFractionDigits: digits })} %`;
+
+/** 55 → "55 min", 130 → "2 h 10 min", 1500 → "1 d 1 h". */
+export function formatDuration(minutes: number): string {
+  if (minutes < 60) return `${Math.max(0, Math.round(minutes))} min`;
+  const days = Math.floor(minutes / 1440);
+  const hours = Math.floor((minutes % 1440) / 60);
+  const rest = Math.round(minutes % 60);
+  if (days > 0) return hours > 0 ? `${days} d ${hours} h` : `${days} d`;
+  return rest > 0 ? `${hours} h ${rest} min` : `${hours} h`;
+}
