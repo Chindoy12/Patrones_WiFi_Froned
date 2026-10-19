@@ -37,6 +37,9 @@ const PATHS = {
   bellOff: 'M9 21h4M18 8a6 6 0 0 0-9.3-5M4 4l16 16M6 10v4l-2 2h11',
   ban: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM6 6l12 12',
   pencil: 'M4 20h4L18 10l-4-4L4 16zM14 6l4 4',
+  camera: 'M3 8h4l2-3h6l2 3h4v11H3zM12 17a4 4 0 1 0 0-8 4 4 0 0 0 0 8z',
+  plug: 'M9 2v5M15 2v5M6 7h12v4a6 6 0 0 1-12 0zM12 17v5',
+  search: 'M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM21 21l-5-5',
 } as const;
 
 export type IconName = keyof typeof PATHS;
