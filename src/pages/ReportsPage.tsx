@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { DataState } from '../components/DataState';
 import { NetworkPicker } from '../components/NetworkPicker';
 import { PageHeader } from '../components/PageHeader';
+import { WeeklyReportPanel } from '../components/WeeklyReportPanel';
 import { formatDateTime, formatNumber } from '../format';
 import { useApi } from '../hooks/useApi';
 import { useNetworkSelection } from '../hooks/useNetworkSelection';
@@ -27,7 +28,7 @@ export function ReportsPage() {
 
   return (
     <>
-      <PageHeader title="Reportes" description="Resumen de las últimas 24 horas y comparación entre redes."
+      <PageHeader title="Reportes" description="Resumen de las últimas 24 horas, reporte semanal y comparación entre redes."
                   actions={<NetworkPicker networks={networks.data ?? []} value={networkId} onChange={setNetworkId} />} />
       <section className="panel">
         <DataState {...report}>
@@ -38,6 +39,7 @@ export function ReportsPage() {
                 {formatDateTime(r.from)} – {formatDateTime(r.to)} · {r.measurementCount} mediciones · {r.alerts} alertas ·{' '}
                 {r.analyses} análisis · {r.anomalies} anomalías {r.simulatedData && <span className="tag">Datos simulados</span>}
               </p>
+              <div className="table-scroll">
               <table className="table">
                 <thead><tr><th>Métrica</th><th>Promedio</th><th>Mínimo</th><th>Máximo</th><th>Percentil 95</th></tr></thead>
                 <tbody>
@@ -55,12 +57,15 @@ export function ReportsPage() {
                   })}
                 </tbody>
               </table>
+              </div>
             </>
           )}
         </DataState>
       </section>
 
-      <section className="panel">
+      {networkId && <WeeklyReportPanel key={networkId} networkId={networkId} />}
+
+      <section className="panel no-print">
         <h2>Comparar redes</h2>
         <div className="checks">
           {(networks.data ?? []).map((n) => (
