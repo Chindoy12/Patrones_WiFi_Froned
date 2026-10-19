@@ -61,7 +61,8 @@ function SensorDevices({ network }: { network: Network }) {
               </p>
               <DeviceList devices={data.devices} onChange={overview.reload} team canManage={can('ADMIN')}
                           updateDevice={(id, change) => api.updateSensorDevice(network.id, id, change)}
-                          loadHistory={(id) => api.sensorDeviceSessions(network.id, id)} />
+                          loadHistory={(id) => api.sensorDeviceSessions(network.id, id)}
+                          identify={() => api.identifySensorDevice(network.id)} latestAt={data.latest?.receivedAt ?? null} />
             </>
           )
         )}

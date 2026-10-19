@@ -1,9 +1,12 @@
+import { useState } from 'react';
+import { useAuth } from '../auth/AuthContext';
 import { DataState } from '../components/DataState';
+import { Icon } from '../components/Icon';
 import { PageHeader } from '../components/PageHeader';
-import { anomalyTypeLabel, formatNumber, formatPercent } from '../format';
-import { useApi } from '../hooks/useApi';
+import { anomalyTypeLabel, formatDateTime, formatNumber, formatPercent } from '../format';
+import { errorMessage, useApi } from '../hooks/useApi';
 import { api } from '../services/api';
-import type { AiModelOverview, AnomalyType, ModelEvaluation } from '../types';
+import type { AiModelOverview, AiModelVersion, AiTrainingStatus, AnomalyType, ModelEvaluation, TrainingMetrics } from '../types';
 
 const FEATURE_LABELS: Record<string, string> = {
   latency: 'Latencia', jitter: 'Jitter', packet_loss: 'Pérdida de paquetes', bandwidth: 'Ancho de banda',
@@ -28,6 +31,7 @@ export function AiModelPage() {
         {(data) => (
           <>
             <ModelPanel overview={data} />
+            <TrainingPanel onTrained={overview.reload} />
             {data.evaluation ? <EvaluationPanels evaluation={data.evaluation} /> : (
               <section className="panel">
                 <p className="notice" role="status">
@@ -51,12 +55,120 @@ function ModelPanel({ overview }: { overview: AiModelOverview }) {
       <h2>En producción</h2>
       <dl className="details">
         <div><dt>Algoritmo</dt><dd>{algorithmLabel(model.algorithm)}</dd></div>
-        <div><dt>Versión</dt><dd>{model.modelVersion}</dd></div>
+        <div><dt>Versión</dt><dd>{model.modelVersion}{' '}
+          <span className={`tag${model.realData ? ' tag--accent' : ''}`}>{model.realData ? 'Datos reales' : 'Datos sintéticos'}</span></dd></div>
         <div><dt>Umbral de anomalía</dt><dd className="num">{formatNumber(model.threshold, 3)}</dd></div>
         <div><dt>Variables</dt><dd>{model.features.map((f) => FEATURE_LABELS[f] ?? f).join(', ')}</dd></div>
-        <div><dt>Entrenado con</dt><dd>{model.trainedOn}</dd></div>
+        <div><dt>Entrenado con</dt><dd>{model.trainedOn}{model.trainedAt ? ` (${formatDateTime(model.trainedAt)})` : ''}</dd></div>
         <div><dt>Recomendaciones</dt><dd>{claude ? `Claude (${model.recommendationEngine})` : 'Reglas del sistema'}</dd></div>
       </dl>
+    </section>
+  );
+}
+
+function Pair({ candidate, current, metric }: {
+  candidate?: TrainingMetrics | null; current?: TrainingMetrics | null; metric: 'f1' | 'falsePositiveRate';
+}) {
+  const show = (m?: TrainingMetrics | null) => (!m ? '—' : metric === 'f1' ? formatNumber(m.f1, 2) : formatPercent(m.falsePositiveRate));
+  return <span className="num">{show(candidate)} <span className="muted small">vs {show(current)}</span></span>;
+}
+
+/**
+ * Training with real measurements: how much data there is, "Entrenar ahora" for an administrator, and every version
+ * with its metrics against the model that was in use and whether it replaced it.
+ */
+export function TrainingPanel({ onTrained }: { onTrained: () => void }) {
+  const { can } = useAuth();
+  const status = useApi(api.aiTraining);
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState<AiModelVersion | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  async function train() {
+    setBusy(true);
+    setError(null);
+    setResult(null);
+    try {
+      setResult(await api.trainAi());
+      status.reload();
+      onTrained();
+    } catch (e) {
+      setError(errorMessage(e));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <section className="panel" aria-labelledby="training-title">
+      <h2 id="training-title">Entrenamiento con datos reales</h2>
+      <DataState {...status}>
+        {(t: AiTrainingStatus) => (
+          <>
+            <p className="muted">
+              {t.available.samples > 0 ? (
+                <>Hay <strong>{t.available.samples.toLocaleString('es-CO')}</strong> mediciones reales de los últimos 30
+                  días ({t.available.teamSamples.toLocaleString('es-CO')} de sensores del equipo y{' '}
+                  {t.available.homeSamples.toLocaleString('es-CO')} de agentes de Mi Wi-Fi) de {t.available.networks}{' '}
+                  {t.available.networks === 1 ? 'red' : 'redes'}
+                  {t.available.from && t.available.to ? ` (${formatDateTime(t.available.from)} – ${formatDateTime(t.available.to)})` : ''}.</>
+              ) : 'Todavía no hay mediciones reales: llegan cuando los sensores y agentes empiezan a reportar.'}
+              {' '}Se necesitan al menos {t.minimumSamples}. El modelo nuevo se compara con el que está en uso y solo lo
+              reemplaza si es mejor. Solo se usan los números de cada medición, nunca la red ni los equipos.
+            </p>
+            {!t.canTrain && t.available.samples > 0 && (
+              <div className="bar" role="img" aria-label={`${t.available.samples} de ${t.minimumSamples}`}>
+                <span className="bar__fill" style={{ width: `${Math.min(t.available.samples / t.minimumSamples, 1) * 100}%` }} />
+                <span className="bar__value num">{t.available.samples} / {t.minimumSamples}</span>
+              </div>
+            )}
+            <div className="training__actions">
+              {can('ADMIN') && (
+                <button className="button" onClick={train} disabled={busy || !t.canTrain}>
+                  <Icon name="ai" size={16} /> {busy ? 'Entrenando…' : 'Entrenar ahora'}
+                </button>
+              )}
+              {t.nextAutomatic && (
+                <span className="muted small">Entrenamiento automático: {formatDateTime(t.nextAutomatic)}</span>
+              )}
+            </div>
+            {error && <p className="notice notice--error" role="alert">{error}</p>}
+            {result && (
+              <p className={`notice${result.decision === 'PROMOTED' ? ' notice--info' : ''}`} role="status">
+                <strong>{result.decision === 'PROMOTED' ? `Nuevo modelo en uso: ${result.version}.` : 'Se sigue usando el modelo actual.'}</strong>{' '}
+                {result.reason}
+              </p>
+            )}
+            {t.versions.length > 0 && (
+              <div className="table-scroll">
+                <table className="table">
+                  <thead>
+                    <tr><th>Versión</th><th>Fecha</th><th>Mediciones</th><th>F1 (nuevo vs anterior)</th>
+                      <th>Falsas alarmas</th><th>Decisión</th></tr>
+                  </thead>
+                  <tbody>
+                    {t.versions.map((v) => (
+                      <tr key={v.id} className={v.active ? 'row--highlight' : undefined}>
+                        <td><strong>{v.version}</strong>{v.active && <span className="tag tag--accent">En uso</span>}</td>
+                        <td>{formatDateTime(v.trainedAt)}<br /><span className="muted small">{v.trainedBy ?? 'Automático'}</span></td>
+                        <td className="num">{v.samples.toLocaleString('es-CO')} · {v.networks} {v.networks === 1 ? 'red' : 'redes'}</td>
+                        <td><Pair candidate={v.metrics.candidate} current={v.metrics.current} metric="f1" /></td>
+                        <td><Pair candidate={v.metrics.candidate} current={v.metrics.current} metric="falsePositiveRate" /></td>
+                        <td title={v.reason}>
+                          <span className={`badge badge--${v.decision === 'PROMOTED' ? 'good' : 'neutral'}`}>
+                            {v.decision === 'PROMOTED' ? 'Aprobado' : 'Rechazado'}
+                          </span>
+                          <br /><span className="muted small">{v.reason}</span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </>
+        )}
+      </DataState>
     </section>
   );
 }

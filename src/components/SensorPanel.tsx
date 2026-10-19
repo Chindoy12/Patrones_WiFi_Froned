@@ -155,7 +155,8 @@ function SensorReport({ network, canManage }: { network: Network; canManage: boo
     <div className="sensor__report">
       <AgentReports overview={data} latest={data.latest} onChange={reload} team canManage={canManage}
                     updateDevice={(id, change) => api.updateSensorDevice(network.id, id, change)}
-                    loadHistory={(id) => api.sensorDeviceSessions(network.id, id)} />
+                    loadHistory={(id) => api.sensorDeviceSessions(network.id, id)}
+                    identify={() => api.identifySensorDevice(network.id)} />
     </div>
   );
 }

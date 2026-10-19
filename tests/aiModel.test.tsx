@@ -2,13 +2,36 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { useAuth } from '../src/auth/AuthContext';
 import { AiModelPage } from '../src/pages/AiModelPage';
 import { api } from '../src/services/api';
-import type { AiModelOverview, AlgorithmMetrics, ModelEvaluation } from '../src/types';
+import type { AiModelOverview, AiModelVersion, AiTrainingStatus, AlgorithmMetrics, ModelEvaluation, Role } from '../src/types';
 
 vi.mock('../src/services/api', () => ({
-  api: { aiModel: vi.fn() },
+  api: { aiModel: vi.fn(), aiTraining: vi.fn(), trainAi: vi.fn() },
 }));
+vi.mock('../src/auth/AuthContext', () => ({ useAuth: vi.fn() }));
+
+function signedInAs(role: Role) {
+  vi.mocked(useAuth).mockReturnValue({
+    user: { id: 1, username: 'equipo', role }, ready: true, login: vi.fn(), register: vi.fn(), renew: vi.fn(),
+    logout: vi.fn(), can: (...roles) => roles.includes(role),
+  });
+}
+
+const promoted: AiModelVersion = {
+  id: 3, version: 'real-20261019-0800', algorithm: 'IsolationForest', trainedAt: '2026-10-19T08:00:00Z',
+  trainedBy: null, samples: 2016, networks: 2, dataFrom: '2026-10-12T08:00:00Z', dataTo: '2026-10-19T07:55:00Z',
+  metrics: { candidate: { precision: 0.97, recall: 0.9, f1: 0.93, falsePositiveRate: 0.03 },
+             current: { precision: 0.7, recall: 0.92, f1: 0.8, falsePositiveRate: 0.31 }, currentVersion: 'isolation-forest-1.1' },
+  decision: 'PROMOTED', reason: 'Da menos falsas alarmas con estas redes (3,0 % frente a 31,0 %).', active: true,
+};
+
+const training = (samples: number, versions: AiModelVersion[] = []): AiTrainingStatus => ({
+  available: { samples, teamSamples: samples, homeSamples: 0, networks: samples ? 1 : 0,
+               from: samples ? '2026-10-12T08:00:00Z' : null, to: samples ? '2026-10-19T07:55:00Z' : null },
+  minimumSamples: 300, canTrain: samples >= 300, nextAutomatic: '2026-10-26T08:00:00Z', versions,
+});
 
 const recallByType = { CONGESTION: 0.99, INTERFERENCE: 1, WEAK_COVERAGE: 0.95, PROVIDER_ISSUE: 0.77, SUSPICIOUS_TRAFFIC: 0.68 };
 const metrics = (algorithm: string, f1: number, production = false): AlgorithmMetrics => ({
@@ -35,6 +58,9 @@ const overview = (ready: boolean): AiModelOverview => ({
 
 beforeEach(() => {
   vi.mocked(api.aiModel).mockReset();
+  vi.mocked(api.aiTraining).mockReset().mockResolvedValue(training(0));
+  vi.mocked(api.trainAi).mockReset();
+  signedInAs('VIEWER');
 });
 
 describe('Modelo de IA', () => {
@@ -60,5 +86,50 @@ describe('Modelo de IA', () => {
 
     expect(await screen.findByRole('heading', { name: 'Comparación de algoritmos' })).toBeInTheDocument();
     expect(api.aiModel).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('Entrenamiento con datos reales', () => {
+  it('shows how much real data there is and the history of versions', async () => {
+    vi.mocked(api.aiModel).mockResolvedValue({ ...overview(true), model: { ...overview(true).model,
+      modelVersion: 'real-20261019-0800', realData: true, trainedOn: '2016 mediciones reales' } });
+    vi.mocked(api.aiTraining).mockResolvedValue(training(2016, [promoted]));
+    render(<MemoryRouter><AiModelPage /></MemoryRouter>);
+
+    expect(await screen.findByText('Datos reales')).toBeInTheDocument();
+    const section = (await screen.findByRole('heading', { name: 'Entrenamiento con datos reales' })).closest('section')!;
+    expect(await within(section).findByText('2.016', { selector: 'strong' })).toBeInTheDocument();
+    const row = within(section).getByText('real-20261019-0800').closest('tr')!;
+    expect(within(row).getByText('En uso')).toBeInTheDocument();
+    expect(within(row).getByText('Aprobado')).toBeInTheDocument();
+    expect(within(row).getByText('Automático')).toBeInTheDocument();
+    expect(row).toHaveTextContent('0,93 vs 0,8');
+    expect(within(section).queryByRole('button', { name: /Entrenar ahora/ })).not.toBeInTheDocument();
+  });
+
+  it('lets an administrator train and says why the new model was or was not used', async () => {
+    signedInAs('ADMIN');
+    vi.mocked(api.aiModel).mockResolvedValue(overview(true));
+    vi.mocked(api.aiTraining).mockResolvedValue(training(450));
+    vi.mocked(api.trainAi).mockResolvedValue({ ...promoted, decision: 'REJECTED', active: false,
+      reason: 'No es mejor que el modelo en uso. Se sigue usando el actual.' });
+    render(<MemoryRouter><AiModelPage /></MemoryRouter>);
+
+    await userEvent.click(await screen.findByRole('button', { name: /Entrenar ahora/ }));
+
+    expect(await screen.findByText('Se sigue usando el modelo actual.')).toBeInTheDocument();
+    expect(screen.getByText(/No es mejor que el modelo en uso/)).toBeInTheDocument();
+    expect(api.trainAi).toHaveBeenCalledTimes(1);
+    expect(api.aiModel).toHaveBeenCalledTimes(2);
+  });
+
+  it('cannot train with too few measurements', async () => {
+    signedInAs('ADMIN');
+    vi.mocked(api.aiModel).mockResolvedValue(overview(true));
+    vi.mocked(api.aiTraining).mockResolvedValue(training(120));
+    render(<MemoryRouter><AiModelPage /></MemoryRouter>);
+
+    expect(await screen.findByRole('button', { name: /Entrenar ahora/ })).toBeDisabled();
+    expect(screen.getByRole('img', { name: '120 de 300' })).toBeInTheDocument();
   });
 });
