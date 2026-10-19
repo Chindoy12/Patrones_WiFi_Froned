@@ -21,6 +21,9 @@ export interface AuthResponse {
   token: string;
   expiresAt: string;
   user: User;
+  /** Renews the session when the 15-minute token expires; works once (each renewal gives a new one). */
+  refreshToken?: string;
+  refreshExpiresAt?: string;
 }
 
 export interface Network {
@@ -55,6 +58,8 @@ export interface SensorStatus {
   agentVersion: string | null;
   platform: string | null;
   pendingCodeExpiresAt: string | null;
+  /** Wi-Fi the sensor's computer was on in its last report (null if it could not be read). */
+  lastSsid?: string | null;
 }
 
 export interface Zone {
@@ -493,4 +498,62 @@ export interface TeamNetworks {
             anomaliesLast24h: number; devices: number };
   networks: TeamNetworkRow[];
   generatedAt: string;
+}
+
+// When a device was connected (Avance 15)
+export interface DeviceSessionPeriod {
+  connectedAt: string;
+  /** null while it is still connected */
+  endedAt: string | null;
+  ongoing: boolean;
+  minutes: number;
+}
+
+export interface DeviceSessionHistory {
+  deviceId: string;
+  days: number;
+  connections: number;
+  totalMinutes: number;
+  periods: DeviceSessionPeriod[];
+}
+
+// Weekly report of a team network (Avance 15)
+export interface WeeklyTotals {
+  measurements: number;
+  latencyAvgMs: number | null;
+  jitterAvgMs: number | null;
+  packetLossAvgPct: number | null;
+  coveragePct: number | null;
+  trafficMb: number | null;
+  alerts: number;
+  criticalAlerts: number;
+}
+
+export interface WeeklyDay {
+  date: string;
+  measurements: number;
+  hoursMeasured: number;
+  latencyAvgMs: number | null;
+  jitterAvgMs: number | null;
+  packetLossAvgPct: number | null;
+  signalAvgDbm: number | null;
+  maxDevices: number | null;
+  trafficMb: number | null;
+  alerts: number;
+}
+
+export interface WeeklyReport {
+  networkId: number;
+  ssid: string;
+  zone: string;
+  start: string;
+  end: string;
+  week: WeeklyTotals;
+  previousWeek: WeeklyTotals;
+  days: WeeklyDay[];
+  worstHour: { hour: number; latencyAvgMs: number; measurements: number } | null;
+  protocols: { protocol: string; packets: number }[];
+  devices: { seen: number; newOnes: number } | null;
+  security: { latestScore: number; latestGrade: SecurityGrade; lowestScore: number } | null;
+  highlights: string[];
 }
