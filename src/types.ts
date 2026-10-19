@@ -60,6 +60,8 @@ export interface SensorStatus {
   pendingCodeExpiresAt: string | null;
   /** Wi-Fi the sensor's computer was on in its last report (null if it could not be read). */
   lastSsid?: string | null;
+  /** While set, the sensor reports every minute ("Which device is this?"). */
+  identifyUntil?: string | null;
 }
 
 export interface Zone {
@@ -231,6 +233,46 @@ export interface AiModelInfo {
   threshold: number;
   trainedOn: string;
   recommendationEngine: string;
+  /** True when the model in use was trained with the real measurements of the networks. */
+  realData?: boolean;
+  trainedSamples?: number | null;
+  trainedAt?: string | null;
+}
+
+export interface TrainingMetrics {
+  precision: number;
+  recall: number;
+  f1: number;
+  falsePositiveRate: number;
+}
+
+/** One training of the model with real measurements and whether it replaced the model in use. */
+export interface AiModelVersion {
+  id: number;
+  version: string;
+  algorithm: string;
+  trainedAt: string;
+  /** Administrator who asked; null for the weekly automatic training. */
+  trainedBy: string | null;
+  samples: number;
+  networks: number;
+  dataFrom: string;
+  dataTo: string;
+  metrics: {
+    candidate?: TrainingMetrics | null; current?: TrainingMetrics | null; currentVersion?: string | null;
+    trainSamples?: number; testNormal?: number; testFaults?: number;
+  };
+  decision: 'PROMOTED' | 'REJECTED';
+  reason: string;
+  active: boolean;
+}
+
+export interface AiTrainingStatus {
+  available: { samples: number; teamSamples: number; homeSamples: number; networks: number; from: string | null; to: string | null };
+  minimumSamples: number;
+  canTrain: boolean;
+  nextAutomatic: string | null;
+  versions: AiModelVersion[];
 }
 
 export interface AlgorithmMetrics {
@@ -429,6 +471,21 @@ export interface AgentDevice {
   lastSeenAt: string;
   online: boolean;
   recent: boolean;
+  /** What kind of device the agent deduced from what it announces and the services it offers (a guess). */
+  kind?: DeviceKind | null;
+  /** SELF: the computer the agent runs on; ROUTER: the gateway of the network. */
+  role?: DeviceRole | null;
+  /** Model the device announces ("iPhone15,2", "Chromecast"). */
+  model?: string | null;
+}
+
+export type DeviceKind = 'PHONE' | 'COMPUTER' | 'TV' | 'PRINTER' | 'CAMERA' | 'SPEAKER' | 'CONSOLE' | 'IOT';
+export type DeviceRole = 'SELF' | 'ROUTER';
+
+/** "Which device is this?": until identifyUntil the agent (or sensor) reports every reportSeconds seconds. */
+export interface IdentifyMode {
+  identifyUntil: string;
+  reportSeconds: number;
 }
 
 export type AgentAlertType = 'NEW_DEVICE' | 'UNAUTHORIZED_DEVICE' | 'SECURITY' | 'ANOMALY';
@@ -440,7 +497,7 @@ export interface AgentAlert {
 }
 
 export interface AgentOverview {
-  key: { prefix: string; createdAt: string; lastSeenAt: string | null } | null;
+  key: { prefix: string; createdAt: string; lastSeenAt: string | null; identifyUntil?: string | null } | null;
   online: boolean;
   latest: AgentReport | null;
   history: AgentHistoryPoint[];
