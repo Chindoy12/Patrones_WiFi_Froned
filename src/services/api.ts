@@ -1,9 +1,9 @@
 import { apiClient } from './apiClient';
 import { sealPassword } from './passwordCipher';
 import type {
-  Account, AgentDevice, AgentOverview, AgentPairingCode, AlertPreferences, AiModelOverview, AiPrediction, Alert, AlertStatus, AnalysisResult, AnalysisType, AnomalyCauseCount, AuthResponse,
+  Account, AgentDevice, AgentOverview, DeviceSessionHistory, AgentPairingCode, AlertPreferences, AiModelOverview, AiPrediction, Alert, AlertStatus, AnalysisResult, AnalysisType, AnomalyCauseCount, AuthResponse,
   ConnectionTest, ConnectionTestInput, DashboardSummary, DataSourceType, Device, HomeNetwork, HomeNetworkInput, Location,
-  Measurement, Network, NetworkQuality, NetworkReport, ProtocolStatistic, SensorStatus, StaffRole, Strategy, SystemStatus,
+  Measurement, Network, NetworkQuality, NetworkReport, WeeklyReport, ProtocolStatistic, SensorStatus, StaffRole, Strategy, SystemStatus,
   TeamNetworks, TrafficSession, User, Zone,
 } from '../types';
 
@@ -67,6 +67,8 @@ export const api = {
   alertPreferences: () => apiClient.get<AlertPreferences>('/api/my/alerts'),
   updateAlertPreferences: (prefs: AlertPreferences) => apiClient.put<AlertPreferences>('/api/my/alerts', prefs),
   myAgent: (networkId: number) => apiClient.get<AgentOverview>(`/api/my/networks/${networkId}/agent`),
+  agentDeviceSessions: (networkId: number, fingerprint: string, days = 7) =>
+    apiClient.get<DeviceSessionHistory>(`/api/my/networks/${networkId}/agent/devices/${fingerprint}/sessions`, { days }),
   revokeAgentKey: (networkId: number) => apiClient.delete(`/api/my/networks/${networkId}/agent/key`),
 
   dashboard: () => apiClient.get<DashboardSummary>('/api/dashboard/summary'),
@@ -92,6 +94,8 @@ export const api = {
   sensorOverview: (networkId: number) => apiClient.get<AgentOverview>(`/api/networks/${networkId}/sensor/overview`),
   updateSensorDevice: (networkId: number, fingerprint: string, change: { label?: string | null; authorized?: boolean }) =>
     apiClient.put<AgentDevice>(`/api/networks/${networkId}/sensor/devices/${fingerprint}`, change),
+  sensorDeviceSessions: (networkId: number, fingerprint: string, days = 7) =>
+    apiClient.get<DeviceSessionHistory>(`/api/networks/${networkId}/sensor/devices/${fingerprint}/sessions`, { days }),
 
   devices: (networkId?: number) => apiClient.get<Device[]>('/api/devices', { networkId }),
   deviceSessions: (deviceId: number) => apiClient.get<TrafficSession[]>(`/api/devices/${deviceId}/sessions`),
@@ -113,6 +117,9 @@ export const api = {
   acknowledgeAlert: (id: number) => apiClient.patch<Alert>(`/api/alerts/${id}/acknowledge`),
   resolveAlert: (id: number) => apiClient.patch<Alert>(`/api/alerts/${id}/resolve`),
 
+  /** Monday to Sunday of the week that contains {@code week} (yyyy-mm-dd; the current week when omitted). */
+  weeklyReport: (networkId: number, week?: string) =>
+    apiClient.get<WeeklyReport>(`/api/reports/networks/${networkId}/weekly`, { week }),
   report: (networkId: number, from?: string, to?: string) =>
     apiClient.get<NetworkReport>(`/api/reports/networks/${networkId}`, { from, to }),
   comparison: (networkIds: number[]) =>

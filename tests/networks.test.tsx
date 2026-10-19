@@ -168,4 +168,14 @@ describe('Redes del equipo con sensor', () => {
     expect(api.updateSensorDevice).toHaveBeenCalledWith(7, 'b'.repeat(24), { authorized: false });
     expect(await screen.findByRole('dialog')).toBeInTheDocument();
   });
+
+  it('says when the computer of the sensor is on another Wi-Fi', async () => {
+    vi.mocked(api.networks).mockResolvedValue([lab]);
+    vi.mocked(api.sensor).mockResolvedValue({ ...online, lastSsid: 'Casa-5G' });
+    renderPage();
+
+    const row = (await screen.findByText('Lab-Redes')).closest('tr')!;
+    await userEvent.click(within(row).getByRole('button', { name: 'Sensor' }));
+    expect(await screen.findByText(/está conectado a «Casa-5G», no a «Lab-Redes»/)).toBeInTheDocument();
+  });
 });

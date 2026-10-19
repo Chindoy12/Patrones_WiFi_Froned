@@ -102,6 +102,13 @@ export function SensorPanel({ network, canManage, onChange }: {
         <SensorPairing pairing={pairing} onRenew={newCode} busy={busy} />
       ) : current?.installed ? (
         <>
+          {current.lastSsid && current.lastSsid !== network.ssid && (
+            <p className="notice notice--error" role="alert">
+              El computador del sensor está conectado a «{current.lastSsid}», no a «{network.ssid}»: sus reportes no se
+              guardan como de esta red. Conéctalo a «{network.ssid}» (si el nombre de la red está mal escrito, elimínala y
+              regístrala de nuevo).
+            </p>
+          )}
           <SensorState status={current} />
           <SensorReport network={network} canManage={canManage} />
         </>
@@ -147,7 +154,8 @@ function SensorReport({ network, canManage }: { network: Network; canManage: boo
   return (
     <div className="sensor__report">
       <AgentReports overview={data} latest={data.latest} onChange={reload} team canManage={canManage}
-                    updateDevice={(id, change) => api.updateSensorDevice(network.id, id, change)} />
+                    updateDevice={(id, change) => api.updateSensorDevice(network.id, id, change)}
+                    loadHistory={(id) => api.sensorDeviceSessions(network.id, id)} />
     </div>
   );
 }
