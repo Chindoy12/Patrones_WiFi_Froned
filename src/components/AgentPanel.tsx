@@ -5,9 +5,10 @@ import { useNow } from '../hooks/useNow';
 import { api } from '../services/api';
 import type {
   AgentAlert, AgentAlertType, AgentChannel, AgentDevice, AgentOverview, AgentPairingCode, AgentReport,
-  AlertPreferences, FindingSeverity, HomeNetwork, SecurityAssessment,
+  AlertPreferences, DeviceSessionHistory, FindingSeverity, HomeNetwork, SecurityAssessment,
   SecurityGrade, WifiAuthentication,
 } from '../types';
+import { DeviceHistory } from './DeviceHistory';
 import { Gauge, type GaugeStatus } from './Gauge';
 import { Icon, type IconName } from './Icon';
 
@@ -102,7 +103,8 @@ export function AgentPanel({ network }: { network: HomeNetwork }) {
       {data?.key && !data.latest && !pairing && <Waiting onInstall={startPairing} busy={busy} />}
       {data?.latest && (
         <AgentReports overview={data} latest={data.latest} onChange={reload}
-                      updateDevice={(id, change) => api.updateAgentDevice(network.id, id, change)} />
+                      updateDevice={(id, change) => api.updateAgentDevice(network.id, id, change)}
+                      loadHistory={(id) => api.agentDeviceSessions(network.id, id)} />
       )}
       {data?.key && (
         <p className="agent__keybar">
@@ -204,15 +206,17 @@ function Waiting({ onInstall, busy }: { onInstall: () => void; busy: boolean }) 
 }
 
 export type DeviceChange = { label?: string | null; authorized?: boolean };
+export type HistoryLoader = (fingerprint: string) => Promise<DeviceSessionHistory>;
 
 /**
  * What the agent saw in its latest report: devices, security audit, Wi-Fi, best channel and the connection. Mi Wi-Fi
  * shows it for a home; the team panel (team) shows the same for the sensor of a team network, where only an
  * administrator can name or block a device (canManage) and the alerts live in the Alerts page.
  */
-export function AgentReports({ overview, latest, onChange, updateDevice, team = false, canManage = true }: {
+export function AgentReports({ overview, latest, onChange, updateDevice, loadHistory, team = false, canManage = true }: {
   overview: AgentOverview; latest: AgentReport; onChange: () => void;
-  updateDevice: (fingerprint: string, change: DeviceChange) => Promise<unknown>; team?: boolean; canManage?: boolean;
+  updateDevice: (fingerprint: string, change: DeviceChange) => Promise<unknown>; loadHistory?: HistoryLoader;
+  team?: boolean; canManage?: boolean;
 }) {
   const security = latest.details.security ?? null;
   const anomaly = latest.details.anomaly ?? null;
@@ -254,7 +258,7 @@ export function AgentReports({ overview, latest, onChange, updateDevice, team = 
             )}
           </p>
           <DeviceList devices={overview.devices} onChange={onChange} updateDevice={updateDevice} team={team}
-                      canManage={canManage} />
+                      canManage={canManage} loadHistory={loadHistory} />
           <p className="dash__foot"><Icon name="clock" size={16} /> Último reporte: {formatDateTime(latest.receivedAt)}</p>
         </section>
 
@@ -516,9 +520,9 @@ export function deviceMaker(device: AgentDevice): string {
 }
 
 /** The devices of a network, as in a phone's Bluetooth list. Without canManage they can only be looked at. */
-export function DeviceList({ devices, onChange, updateDevice, team = false, canManage = true }: {
+export function DeviceList({ devices, onChange, updateDevice, loadHistory, team = false, canManage = true }: {
   devices: AgentDevice[]; onChange: () => void; updateDevice: (fingerprint: string, change: DeviceChange) => Promise<unknown>;
-  team?: boolean; canManage?: boolean;
+  loadHistory?: HistoryLoader; team?: boolean; canManage?: boolean;
 }) {
   const [guide, setGuide] = useState<AgentDevice | null>(null);
   if (devices.length === 0) {
@@ -530,7 +534,7 @@ export function DeviceList({ devices, onChange, updateDevice, team = false, canM
       <ul className="devlist">
         {devices.map((d, i) => (
           <DeviceRow key={d.id} device={d} shownName={names[i]} onChange={onChange} updateDevice={updateDevice}
-                     team={team} canManage={canManage} onBlocked={() => setGuide(d)} />
+                     loadHistory={loadHistory} team={team} canManage={canManage} onBlocked={() => setGuide(d)} />
         ))}
       </ul>
       {guide && <RouterGuide name={names[devices.indexOf(guide)] ?? deviceName(guide, 0)} onClose={() => setGuide(null)} />}
@@ -538,12 +542,13 @@ export function DeviceList({ devices, onChange, updateDevice, team = false, canM
   );
 }
 
-function DeviceRow({ device, shownName, onChange, updateDevice, team, canManage, onBlocked }: {
+function DeviceRow({ device, shownName, onChange, updateDevice, loadHistory, team, canManage, onBlocked }: {
   device: AgentDevice; shownName: string; onChange: () => void;
-  updateDevice: (fingerprint: string, change: DeviceChange) => Promise<unknown>; team: boolean; canManage: boolean;
-  onBlocked: () => void;
+  updateDevice: (fingerprint: string, change: DeviceChange) => Promise<unknown>; loadHistory?: HistoryLoader;
+  team: boolean; canManage: boolean; onBlocked: () => void;
 }) {
   const [editing, setEditing] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
   const [name, setName] = useState(device.label ?? '');
   const [busy, setBusy] = useState(false);
 
@@ -591,20 +596,29 @@ function DeviceRow({ device, shownName, onChange, updateDevice, team, canManage,
         </span>
       </div>
       <span className="devrow__dot" aria-hidden="true" />
-      {canManage && <div className="devrow__actions">
-        {!editing && (
+      <div className="devrow__actions">
+        {loadHistory && (
+          <button className="iconbtn" onClick={() => setShowHistory((v) => !v)} aria-expanded={showHistory}
+                  title="Cuándo estuvo conectado" aria-label={`Historial de conexiones de ${shownName}`}>
+            <Icon name="clock" size={16} />
+          </button>
+        )}
+        {canManage && !editing && (
           <button className="iconbtn" onClick={() => { setName(device.label ?? ''); setEditing(true); }}
                   disabled={busy} title="Cambiar el nombre" aria-label="Cambiar el nombre"><Icon name="pencil" size={16} /></button>
         )}
-        {device.authorized ? (
+        {canManage && (device.authorized ? (
           <button className="iconbtn iconbtn--danger" onClick={block} disabled={busy}
                   title={team ? 'No autorizado / quitar acceso' : 'No es mío / quitar acceso'}
                   aria-label="Marcar como no autorizado"><Icon name="ban" size={16} /></button>
         ) : (
           <button className="iconbtn" onClick={() => save({ authorized: true })} disabled={busy}
                   title={team ? 'Autorizar' : 'Sí es mío'} aria-label="Volver a autorizar"><Icon name="check" size={16} /></button>
-        )}
-      </div>}
+        ))}
+      </div>
+      {showHistory && loadHistory && (
+        <div className="devrow__history"><DeviceHistory load={() => loadHistory(device.id)} /></div>
+      )}
     </li>
   );
 }
