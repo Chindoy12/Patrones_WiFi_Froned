@@ -1,8 +1,8 @@
 import { apiClient } from './apiClient';
 import { sealPassword } from './passwordCipher';
 import type {
-  Account, AgentDevice, AgentOverview, DeviceSessionHistory, AgentPairingCode, AlertPreferences, AiModelOverview, AiPrediction, Alert, AlertStatus, AnalysisResult, AnalysisType, AnomalyCauseCount, AuthResponse,
-  ConnectionTest, ConnectionTestInput, DashboardSummary, DataSourceType, Device, HomeNetwork, HomeNetworkInput, Location,
+  Account, AgentDevice, AgentOverview, DeviceSessionHistory, AgentPairingCode, AlertPreferences, AiModelOverview, AiModelVersion, AiPrediction, AiTrainingStatus, Alert, AlertStatus, AnalysisResult, AnalysisType, AnomalyCauseCount, AuthResponse,
+  ConnectionTest, ConnectionTestInput, DashboardSummary, DataSourceType, Device, HomeNetwork, HomeNetworkInput, IdentifyMode, Location,
   Measurement, Network, NetworkQuality, NetworkReport, WeeklyReport, ProtocolStatistic, SensorStatus, StaffRole, Strategy, SystemStatus,
   TeamNetworks, TrafficSession, User, Zone,
 } from '../types';
@@ -69,6 +69,8 @@ export const api = {
   myAgent: (networkId: number) => apiClient.get<AgentOverview>(`/api/my/networks/${networkId}/agent`),
   agentDeviceSessions: (networkId: number, fingerprint: string, days = 7) =>
     apiClient.get<DeviceSessionHistory>(`/api/my/networks/${networkId}/agent/devices/${fingerprint}/sessions`, { days }),
+  /** "Which device is this?": the agent reports every minute for the next ten minutes. */
+  identifyAgentDevice: (networkId: number) => apiClient.post<IdentifyMode>(`/api/my/networks/${networkId}/agent/identify`),
   revokeAgentKey: (networkId: number) => apiClient.delete(`/api/my/networks/${networkId}/agent/key`),
 
   dashboard: () => apiClient.get<DashboardSummary>('/api/dashboard/summary'),
@@ -94,6 +96,7 @@ export const api = {
   sensorOverview: (networkId: number) => apiClient.get<AgentOverview>(`/api/networks/${networkId}/sensor/overview`),
   updateSensorDevice: (networkId: number, fingerprint: string, change: { label?: string | null; authorized?: boolean }) =>
     apiClient.put<AgentDevice>(`/api/networks/${networkId}/sensor/devices/${fingerprint}`, change),
+  identifySensorDevice: (networkId: number) => apiClient.post<IdentifyMode>(`/api/networks/${networkId}/sensor/identify`),
   sensorDeviceSessions: (networkId: number, fingerprint: string, days = 7) =>
     apiClient.get<DeviceSessionHistory>(`/api/networks/${networkId}/sensor/devices/${fingerprint}/sessions`, { days }),
 
@@ -112,6 +115,10 @@ export const api = {
   anomalies: () => apiClient.get<AiPrediction[]>('/api/anomalies'),
   anomalyCauses: (days = 30) => apiClient.get<AnomalyCauseCount[]>('/api/anomalies/causes', { days }),
   aiModel: () => apiClient.get<AiModelOverview>('/api/ai/model'),
+  /** Real measurements available to train the model and every training so far. */
+  aiTraining: () => apiClient.get<AiTrainingStatus>('/api/ai/training'),
+  /** ADMIN: train now; the new model replaces the one in use only if it is better. */
+  trainAi: () => apiClient.post<AiModelVersion>('/api/ai/training'),
 
   alerts: (status?: AlertStatus) => apiClient.get<Alert[]>('/api/alerts', { status }),
   acknowledgeAlert: (id: number) => apiClient.patch<Alert>(`/api/alerts/${id}/acknowledge`),
