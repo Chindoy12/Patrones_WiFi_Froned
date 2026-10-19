@@ -68,6 +68,16 @@ Mala) y un ícono, así que no depende solo del color.
   `AgentReports`): equipos conectados con fabricante y nombre, auditoría de seguridad con sus consejos, datos del Wi-Fi,
   mejor canal y la conexión. **Dispositivos** lista los equipos de cada red con sensor; solo el administrador puede
   ponerles nombre o marcarlos como no autorizados. Nunca se muestra una MAC.
+- **Historial de conexiones:** el reloj de cada equipo (en Mi Wi-Fi, en el panel del sensor y en Dispositivos) muestra
+  cuándo estuvo conectado en los últimos 7 días: una franja con las 24 horas de hoy, cada periodo («2:10 p. m. → 3:05
+  p. m.») y el total. Un equipo cuenta como desconectado después de faltar unos 10 minutos (dos reportes).
+- **Reporte semanal** (Reportes): lunes a domingo en hora de Colombia, lo más importante en frases, los totales frente a
+  la semana anterior, cada día, protocolos, equipos y seguridad. «Descargar CSV (Excel)» usa punto y coma y coma
+  decimal, como lo abre Excel en español; «Imprimir o guardar PDF» imprime solo el reporte (`@media print`).
+- **La sesión se renueva sola:** el token de acceso dura 15 minutos. Cuando una llamada recibe 401, `apiClient` cambia
+  el refresh token por uno nuevo una sola vez (varias llamadas a la vez comparten esa renovación) y repite la llamada;
+  solo si eso falla pide iniciar sesión. Cerrar sesión también revoca el refresh token en el backend. Ambos tokens
+  viven solo en la pestaña (`sessionStorage`).
 - **Redes de usuarios (ADMIN y ANALYST):** el panel del equipo con datos reales: usuarios, agentes conectados, redes
   en riesgo y con anomalías, y una tabla de cada red con su último reporte. Nada de sus equipos; el analista ve el
   usuario enmascarado. Un VIEWER no la ve.
@@ -111,7 +121,7 @@ Administrador además registra redes).
 npm install
 cp .env.example .env        # VITE_API_URL=http://localhost:8080
 npm run dev                 # http://localhost:5173
-npm test                    # 112 pruebas
+npm test                    # 122 pruebas
 npm run build               # tipos + build de producción en dist/
 ```
 
