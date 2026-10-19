@@ -68,6 +68,13 @@ Mala) y un ícono, así que no depende solo del color.
   `AgentReports`): equipos conectados con fabricante y nombre, auditoría de seguridad con sus consejos, datos del Wi-Fi,
   mejor canal y la conexión. **Dispositivos** lista los equipos de cada red con sensor; solo el administrador puede
   ponerles nombre o marcarlos como no autorizados. Nunca se muestra una MAC.
+- **Reconocer cada equipo:** desde el agente 1.7.0 cada equipo llega con su tipo (celular, computador, TV, impresora,
+  cámara, parlante, consola o dispositivo inteligente), el modelo que anuncia y dos marcas: «Este computador (agente)»
+  y «Router». Un equipo sin nombre se llama por su tipo («Celular o tableta 2», «TV o Chromecast 1»).
+- **¿Cuál es este equipo?** (`IdentifyWizard`, en Mi Wi-Fi, el panel del sensor y Dispositivos; en el equipo solo
+  ADMIN): el agente reporta cada minuto durante 10 minutos; el usuario apaga el Wi-Fi del equipo, la página ve cuál
+  desapareció, lo vuelve a encender, se confirma que volvió y le pone nombre. Si desaparecen varios a la vez, el que
+  vuelve primero es el suyo.
 - **Historial de conexiones:** el reloj de cada equipo (en Mi Wi-Fi, en el panel del sensor y en Dispositivos) muestra
   cuándo estuvo conectado en los últimos 7 días: una franja con las 24 horas de hoy, cada periodo («2:10 p. m. → 3:05
   p. m.») y el total. Un equipo cuenta como desconectado después de faltar unos 10 minutos (dos reportes).
@@ -98,6 +105,10 @@ Administrador además registra redes).
   Local Outlier Factor y One-Class SVM (precisión, recall, F1, falsas alarmas, ROC-AUC y tiempo), detección por tipo
   de falla, ajuste de hiperparámetros, sensibilidad del umbral y acierto del diagnóstico. Todo llega por el backend
   (`GET /api/ai/model`); el navegador nunca llama al servicio de IA.
+- **Entrenamiento con datos reales** (en Modelo de IA): cuántas mediciones reales hay, «Entrenar ahora» (ADMIN; desde
+  300 mediciones), la fecha del entrenamiento automático semanal y el historial de versiones con F1 y falsas alarmas
+  del modelo nuevo frente al anterior, la decisión (aprobado o rechazado) y por qué. La versión en uso dice si se
+  entrenó con datos reales o sintéticos.
 
 ## Inicio de sesión y cuentas
 
@@ -121,7 +132,7 @@ Administrador además registra redes).
 npm install
 cp .env.example .env        # VITE_API_URL=http://localhost:8080
 npm run dev                 # http://localhost:5173
-npm test                    # 122 pruebas
+npm test                    # 131 pruebas
 npm run build               # tipos + build de producción en dist/
 ```
 
