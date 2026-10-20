@@ -24,7 +24,9 @@ src/hooks/                  carga de datos y selección de red
 src/components/             layout, AuthShell (login y registro), WifiLogo animado, gráficos, estados de carga
 src/pages/                  una página por sección
 src/auth/credentials.ts     límites de usuario (40, nombre o correo) y contraseña (10–12) y reglas de contraseña
-tests/                      pruebas de apiClient, reglas de arquitectura y componentes
+tests/                      pruebas de apiClient, reglas de arquitectura y seguridad, y componentes
+.github/workflows/pagina.yml  tipos, pruebas, build y npm audit en cada Pull Request
+.github/dependabot.yml      actualizaciones mensuales de npm y de las acciones
 ```
 
 ## Secciones
@@ -124,7 +126,12 @@ Administrador además registra redes).
   un reto de un solo uso y la cifra con Web Crypto (RSA-OAEP, SHA-256). En F12 → Red solo se ve
   `{username, challengeId, encryptedPassword}`; aplica a login, registro y creación de cuentas del equipo.
 - Cualquier error de login muestra solo `Datos incorrectos.`
-- `vercel.json` agrega cabeceras de seguridad (CSP, no embeber en iframes, sin referer).
+- `vercel.json` agrega cabeceras de seguridad: CSP (solo scripts propios, nada en línea ni de otros sitios), no
+  embeber en iframes, `nosniff`, sin referer, HSTS, `Cross-Origin-Opener-Policy` y sin cámara, micrófono, ubicación,
+  pagos ni USB. `tests/security.test.ts` falla si alguna desaparece, si la página habla directo con la IA o la base,
+  si aparece un secreto o si el token se guarda en `localStorage` (vive solo en la pestaña).
+- **GitHub Actions** (`.github/workflows/pagina.yml`) en cada Pull Request: tipos, las pruebas, el build de producción
+  y `npm audit` de lo que llega al navegador (0 vulnerabilidades conocidas el 19/10/2026).
 
 ## Instalación y ejecución
 
@@ -132,7 +139,7 @@ Administrador además registra redes).
 npm install
 cp .env.example .env        # VITE_API_URL=http://localhost:8080
 npm run dev                 # http://localhost:5173
-npm test                    # 131 pruebas
+npm test                    # 133 pruebas
 npm run build               # tipos + build de producción en dist/
 ```
 
