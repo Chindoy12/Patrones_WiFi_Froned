@@ -37,4 +37,24 @@ describe('frontend security rules', () => {
     expect(api).toMatch(/sealPassword\(current\)/);
     expect(api).toMatch(/sealPassword\(next\)/);
   });
+
+  it('keeps the session only in the tab, never in localStorage', () => {
+    const offenders = sources.filter(({ text }) => /localStorage/.test(text) && /token/i.test(text));
+    expect(offenders.map((o) => o.file)).toEqual([]);
+    expect(readFileSync('src/services/apiClient.ts', 'utf8')).toMatch(/sessionStorage\.setItem\(TOKEN_KEY/);
+  });
+
+  it('asks the browser to protect the page (Vercel headers)', () => {
+    const vercel = JSON.parse(readFileSync('vercel.json', 'utf8')) as {
+      headers: { source: string; headers: { key: string; value: string }[] }[];
+    };
+    const sent = Object.fromEntries(vercel.headers.find((h) => h.source === '/(.*)')!.headers.map((h) => [h.key, h.value]));
+    expect(sent['Content-Security-Policy']).toMatch(/default-src 'self'/);
+    expect(sent['Content-Security-Policy']).toMatch(/script-src 'self'(;|$)/);  // no inline or remote scripts
+    expect(sent['Content-Security-Policy']).toMatch(/frame-ancestors 'none'/);
+    expect(sent['X-Content-Type-Options']).toBe('nosniff');
+    expect(sent['X-Frame-Options']).toBe('DENY');
+    expect(sent['Referrer-Policy']).toBe('no-referrer');
+    expect(sent['Strict-Transport-Security']).toMatch(/max-age=\d{8}/);
+  });
 });

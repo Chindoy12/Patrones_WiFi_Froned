@@ -1,0 +1,43 @@
+# Checks every change of the web page before it reaches Vercel: types, all the tests, the production build and the
+# known vulnerabilities of the libraries the page ships to the browser. Runs on every Pull Request and on main.
+name: Página
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pagina-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pruebas:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependencias (exactamente las de package-lock.json)
+        run: npm ci
+
+      - name: Tipos de TypeScript
+        run: npx tsc --noEmit
+
+      - name: Pruebas
+        run: npm test
+
+      - name: Compilar como en Vercel
+        run: npm run build
+
+      - name: Vulnerabilidades conocidas en lo que llega al navegador
+        run: npm audit --omit=dev --audit-level=high
