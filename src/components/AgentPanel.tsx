@@ -137,8 +137,8 @@ function Intro({ onInstall, busy }: { onInstall: () => void; busy: boolean }) {
         <h3>Mira cuántos equipos hay en tu Wi-Fi y qué tan segura es</h3>
         <p className="muted">
           El agente es un pequeño programa que se instala en un computador de tu casa. Cada 5 minutos cuenta los
-          equipos conectados, revisa la seguridad del Wi-Fi y del router, y mide la conexión. La IA te avisa si
-          aparece un equipo nuevo, si hay una vulnerabilidad o si la red se comporta raro.
+          equipos conectados, revisa la seguridad del Wi-Fi y del router, y mide la conexión. Te avisamos si aparece
+          un equipo nuevo, si hay una vulnerabilidad o si la IA ve que la red se comporta raro.
         </p>
         <ul className="agent__features">
           <li><Icon name="devices" size={18} /> Equipos conectados y aviso de equipos nuevos</li>
@@ -259,6 +259,8 @@ export function AgentReports({ overview, latest, onChange, updateDevice, loadHis
               <> Los celulares y tabletas con <strong>dirección privada</strong> no dicen su marca{canManage
                 ? <>: usa «¿Cuál es este equipo?» o ponles un nombre con el lápiz para reconocerlos.</> : '.'}</>
             )}
+            {' '}Son los equipos que respondieron al {team ? 'sensor' : 'agente'}; el tipo («Parece…») es una suposición a
+            partir de lo que cada equipo anuncia: solo el router sabe con certeza quién está conectado.
           </p>
           <DeviceList devices={overview.devices} onChange={onChange} updateDevice={updateDevice} team={team}
                       canManage={canManage} loadHistory={loadHistory} identify={identify} latestAt={latest.receivedAt} />
@@ -270,7 +272,7 @@ export function AgentReports({ overview, latest, onChange, updateDevice, loadHis
           <Gauge size="sm" percent={security?.score ?? null} value={security ? String(security.score) : '—'}
                  label="de 100" status={security ? securityStatus[security.grade] : 'none'}
                  caption={security?.gradeLabel ?? 'Sin auditoría'} />
-          <p className="small">{security?.summary ?? 'La IA no estaba disponible en el último reporte.'}</p>
+          <p className="small">{security?.summary ?? 'El servicio de análisis no respondió en el último reporte.'}</p>
         </section>
 
         <section className="dash__card" aria-labelledby="wifi-title">
@@ -541,12 +543,16 @@ export function deviceNames(devices: AgentDevice[]): string[] {
   });
 }
 
-/** Second line of a device: its kind, model and maker (what the name does not already say), or why the maker is unknown. */
+/**
+ * Second line of a device: the kind the agent guessed ("Parece impresora": a guess, said as one), the model it
+ * announces and its maker (what the name does not already say), or why the maker is unknown.
+ */
 export function deviceMaker(device: AgentDevice, shownName = ''): string {
   const parts: string[] = [];
   const said = shownName.toLowerCase();
-  if (device.kind && device.role !== 'ROUTER' && !said.startsWith(KIND_LABELS[device.kind].toLowerCase())) {
-    parts.push(KIND_LABELS[device.kind]);
+  if (device.kind && device.role !== 'ROUTER') {
+    // a guess of the agent, never a certainty ("TV" keeps its capitals: only a capitalised first word is lowered)
+    parts.push(`Parece ${KIND_LABELS[device.kind].replace(/^\p{Lu}(?!\p{Lu})/u, (c) => c.toLowerCase())}`);
   }
   if (device.model && !said.includes(device.model.toLowerCase())) parts.push(device.model);
   const maker = device.vendor ?? (device.privateMac ? 'Dirección privada' : 'Sin identificar');

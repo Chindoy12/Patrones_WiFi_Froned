@@ -14,7 +14,7 @@ const PHASE_TEXT: Record<Phase, string> = {
   latency: 'Midiendo la latencia…',
   download: 'Midiendo la velocidad de bajada…',
   upload: 'Midiendo la velocidad de subida…',
-  grading: 'La IA está calificando tu conexión…',
+  grading: 'Calificando tu conexión…',
 };
 
 /** Dashboard of one network of the user: the quality gauge, the connection test and what the result means. */
@@ -58,7 +58,7 @@ export function ConnectionPanel({ network, onTested }: { network: HomeNetwork; o
         </p>
         {error && <p className="notice notice--error" role="alert">{error}</p>}
         {latest && !quality && (
-          <p className="notice">La IA no estaba disponible: guardamos tus mediciones, pero sin calificación.</p>
+          <p className="notice">El servicio de análisis no estaba disponible: guardamos tus mediciones, pero sin calificación.</p>
         )}
         <p className="dash__foot">
           <Icon name="clock" size={16} /> {latest ? `Última prueba: ${formatDateTime(latest.createdAt)}` : 'Aún no has probado esta red.'}
@@ -98,10 +98,10 @@ export function ConnectionPanel({ network, onTested }: { network: HomeNetwork; o
       </section>
 
       <section className="dash__card" aria-labelledby="tips-title">
-        <h2 className="dash__title" id="tips-title"><Icon name="ai" size={18} /> Consejos de la IA</h2>
+        <h2 className="dash__title" id="tips-title"><Icon name="ai" size={18} /> Consejos para tu conexión</h2>
         {quality && quality.tips.length > 0 && <ul className="tips">{quality.tips.map((t) => <li key={t}>{t}</li>)}</ul>}
         {quality && quality.tips.length === 0 && <p>Tu conexión está muy bien: no hace falta cambiar nada.</p>}
-        {!quality && <p className="muted">Los consejos aparecen cuando la IA califica una prueba.</p>}
+        {!quality && <p className="muted">Los consejos aparecen cuando se califica una prueba.</p>}
       </section>
 
       <section className="dash__card dash__card--full" aria-labelledby="history-title">

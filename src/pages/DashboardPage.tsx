@@ -135,7 +135,7 @@ function HealthView({ state }: { state: { data: NetworkQuality | null; error: st
       <p className="dash__foot">
         <Icon name="clock" size={16} /> Medición de las {formatTime(state.data.measuredAt)}
         {state.data.simulatedData && <span className="tag">Datos simulados</span>}
-        <span>· Calificado por la IA</span>
+        <span>· Calificación por reglas del servicio de análisis</span>
       </p>
     </>
   );
