@@ -133,3 +133,16 @@ describe('Entrenamiento con datos reales', () => {
     expect(screen.getByRole('img', { name: '120 de 300' })).toBeInTheDocument();
   });
 });
+
+describe('Qué es aprendizaje automático y qué son reglas', () => {
+  it('says that only the anomaly detection is a trained model', async () => {
+    vi.mocked(api.aiModel).mockResolvedValue(overview(true));
+    render(<MemoryRouter><AiModelPage /></MemoryRouter>);
+
+    const section = (await screen.findByRole('heading', { name: 'Qué es aprendizaje automático y qué son reglas' })).closest('section')!;
+    expect(within(section).getAllByText('Aprendizaje automático')).toHaveLength(1);
+    expect(within(section).getByText(/Isolation Forest/).closest('tr')).toHaveTextContent('Aprendizaje automático');
+    expect(within(section).getByText('Auditoría de seguridad').closest('tr')).toHaveTextContent('Reglas');
+    expect(within(section).getByText(/es una hipótesis/)).toBeInTheDocument();
+  });
+});

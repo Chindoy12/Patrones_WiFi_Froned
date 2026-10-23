@@ -31,6 +31,7 @@ export function AiModelPage() {
         {(data) => (
           <>
             <ModelPanel overview={data} />
+            <TechniquesPanel />
             <TrainingPanel onTrained={overview.reload} />
             {data.evaluation ? <EvaluationPanels evaluation={data.evaluation} /> : (
               <section className="panel">
@@ -44,6 +45,42 @@ export function AiModelPage() {
         )}
       </DataState>
     </>
+  );
+}
+
+/** What each answer of the AI service really is: only the anomaly detection is machine learning. */
+const TECHNIQUES: { result: string; technique: string; kind: 'ml' | 'rules' | 'external' }[] = [
+  { result: '¿La medición es anómala? y su puntaje', technique: 'Isolation Forest (aprendizaje automático no supervisado)', kind: 'ml' },
+  { result: 'Severidad (baja, media, alta)', technique: 'Regla sobre el puntaje del modelo', kind: 'rules' },
+  { result: 'Causa probable (congestión, interferencia…)', technique: 'Firmas de cada falla: es una hipótesis, no una confirmación', kind: 'rules' },
+  { result: 'Recomendación de una anomalía', technique: 'Reglas; Claude si está configurado (si falla, se usan las reglas)', kind: 'external' },
+  { result: 'Calidad de la conexión (0 a 100)', technique: 'Curvas por métrica', kind: 'rules' },
+  { result: 'Auditoría de seguridad', technique: 'Cifrado, puertos del router y equipos nuevos', kind: 'rules' },
+  { result: 'Mejor canal Wi-Fi', technique: 'Redes vecinas por canal y solapamiento', kind: 'rules' },
+];
+
+const KIND_TAG = { ml: 'Aprendizaje automático', rules: 'Reglas', external: 'Reglas o servicio externo' } as const;
+
+export function TechniquesPanel() {
+  return (
+    <section className="panel" aria-labelledby="techniques-title">
+      <h2 id="techniques-title">Qué es aprendizaje automático y qué son reglas</h2>
+      <p className="muted">No todo lo que responde el servicio de IA es un modelo entrenado. Así se calcula cada resultado:</p>
+      <div className="table-scroll">
+        <table className="table">
+          <thead><tr><th>Resultado</th><th>Cómo se obtiene</th><th>Tipo</th></tr></thead>
+          <tbody>
+            {TECHNIQUES.map((t) => (
+              <tr key={t.result}>
+                <td>{t.result}</td>
+                <td>{t.technique}</td>
+                <td><span className={`tag${t.kind === 'ml' ? ' tag--accent' : ''}`}>{KIND_TAG[t.kind]}</span></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
   );
 }
 
