@@ -21,12 +21,14 @@ src/services/api.ts         funciones por endpoint del backend
 src/auth/AuthContext.tsx    sesión, inicio de sesión y registro
 src/auth/guards.tsx         rutas por rol: el equipo va al panel y los usuarios finales a /mi-wifi
 src/hooks/                  carga de datos y selección de red
-src/components/             layout, AuthShell (login y registro), WifiLogo animado, gráficos, estados de carga
+src/components/             layout, AuthShell (login y registro), WifiLogo animado, gráficos, estados de carga y
+                            ErrorBoundary (una página que falla muestra un mensaje en vez de dejar la pantalla en blanco)
 src/pages/                  una página por sección
 src/auth/credentials.ts     límites de usuario (40, nombre o correo) y contraseña (10–12) y reglas de contraseña
 tests/                      pruebas de apiClient, reglas de arquitectura y seguridad, y componentes
 .github/workflows/pagina.yml  tipos, pruebas, build y npm audit en cada Pull Request
 .github/dependabot.yml      actualizaciones mensuales de npm y de las acciones
+docs/patrones.md            patrones de la página: Error Boundary, Provider, componentes guardia, Custom Hook y Single-flight
 ```
 
 ## Secciones
@@ -130,6 +132,13 @@ Administrador además registra redes).
   embeber en iframes, `nosniff`, sin referer, HSTS, `Cross-Origin-Opener-Policy` y sin cámara, micrófono, ubicación,
   pagos ni USB. `tests/security.test.ts` falla si alguna desaparece, si la página habla directo con la IA o la base,
   si aparece un secreto o si el token se guarda en `localStorage` (vive solo en la pestaña).
+- **Contrato con la IA** (`tests/contract.test.ts`): la página muestra la auditoría de seguridad, la calidad y el mejor
+  canal tal como los responde la IA; la prueba usa los mismos ejemplos JSON que el backend y la IA y falla si cambia un
+  campo que la página lee.
+- **Build de Vercel sin URL del backend:** si falta `VITE_API_URL`, el build de Vercel se detiene con un mensaje claro
+  en vez de publicar una página que llama a `localhost` (`vite.config.ts`, `tests/buildConfig.test.ts`).
+- **Lo que se sabe y lo que se supone:** el tipo de cada equipo se muestra como «Parece…» (es una suposición del agente)
+  y la página Modelo de IA explica qué resultados son aprendizaje automático y cuáles son reglas.
 - **GitHub Actions** (`.github/workflows/pagina.yml`) en cada Pull Request: tipos, las pruebas, el build de producción
   y `npm audit` de lo que llega al navegador (0 vulnerabilidades conocidas el 19/10/2026).
 
@@ -139,7 +148,7 @@ Administrador además registra redes).
 npm install
 cp .env.example .env        # VITE_API_URL=http://localhost:8080
 npm run dev                 # http://localhost:5173
-npm test                    # 133 pruebas
+npm test                    # 148 pruebas
 npm run build               # tipos + build de producción en dist/
 ```
 
