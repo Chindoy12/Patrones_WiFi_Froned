@@ -119,7 +119,7 @@ describe('Mi Wi-Fi', () => {
     vi.mocked(api.myTests).mockResolvedValue([{ ...graded, quality: null, qualityScore: null, qualityGrade: null }]);
     renderPage();
 
-    expect(await screen.findByText(/La IA no estaba disponible/)).toBeInTheDocument();
+    expect(await screen.findByText(/El servicio de análisis no estaba disponible/)).toBeInTheDocument();
     expect(screen.getByRole('img', { name: 'Latencia: 24 ms, Sin datos' })).toBeInTheDocument();
   });
 
