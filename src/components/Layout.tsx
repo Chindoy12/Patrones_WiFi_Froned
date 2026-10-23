@@ -1,7 +1,8 @@
 import { Suspense, useState } from 'react';
-import { NavLink, Outlet } from 'react-router-dom';
+import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { roleLabel } from '../format';
+import { ErrorBoundary } from './ErrorBoundary';
 import { Icon, type IconName } from './Icon';
 import { NetworkBackdrop } from './NetworkBackdrop';
 import { ThemeToggle } from './ThemeToggle';
@@ -27,6 +28,7 @@ export function Layout() {
     ...(can('ADMIN') ? [{ to: '/users', label: 'Usuarios', icon: 'users' as const }] : []),
   ];
   const [open, setOpen] = useState(false);
+  const { pathname } = useLocation();
 
   return (
     <div className="shell">
@@ -59,10 +61,12 @@ export function Layout() {
         )}
       </aside>
       <main className="content">
-        {/* Only the page changes while the next one loads; the menu stays in place. */}
-        <Suspense fallback={<p className="notice page-loading" role="status" aria-busy="true">Cargando…</p>}>
-          <Outlet />
-        </Suspense>
+        {/* Only the page changes while the next one loads, or if it fails; the menu stays in place. */}
+        <ErrorBoundary resetKey={pathname}>
+          <Suspense fallback={<p className="notice page-loading" role="status" aria-busy="true">Cargando…</p>}>
+            <Outlet />
+          </Suspense>
+        </ErrorBoundary>
       </main>
     </div>
   );

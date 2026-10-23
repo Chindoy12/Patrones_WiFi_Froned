@@ -1,7 +1,8 @@
-import { type ComponentType, lazy, Suspense } from 'react';
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { type ComponentType, lazy, type ReactNode, Suspense } from 'react';
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { AuthProvider } from './auth/AuthContext';
 import { RequireAdmin, RequireAnalyst, RequireAuth, RequireEndUser, RequireStaff } from './auth/guards';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 
@@ -33,34 +34,42 @@ function Loading() {
   return <p className="notice page-loading" role="status" aria-busy="true">Cargando…</p>;
 }
 
+/** The last safety net: login, Mi Wi-Fi and a page of the team that fails to load (the team pages have their own). */
+function RoutedErrorBoundary({ children }: { children: ReactNode }) {
+  const { pathname } = useLocation();
+  return <ErrorBoundary resetKey={pathname}>{children}</ErrorBoundary>;
+}
+
 export function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
-        <Suspense fallback={<Loading />}>
-          <Routes>
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/registro" element={<RegisterPage />} />
-            <Route path="/recuperar" element={<ForgotPasswordPage />} />
-            <Route path="/restablecer" element={<ResetPasswordPage />} />
-            <Route path="/mi-wifi" element={<RequireAuth><RequireEndUser><EndUserHomePage /></RequireEndUser></RequireAuth>} />
-            <Route element={<RequireAuth><RequireStaff><Layout /></RequireStaff></RequireAuth>}>
-              <Route index element={<DashboardPage />} />
-              <Route path="networks" element={<NetworksPage />} />
-              <Route path="devices" element={<DevicesPage />} />
-              <Route path="measurements" element={<MeasurementsPage />} />
-              <Route path="history" element={<HistoryPage />} />
-              <Route path="analysis" element={<AnalysisPage />} />
-              <Route path="anomalies" element={<AnomaliesPage />} />
-              <Route path="ai-model" element={<AiModelPage />} />
-              <Route path="alerts" element={<AlertsPage />} />
-              <Route path="reports" element={<ReportsPage />} />
-              <Route path="user-networks" element={<RequireAnalyst><UserNetworksPage /></RequireAnalyst>} />
-              <Route path="users" element={<RequireAdmin><UsersPage /></RequireAdmin>} />
-            </Route>
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </Suspense>
+        <RoutedErrorBoundary>
+          <Suspense fallback={<Loading />}>
+            <Routes>
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/registro" element={<RegisterPage />} />
+              <Route path="/recuperar" element={<ForgotPasswordPage />} />
+              <Route path="/restablecer" element={<ResetPasswordPage />} />
+              <Route path="/mi-wifi" element={<RequireAuth><RequireEndUser><EndUserHomePage /></RequireEndUser></RequireAuth>} />
+              <Route element={<RequireAuth><RequireStaff><Layout /></RequireStaff></RequireAuth>}>
+                <Route index element={<DashboardPage />} />
+                <Route path="networks" element={<NetworksPage />} />
+                <Route path="devices" element={<DevicesPage />} />
+                <Route path="measurements" element={<MeasurementsPage />} />
+                <Route path="history" element={<HistoryPage />} />
+                <Route path="analysis" element={<AnalysisPage />} />
+                <Route path="anomalies" element={<AnomaliesPage />} />
+                <Route path="ai-model" element={<AiModelPage />} />
+                <Route path="alerts" element={<AlertsPage />} />
+                <Route path="reports" element={<ReportsPage />} />
+                <Route path="user-networks" element={<RequireAnalyst><UserNetworksPage /></RequireAnalyst>} />
+                <Route path="users" element={<RequireAdmin><UsersPage /></RequireAdmin>} />
+              </Route>
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </Suspense>
+        </RoutedErrorBoundary>
       </BrowserRouter>
     </AuthProvider>
   );

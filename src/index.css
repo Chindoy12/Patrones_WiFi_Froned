@@ -697,6 +697,10 @@ a { color: var(--accent); }
 .iconbtn:disabled { opacity: .5; cursor: progress; }
 .tag--danger { background: var(--bad-soft); color: var(--bad-ink); border: 1px solid var(--bad-line); }
 
+/* Error boundary: a page that failed while drawing */
+.error-boundary h2 { display: flex; align-items: center; gap: 8px; }
+.error-boundary__actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+
 /* AI training with real data */
 .training__actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 12px 0; }
 .training__actions .button { display: inline-flex; align-items: center; gap: 6px; }
