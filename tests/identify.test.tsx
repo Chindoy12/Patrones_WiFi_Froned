@@ -24,9 +24,9 @@ describe('Reconocer los equipos', () => {
 
   it('shows the kind, model and maker that the name does not already say', () => {
     expect(deviceMaker(device('a', { kind: 'PHONE', model: 'iPhone15,2', privateMac: true }), 'iPhone de Ana'))
-      .toBe('Celular o tableta · iPhone15,2 · Dirección privada');
+      .toBe('Parece celular o tableta · iPhone15,2 · Dirección privada');
     expect(deviceMaker(device('a', { kind: 'TV', vendor: 'Google', model: 'Chromecast' }), 'Google Chromecast'))
-      .toBe('TV o Chromecast');
+      .toBe('Parece TV o Chromecast');
     expect(deviceIcon(device('a', { role: 'ROUTER' }))).toBe('router');
     expect(deviceIcon(device('a', { kind: 'CAMERA' }))).toBe('camera');
   });
