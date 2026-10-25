@@ -1,0 +1,35 @@
+/*
+ * Status strip at the bottom of the dashboards, drawn as a route: one hairline through every service and a circular
+ * node on it for each one, like the hops a Wi-Fi packet takes. The node repeats the state in color; the text says it.
+ */
+.strip {
+  position: relative; list-style: none; margin: 22px 0 0; padding: 16px 10px 14px;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); row-gap: 14px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+}
+.strip::before {
+  content: ''; position: absolute; left: 28px; right: 28px; top: 23px; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--line-strong) 8%, var(--line-strong) 92%, transparent);
+}
+.strip__item {
+  position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-rows: auto auto;
+  column-gap: 10px; row-gap: 12px; align-items: center; padding: 0 14px; min-width: 0;
+}
+.strip__node {
+  grid-column: 1 / -1; justify-self: start; width: 14px; height: 14px; border-radius: 50%;
+  background: var(--paper); border: 2px solid var(--muted);
+}
+.strip__item--ok .strip__node { border-color: var(--accent); background: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft), 0 0 14px var(--accent-glow); }
+.strip__item--warn .strip__node { border-color: var(--warn); background: var(--warn); box-shadow: 0 0 0 4px var(--warn-soft); }
+.strip__item--down .strip__node { border-color: var(--bad); box-shadow: 0 0 0 4px var(--bad-soft); }
+.strip__item > .icon { color: var(--muted); }
+.strip__text { display: grid; min-width: 0; }
+.strip__label { font-weight: 500; font-size: .92rem; }
+.strip__detail { font-size: .8rem; color: var(--muted); overflow-wrap: anywhere; }
+.strip__item--down .strip__detail { color: var(--bad-ink); }
+.strip__item--warn .strip__detail { color: var(--warn-ink); }
+
+@media (max-width: 760px) {
+  .strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .strip::before { display: none; }
+}
