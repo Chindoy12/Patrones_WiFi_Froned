@@ -1,0 +1,14 @@
+/* Footer: one hairline and three quiet facts, signed like a postcard. */
+.site-footer {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px 24px; flex-wrap: wrap;
+  margin-top: 36px; padding: 18px 2px 4px; border-top: 1px solid var(--line); font-size: .86rem;
+}
+.site-footer__brand { display: inline-flex; align-items: baseline; gap: 6px; font-weight: 500; }
+.site-footer__plus { color: var(--accent); font-weight: 300; font-size: 1.1rem; }
+.site-footer__facts { display: grid; gap: 4px; justify-items: end; text-align: right; }
+.site-footer .stamp { font-size: .6rem; }
+
+@media (max-width: 760px) {
+  .site-footer { flex-direction: column; align-items: flex-start; }
+  .site-footer__facts { justify-items: start; text-align: left; }
+}
