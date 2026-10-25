@@ -7,7 +7,7 @@ import { EndUserShell } from '../components/EndUserShell';
 import { HomeNetworkForm } from '../components/HomeNetworkForm';
 import { StatusStrip } from '../components/StatusStrip';
 import { TopBar } from '../components/TopBar';
-import { formatDateTime } from '../format';
+import { formatDateTime, greetingName } from '../format';
 import { useApi } from '../hooks/useApi';
 import { useOnline } from '../hooks/useOnline';
 import { api } from '../services/api';
@@ -47,11 +47,12 @@ export function EndUserHomePage() {
 
   return (
     <EndUserShell>
-      <TopBar title={`Hola, ${user?.username ?? ''}`} status={{ label: online ? 'Conectado' : 'Sin conexión', ok: online }} />
+      <TopBar title={`Hola, ${greetingName(user?.username)}`} eyebrow="Mi Wi-Fi"
+              status={{ label: online ? 'Conectado' : 'Sin conexión', ok: online }} />
 
       {networks.data && count === 0 && (
         <section className="eu-hero">
-          <h2>Empieza registrando tu red</h2>
+          <h2 className="display">Empieza registrando tu red</h2>
           <p>Agrega tu Wi-Fi abajo y podrás medir su latencia, estabilidad y velocidad, y saber para qué te alcanza.</p>
         </section>
       )}
