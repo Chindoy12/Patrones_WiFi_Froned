@@ -1,0 +1,18 @@
+/* AI pages: probable causes, model evaluation bars and training with real data. */
+.cause {
+  display: inline-block; font-size: .82rem; font-weight: 500; padding: 2px 10px; border-radius: var(--radius-pill);
+  background: var(--accent-soft); color: var(--accent-ink); border: 1px solid var(--accent-line); white-space: nowrap;
+}
+.cause-summary { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 10px; }
+.cause-summary li {
+  display: flex; align-items: baseline; gap: 8px; padding: 9px 14px; border: 1px solid var(--line); border-radius: 12px;
+  background: var(--surface-2);
+}
+.cause-summary strong { font-size: 1.4rem; font-weight: 300; color: var(--accent-ink); }
+
+.bar { position: relative; display: block; min-width: 120px; height: 22px; border-radius: var(--radius-small); background: var(--track); overflow: hidden; }
+.bar__fill { position: absolute; inset: 0 auto 0 0; background: var(--accent-soft); border-right: 2px solid var(--accent); border-radius: var(--radius-small); }
+.bar__value { position: relative; display: block; padding: 0 8px; line-height: 22px; font-size: .78rem; font-weight: 500; color: var(--ink); font-variant-numeric: tabular-nums; }
+
+.training__actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 12px 0; }
+.training__actions .button { display: inline-flex; align-items: center; gap: 6px; }
