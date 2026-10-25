@@ -1,0 +1,11 @@
+/* Printing (or saving as PDF) a report: only the content, in black on white, whatever the theme on screen. */
+@media print {
+  .no-print, .sidebar, .topbar, .backdrop, .page-header__actions, .site-footer { display: none !important; }
+  :root, :root[data-theme='dark'] {
+    --ink: #000000; --muted: #444444; --line: #cccccc; --line-soft: #e5e5e5; --surface: transparent;
+    --surface-2: transparent; --accent-ink: #000000; --page-bg: #ffffff;
+  }
+  .shell { display: block; }
+  body { background: #ffffff !important; color: #000000; }
+  .panel { border: 1px solid #cccccc; break-inside: avoid; backdrop-filter: none; }
+}
