@@ -1,0 +1,22 @@
+/* Connection test (Mi Wi-Fi): speed against the contracted plan, what the connection is good for and the tips. */
+
+/* Download against the contracted speed, drawn in segments like the bars of a signal meter */
+.meter {
+  position: relative; display: block; height: 10px; margin: 10px 0 5px; border-radius: 2px; background: var(--track); overflow: hidden;
+  -webkit-mask: repeating-linear-gradient(90deg, currentColor 0 calc(10% - 3px), transparent calc(10% - 3px) 10%);
+  mask: repeating-linear-gradient(90deg, currentColor 0 calc(10% - 3px), transparent calc(10% - 3px) 10%);
+}
+.meter span { display: block; height: 100%; background: linear-gradient(90deg, var(--accent-line), var(--accent)); }
+
+.uses { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.uses__item {
+  display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; padding: 8px 12px;
+  border-radius: 10px; border: 1px solid var(--line-soft); background: var(--surface-2); font-size: .92rem;
+}
+.uses__item--yes .icon { color: var(--accent); }
+.uses__item--no .icon { color: var(--bad); }
+.uses__item--no strong { color: var(--bad-ink); }
+.uses__item--unknown .icon { color: var(--muted); }
+.uses__item strong { font-size: .8rem; font-weight: 500; }
+.tips { margin: 0; padding-left: 18px; display: grid; gap: 8px; }
+.tips li::marker { color: var(--accent); }
