@@ -1,0 +1,49 @@
+/*
+ * Controls. Only two button radii: 8px for controls and a full pill for the big call to action. The violet fill is the
+ * primary action; everything else is an outlined control that lets the hairline do the work.
+ */
+.button {
+  display: inline-block; background: var(--accent-fill); color: var(--on-accent); border: 1px solid transparent;
+  border-radius: var(--radius-control); padding: 9px 16px; font: inherit; font-weight: 500; cursor: pointer;
+  text-decoration: none; text-align: center;
+  transition: background .15s ease, border-color .15s ease, box-shadow .2s ease, transform .15s ease;
+}
+.button:hover { background: var(--accent-hover); }
+.button:not(.button--quiet):hover:not(:disabled) { box-shadow: 0 0 0 4px var(--accent-soft), 0 0 22px var(--accent-glow); }
+.button:disabled { opacity: .5; cursor: progress; }
+.button--quiet { background: var(--surface-2); color: var(--ink); border-color: var(--line-strong); }
+.button--quiet:hover { background: var(--surface-3); border-color: var(--ink); }
+.button--big {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%;
+  padding: 13px 22px; font-size: 1rem; border-radius: var(--radius-pill);
+}
+.link-button {
+  background: none; border: 0; padding: 2px 4px; color: var(--accent-ink); font: inherit; cursor: pointer;
+  text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px;
+}
+.link-button:hover { text-decoration-thickness: 2px; }
+.link-button--danger { color: var(--bad-ink); }
+
+.iconbtn {
+  width: 34px; height: 34px; display: grid; place-items: center; border: 1px solid var(--line);
+  border-radius: var(--radius-control); background: transparent; color: var(--muted); cursor: pointer;
+  transition: border-color .15s ease, color .15s ease;
+}
+.iconbtn:hover { border-color: var(--accent-line); color: var(--accent-ink); }
+.iconbtn--danger:hover { border-color: var(--bad-line); color: var(--bad-ink); }
+.iconbtn:disabled { opacity: .5; cursor: progress; }
+
+.theme-toggle {
+  display: inline-flex; align-items: center; gap: 8px; padding: 7px 12px; border-radius: var(--radius-control);
+  font: inherit; font-size: .88rem; cursor: pointer; color: var(--ink); background: transparent;
+  border: 1px solid var(--line);
+}
+.theme-toggle:hover { border-color: var(--line-strong); }
+
+.segmented {
+  display: inline-flex; border: 1px solid var(--line); border-radius: var(--radius-control); overflow: hidden;
+  background: transparent;
+}
+.segmented button { border: 0; background: none; padding: 7px 12px; font: inherit; cursor: pointer; color: var(--muted); }
+.segmented button + button { border-left: 1px solid var(--line); }
+.segmented button[aria-pressed='true'] { background: var(--accent-soft); color: var(--accent-ink); font-weight: 500; }
