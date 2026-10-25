@@ -28,7 +28,9 @@ src/auth/credentials.ts     límites de usuario (40, nombre o correo) y contrase
 tests/                      pruebas de apiClient, reglas de arquitectura y seguridad, y componentes
 .github/workflows/pagina.yml  tipos, pruebas, build y npm audit en cada Pull Request
 .github/dependabot.yml      actualizaciones mensuales de npm y de las acciones
+src/styles/                 una hoja de estilos por área; tokens.css tiene todos los colores, radios y fuentes
 docs/patrones.md            patrones de la página: Error Boundary, Provider, componentes guardia, Custom Hook y Single-flight
+docs/diseno.md              sistema de diseño: tokens, tipografía, componentes y lo que no se tomó de la referencia
 ```
 
 ## Secciones
@@ -39,10 +41,12 @@ ve la calidad de cada red y registra, edita y elimina sus redes (hasta 3). Nunca
 
 ## Dashboards
 
-Los dos paneles comparten el mismo diseño: barra con hora y fecha, **medidor en arco** de la calidad (0 a 100,
-calificada por la IA), medidores pequeños de latencia y jitter, tarjetas de cifras y una franja inferior con el estado
-de cada servicio. El color del medidor indica el estado y siempre va acompañado de la palabra (Buena, Regular,
-Mala) y un ícono, así que no depende solo del color.
+Los dos paneles comparten el mismo diseño: encabezado con el título en itálica, hora y fecha, **medidor en arco** de
+la calidad (0 a 100, calificada por reglas del servicio de análisis) con marcas que se encienden como la señal Wi-Fi,
+medidores pequeños de latencia y jitter, tarjetas de cifras y una franja inferior con el estado de cada servicio
+dibujada como una ruta con un nodo por servicio. El color del medidor indica el estado y siempre va acompañado de la
+palabra (Buena, Regular, Mala) y un ícono, así que no depende solo del color. En **Mediciones**, el porcentaje de cada
+protocolo (UDP, TCP, ICMP…) se muestra con los mismos medidores circulares, de mayor a menor.
 
 - **Equipo (Panel):** salud de la red elegida según su última medición, redes por estado, actividad (alertas,
   anomalías, latencia media, dispositivos) y estado de la IA, la base de datos y el monitoreo.
@@ -92,12 +96,14 @@ Mala) y un ícono, así que no depende solo del color.
 - **Redes de usuarios (ADMIN y ANALYST):** el panel del equipo con datos reales: usuarios, agentes conectados, redes
   en riesgo y con anomalías, y una tabla de cada red con su último reporte. Nada de sus equipos; el analista ve el
   usuario enmascarado. Un VIEWER no la ve.
-- **Diseño:** fondo azul cielo con tarjetas de vidrio blanco y un fondo animado (`NetworkBackdrop`): ondas y una red
-  de nodos con paquetes que viajan entre ellos y se acercan al puntero. Con «reducir movimiento» queda quieto.
+- **Diseño (Avance 19):** lienzo casi negro con un solo color de señal, el violeta; tarjetas planas de línea fina,
+  sin sombras; Inter, JetBrains Mono para las etiquetas sello y Lora itálica para los títulos grandes. Fondo animado
+  (`NetworkBackdrop`): ondas y una red de nodos con paquetes que, al llegar, se expanden en anillos como una señal
+  Wi-Fi. Con «reducir movimiento» queda quieto. Detalle en [docs/diseno.md](docs/diseno.md).
 - **Carga por áreas:** cada página se descarga al entrar (`React.lazy`); un usuario final no descarga las páginas del
   equipo ni la librería de gráficas.
-- **Modo claro y oscuro:** claro por defecto; el botón Modo oscuro cambia todos los colores (tokens en `index.css`)
-  y se recuerda en el navegador.
+- **Modo oscuro y claro:** oscuro por defecto; el botón de tema cambia todos los colores (tokens en
+  `src/styles/tokens.css`) y la elección se recuerda en el navegador.
 Las acciones se muestran según el rol (Observador consulta; Analista recolecta, analiza y gestiona alertas;
 Administrador además registra redes).
 
@@ -116,8 +122,8 @@ Administrador además registra redes).
 
 ## Inicio de sesión y cuentas
 
-- **Login y registro** comparten el mismo diseño: fondo con destellos de luz animados, tarjeta de vidrio esmerilado y
-  el logo Wi-Fi que se enciende de abajo hacia arriba, arco por arco, como si estuviera cargando (más rápido mientras
+- **Login y registro** comparten el mismo diseño: anillos Wi-Fi que suben desde el horizonte, tarjeta de vidrio como
+  un «pase de acceso» (Tu Wi-Fi → WiFiSense) y el logo Wi-Fi que se enciende de abajo hacia arriba, arco por arco, como si estuviera cargando (más rápido mientras
   se envía el formulario). Con «reducir movimiento» activado en el sistema, las animaciones se detienen.
 - **Registro público** en `/registro` para usuarios finales: requisitos de la contraseña en vivo y confirmación. El
   rol siempre lo asigna el backend (`USER`); el formulario nunca lo envía.
@@ -148,7 +154,7 @@ Administrador además registra redes).
 npm install
 cp .env.example .env        # VITE_API_URL=http://localhost:8080
 npm run dev                 # http://localhost:5173
-npm test                    # 148 pruebas
+npm test                    # 171 pruebas
 npm run build               # tipos + build de producción en dist/
 ```
 
