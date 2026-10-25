@@ -53,3 +53,8 @@ export function formatDuration(minutes: number): string {
   if (days > 0) return hours > 0 ? `${days} d ${hours} h` : `${days} d`;
   return rest > 0 ? `${hours} h ${rest} min` : `${hours} h`;
 }
+
+/** Name for a greeting: an email reads better without its domain ("laura.rios@correo.co" → "laura.rios"). */
+export function greetingName(username: string | undefined): string {
+  return (username ?? '').split('@')[0];
+}
