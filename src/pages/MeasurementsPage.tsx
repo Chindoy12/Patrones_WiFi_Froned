@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { useAuth } from '../auth/AuthContext';
 import { DataState } from '../components/DataState';
+import { Gauge } from '../components/Gauge';
 import { NetworkPicker } from '../components/NetworkPicker';
 import { PageHeader } from '../components/PageHeader';
 import { formatDateTime, formatNumber, statusLabel } from '../format';
 import { errorMessage, useApi } from '../hooks/useApi';
 import { useNetworkSelection } from '../hooks/useNetworkSelection';
 import { api } from '../services/api';
+import type { ProtocolStatistic } from '../types';
 
 export function MeasurementsPage() {
   const { can } = useAuth();
@@ -31,7 +33,6 @@ export function MeasurementsPage() {
     }
   }
 
-  const totalPackets = (protocols.data ?? []).reduce((sum, p) => sum + p.packetCount, 0);
   // A network with a sensor sends its readings by itself: there is nothing to collect from here.
   const bySensor = networks.data?.find((n) => n.id === networkId)?.dataSourceType === 'AGENT';
 
@@ -79,26 +80,37 @@ export function MeasurementsPage() {
             )}
           </DataState>
         </section>
-        <section className="panel">
-          <h2>Protocolos (último periodo)</h2>
+        <section className="panel" aria-labelledby="protocols-title">
+          <h2 id="protocols-title">Protocolos (último periodo)</h2>
           <DataState {...protocols} empty="Sin estadísticas de protocolos.">
-            {(rows) => (
-              <ul className="share-list">
-                {rows.map((p) => {
-                  const share = totalPackets ? (p.packetCount / totalPackets) * 100 : 0;
-                  return (
-                    <li key={p.protocol}>
-                      <span>{p.protocol}</span>
-                      <span className="share-list__bar"><span style={{ width: `${share}%` }} /></span>
-                      <span className="num">{share.toFixed(1)} %</span>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
+            {(rows) => <ProtocolGauges rows={rows} />}
           </DataState>
         </section>
       </div>
+    </>
+  );
+}
+
+/**
+ * Share of each protocol in the traffic of the last period, drawn with the same round gauges as latency and jitter:
+ * a share is not good or bad, so every gauge uses the neutral "share" status. Largest first.
+ */
+export function ProtocolGauges({ rows }: { rows: ProtocolStatistic[] }) {
+  const total = rows.reduce((sum, p) => sum + p.packetCount, 0);
+  const shares = rows
+    .map((p) => ({ ...p, share: total ? (p.packetCount / total) * 100 : 0 }))
+    .sort((a, b) => b.share - a.share);
+  return (
+    <>
+      <ul className="gauge-grid">
+        {shares.map((p) => (
+          <li key={p.protocol}>
+            <Gauge size="sm" percent={p.share} value={formatNumber(p.share, 1)} unit="%" label={p.protocol}
+                   status="share" caption={`${formatNumber(p.packetCount, 0)} paquetes`} />
+          </li>
+        ))}
+      </ul>
+      <p className="muted gauge-grid__note">{formatNumber(total, 0)} paquetes en total.</p>
     </>
   );
 }
