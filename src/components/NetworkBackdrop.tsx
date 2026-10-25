@@ -2,16 +2,19 @@ import { useEffect, useRef } from 'react';
 
 /**
  * Animated background of the app: soft waves that flow like a signal and a mesh of nodes with packets travelling
- * between them, like devices talking on a Wi-Fi network. The mesh leans gently toward the pointer.
+ * between them, like devices talking on a Wi-Fi network. When a packet arrives, the node answers with a ring that
+ * spreads and fades, like a Wi-Fi signal. The mesh leans gently toward the pointer.
  *
  * It is decoration only (aria-hidden, no pointer events). It draws a single still frame when the user prefers
  * reduced motion, pauses while the tab is hidden and keeps the frame rate modest so it never competes with the page.
  */
 interface Node { x: number; y: number; vx: number; vy: number; r: number }
 interface Packet { from: number; to: number; t: number; speed: number }
+interface Ripple { x: number; y: number; age: number }
 
 const LINK_DISTANCE = 150;
 const FRAME_MS = 1000 / 40;
+const RIPPLE_RADIUS = 34;
 
 function color(name: string, fallback: string): string {
   const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
@@ -36,6 +39,7 @@ export function NetworkBackdrop() {
     let height = 0;
     let nodes: Node[] = [];
     let packets: Packet[] = [];
+    let ripples: Ripple[] = [];
     let frame = 0;
     let last = 0;
     let phase = 0;
@@ -52,6 +56,7 @@ export function NetworkBackdrop() {
         vx: (Math.random() - .5) * .25, vy: (Math.random() - .5) * .25, r: 1.4 + Math.random() * 1.8,
       }));
       packets = [];
+      ripples = [];
     }
 
     function wave(offset: number, amplitude: number, length: number, base: number, fill: string) {
@@ -68,12 +73,12 @@ export function NetworkBackdrop() {
     }
 
     function draw() {
-      const nodeColor = color('--net-node', '#3b6cf6');
-      const linkColor = color('--net-link', 'rgba(59,108,246,.18)');
+      const nodeColor = color('--net-node', '#af50ff');
+      const linkColor = color('--net-link', 'rgba(225,189,255,.14)');
       ctx!.clearRect(0, 0, width, height);
-      wave(1, 26, 180, height * .72, color('--net-wave-1', 'rgba(124,176,255,.16)'));
-      wave(1.4, 20, 140, height * .8, color('--net-wave-2', 'rgba(59,108,246,.10)'));
-      wave(.8, 16, 220, height * .88, color('--net-wave-3', 'rgba(255,255,255,.35)'));
+      wave(1, 26, 180, height * .72, color('--net-wave-1', 'rgba(175,80,255,.07)'));
+      wave(1.4, 20, 140, height * .8, color('--net-wave-2', 'rgba(225,189,255,.04)'));
+      wave(.8, 16, 220, height * .88, color('--net-wave-3', 'rgba(9,9,9,.5)'));
 
       for (let i = 0; i < nodes.length; i++) {
         for (let j = i + 1; j < nodes.length; j++) {
@@ -109,6 +114,19 @@ export function NetworkBackdrop() {
         ctx!.arc(a.x + (b.x - a.x) * packet.t, a.y + (b.y - a.y) * packet.t, 2.2, 0, Math.PI * 2);
         ctx!.fill();
       }
+      ctx!.strokeStyle = color('--net-ripple', 'rgba(175,80,255,.5)');
+      ctx!.lineWidth = 1.2;
+      for (const ripple of ripples) {
+        // two rings a little apart, like the arcs of the Wi-Fi mark
+        for (const lag of [0, .35]) {
+          const age = ripple.age - lag;
+          if (age <= 0) continue;
+          ctx!.globalAlpha = Math.max(1 - age, 0) * .9;
+          ctx!.beginPath();
+          ctx!.arc(ripple.x, ripple.y, 3 + age * RIPPLE_RADIUS, 0, Math.PI * 2);
+          ctx!.stroke();
+        }
+      }
       ctx!.globalAlpha = 1;
     }
 
@@ -129,7 +147,14 @@ export function NetworkBackdrop() {
         if (node.x < 0 || node.x > width) node.vx *= -1;
         if (node.y < 0 || node.y > height) node.vy *= -1;
       }
-      packets = packets.filter((p) => (p.t += p.speed) < 1);
+      packets = packets.filter((p) => {
+        p.t += p.speed;
+        if (p.t < 1) return true;
+        const target = nodes[p.to];
+        if (target && ripples.length < 8) ripples.push({ x: target.x, y: target.y, age: 0 });
+        return false;
+      });
+      ripples = ripples.filter((r) => (r.age += .02) < 1.35);
       if (packets.length < 6 && Math.random() < .05 && nodes.length > 1) {
         const from = Math.floor(Math.random() * nodes.length);
         const to = nodes.findIndex((n, i) => i !== from
