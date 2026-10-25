@@ -33,7 +33,7 @@ export function DashboardPage() {
 
   return (
     <>
-      <TopBar title="Panel de redes"
+      <TopBar title="Panel de redes" eyebrow="Equipo · Monitoreo en vivo"
               status={status.data ? { label: status.data.monitoringEnabled ? 'Monitoreo activo' : 'Monitoreo detenido',
                                       ok: status.data.monitoringEnabled } : undefined}
               actions={<button className="button button--quiet" onClick={refresh}>Actualizar</button>} />
