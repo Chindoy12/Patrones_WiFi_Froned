@@ -28,7 +28,7 @@ export function UserNetworksPage() {
 
   return (
     <>
-      <TopBar title="Redes de usuarios"
+      <TopBar title="Redes de usuarios" eyebrow="Equipo · Datos reales de los agentes"
               actions={<button className="button button--quiet" onClick={team.reload}>Actualizar</button>} />
       <p className="notice notice--info">
         Datos reales que envían los agentes instalados en las casas de los usuarios. Por privacidad no se muestra nada
