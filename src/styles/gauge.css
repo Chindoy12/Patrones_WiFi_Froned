@@ -1,0 +1,49 @@
+/*
+ * Radial gauges (quality, latency, jitter, security and protocol shares). The arc and the ticks take --gauge from the
+ * status: a good value glows violet, fair is amber, poor is rose; a share is always violet.
+ */
+.gauge { position: relative; margin: 0 auto; width: 100%; display: grid; justify-items: center; }
+.gauge--lg { max-width: 300px; }
+.gauge--sm { max-width: 172px; }
+.gauge__arc { width: 100%; height: auto; overflow: visible; }
+.gauge__track, .gauge__fill { fill: none; stroke-linecap: round; }
+.gauge--lg .gauge__track, .gauge--lg .gauge__fill { stroke-width: 12; }
+.gauge--sm .gauge__track, .gauge--sm .gauge__fill { stroke-width: 10; }
+.gauge__track { stroke: var(--track); }
+.gauge--good, .gauge--share { --gauge: var(--accent); --gauge-soft: var(--accent-soft); --gauge-ink: var(--accent-ink); }
+.gauge--fair { --gauge: var(--warn); --gauge-soft: var(--warn-soft); --gauge-ink: var(--warn-ink); }
+.gauge--poor { --gauge: var(--bad); --gauge-soft: var(--bad-soft); --gauge-ink: var(--bad-ink); }
+.gauge--none { --gauge: var(--muted); --gauge-soft: var(--track); --gauge-ink: var(--muted); }
+.gauge__stop-start { stop-color: var(--gauge); stop-opacity: .45; }
+.gauge__stop-end { stop-color: var(--gauge); stop-opacity: 1; }
+.gauge__fill {
+  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--gauge) 55%, transparent));
+  transition: stroke-dasharray .8s var(--ease);
+}
+
+/* Tick marks around the arc: they light up as far as the value goes, like the bars of a Wi-Fi signal */
+.gauge__tick { stroke: var(--line); stroke-width: 1.4; stroke-linecap: round; transition: stroke .4s ease; }
+.gauge__tick.is-major { stroke: var(--line-strong); stroke-width: 1.8; }
+.gauge__tick.is-on { stroke: var(--gauge); opacity: .85; }
+
+.gauge__center { position: absolute; inset: 0 0 20% 0; display: grid; place-content: center; text-align: center; }
+.gauge__value { font-weight: 300; line-height: 1; letter-spacing: -.04em; font-variant-numeric: tabular-nums; }
+.gauge--lg .gauge__value { font-size: 3.6rem; }
+.gauge--sm .gauge__value { font-size: 1.85rem; }
+.gauge__value small { font-size: .36em; font-weight: 400; margin-left: 3px; color: var(--muted); letter-spacing: 0; }
+.gauge__label {
+  margin-top: 8px; color: var(--muted); font-family: var(--font-mono); font-size: .66rem; letter-spacing: .14em;
+  text-transform: uppercase;
+}
+.gauge--sm .gauge__label { margin-top: 5px; font-size: .62rem; }
+.gauge__caption {
+  display: inline-flex; align-items: center; gap: 6px; margin-top: -4px; padding: 3px 12px; border-radius: var(--radius-pill);
+  font-size: .82rem; font-weight: 500; color: var(--ink); background: var(--gauge-soft);
+  border: 1px solid color-mix(in srgb, var(--gauge) 35%, transparent);
+}
+.gauge__caption .icon { color: var(--gauge-ink); }
+
+/* A row of small gauges, e.g. the share of each protocol */
+.gauge-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(132px, 1fr)); gap: 18px 12px; }
+.gauge-grid > li { min-width: 0; }
+.gauge-grid__note { margin: 14px 0 0; font-size: .82rem; }
