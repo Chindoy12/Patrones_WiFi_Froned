@@ -1,0 +1,10 @@
+/* Best Wi-Fi channel: one segmented bar per candidate channel; longer means more neighbor networks on it. */
+.channels { list-style: none; margin: 12px 0 4px; padding: 0; display: grid; gap: 8px; }
+.channels li { display: grid; grid-template-columns: 2.4rem minmax(0, 1fr) auto; align-items: center; gap: 10px; }
+.channels__num { font-family: var(--font-mono); font-weight: 500; text-align: right; color: var(--muted); }
+.channels__bar { height: 8px; border-radius: var(--radius-pill); background: var(--track); overflow: hidden; }
+.channels__bar i { display: block; height: 100%; border-radius: inherit; background: var(--warn); }
+.channels li.is-best .channels__bar i { background: var(--accent); box-shadow: 0 0 10px var(--accent-glow); }
+.channels li.is-current .channels__num { color: var(--ink); }
+.channels li.is-best .channels__num { color: var(--accent-ink); }
+.channels__load { color: var(--muted); white-space: nowrap; font-size: .88rem; }
