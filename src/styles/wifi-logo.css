@@ -1,0 +1,26 @@
+/* Wi-Fi mark: the dot and the three arcs light up in violet from the bottom, one after another, like a signal loading. */
+.wifi-logo { overflow: visible; flex-shrink: 0; --wifi-rest: var(--line-strong); --wifi-on: var(--accent); }
+.wifi-logo__dot { fill: var(--wifi-rest); animation: wifi-dot 2.4s ease-in-out infinite; }
+.wifi-logo__arc { fill: none; stroke: var(--wifi-rest); stroke-width: 5; stroke-linecap: round; animation: wifi-arc 2.4s ease-in-out infinite; }
+.wifi-logo__arc--1 { animation-delay: .3s; }
+.wifi-logo__arc--2 { animation-delay: .6s; }
+.wifi-logo__arc--3 { animation-delay: .9s; }
+.wifi-logo--busy .wifi-logo__dot, .wifi-logo--busy .wifi-logo__arc { animation-duration: 1.2s; }
+.wifi-logo--busy .wifi-logo__arc--1 { animation-delay: .15s; }
+.wifi-logo--busy .wifi-logo__arc--2 { animation-delay: .3s; }
+.wifi-logo--busy .wifi-logo__arc--3 { animation-delay: .45s; }
+@keyframes wifi-arc {
+  0%, 5% { stroke: var(--wifi-rest); filter: none; }
+  18%, 70% { stroke: var(--wifi-on); filter: drop-shadow(0 0 5px var(--accent-glow)); }
+  90%, 100% { stroke: var(--wifi-rest); filter: none; }
+}
+@keyframes wifi-dot {
+  0%, 5% { fill: var(--wifi-rest); filter: none; }
+  18%, 70% { fill: var(--wifi-on); filter: drop-shadow(0 0 5px var(--accent-glow)); }
+  90%, 100% { fill: var(--wifi-rest); filter: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wifi-logo__dot, .wifi-logo__arc { animation: none; }
+  .wifi-logo__dot { fill: var(--wifi-on); }
+  .wifi-logo__arc { stroke: var(--wifi-on); }
+}
