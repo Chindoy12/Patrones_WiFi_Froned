@@ -1,0 +1,20 @@
+/*
+ * Surfaces: flat, translucent and shadowless. A hairline does the separation; under the pointer the hairline gets
+ * brighter instead of the card casting a shadow.
+ */
+.panel, .eu-card, .dash__card, .strip, .overview {
+  backdrop-filter: var(--glass); -webkit-backdrop-filter: var(--glass);
+}
+.panel {
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px 22px;
+  margin-bottom: 20px; min-width: 0;
+}
+.panel > h2:first-child { margin-top: 0; }
+.grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 20px; }
+.grid-2--wide-left { grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); }
+.eu-card, .dash__card { transition: border-color .25s ease, transform .25s var(--ease); }
+.eu-card:hover, .dash__card:hover { border-color: var(--line-strong); }
+
+@media (max-width: 1000px) {
+  .grid-2, .grid-2--wide-left { grid-template-columns: minmax(0, 1fr); }
+}
