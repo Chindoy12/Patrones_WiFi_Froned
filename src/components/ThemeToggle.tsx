@@ -1,7 +1,7 @@
 import { applyTheme, useTheme } from '../theme';
 import { Icon } from './Icon';
 
-/** Switches between the light design (default) and the dark one. */
+/** Switches between the dark design (default) and the light one; the choice is remembered in this browser. */
 export function ThemeToggle() {
   const dark = useTheme() === 'dark';
   return (
