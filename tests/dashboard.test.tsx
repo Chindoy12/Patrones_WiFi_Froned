@@ -56,6 +56,15 @@ beforeEach(() => {
 const renderPage = () => render(<MemoryRouter><DashboardPage /></MemoryRouter>);
 
 describe('Panel del equipo', () => {
+  it('signs the header with the area and the title of the page', async () => {
+    renderPage();
+
+    const title = screen.getByRole('heading', { level: 1, name: 'Panel de redes' });
+    expect(title).toHaveClass('display');
+    expect(screen.getByText('Equipo · Monitoreo en vivo')).toHaveClass('stamp');
+    expect(await screen.findByRole('img', { name: /Calidad de 0 a 100/ })).toBeInTheDocument();
+  });
+
   it('shows the health gauge of the selected network graded by the AI', async () => {
     renderPage();
 
