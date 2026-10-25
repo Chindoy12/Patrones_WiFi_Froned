@@ -1,0 +1,10 @@
+/* Modal (router guide): a solid card over a dimmed, blurred page. */
+.modal { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 16px; background: var(--overlay); backdrop-filter: blur(4px); }
+.modal__box {
+  width: min(540px, 100%); max-height: 90vh; overflow: auto; background: var(--surface-solid); border: 1px solid var(--line-strong);
+  border-radius: var(--radius); padding: 24px 26px;
+}
+.modal__box h3 { display: flex; align-items: center; gap: 8px; margin-top: 0; font-weight: 500; }
+.modal__box h3 .icon { color: var(--accent); }
+.modal__box .agent__steps { margin: 12px 0; }
+.modal__box .button { margin-top: 8px; }
