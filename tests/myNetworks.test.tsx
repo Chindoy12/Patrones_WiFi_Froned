@@ -53,6 +53,19 @@ const graded: ConnectionTest = {
 };
 
 describe('Mi Wi-Fi', () => {
+  it('greets the user by the name of the email, without the domain', async () => {
+    vi.mocked(useAuth).mockReturnValue({
+      user: { id: 9, username: 'laura.rios@correo.co', role: 'USER' }, ready: true,
+      login: vi.fn(), register: vi.fn(), renew: vi.fn(), logout: vi.fn(), can: () => false,
+    });
+    vi.mocked(api.myNetworks).mockResolvedValue([casa]);
+    renderPage();
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'Hola, laura.rios' })).toBeInTheDocument();
+    expect(screen.getByText('Mi Wi-Fi')).toHaveClass('stamp');
+    expect(screen.getByText('Las direcciones MAC nunca salen de tu computador')).toBeInTheDocument();
+  });
+
   it('lists only what the backend returns for this user', async () => {
     vi.mocked(api.myNetworks).mockResolvedValue([casa]);
     renderPage();
