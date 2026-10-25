@@ -9,9 +9,12 @@ interface Props {
   children: ReactNode;
 }
 
-const STREAKS = 7;
+const STREAKS = 5;
 
-/** Shared frame for login and sign-up: animated light streaks behind a frosted-glass card. */
+/**
+ * Shared frame for login, sign-up and password recovery: a midnight canvas with a violet glow on the horizon and a
+ * glass card styled like an access pass (a stamped label and the route from your Wi-Fi to WiFiSense).
+ */
 export function AuthShell({ title, subtitle, busy = false, footer, children }: Props) {
   return (
     <div className="auth-shell">
@@ -20,10 +23,14 @@ export function AuthShell({ title, subtitle, busy = false, footer, children }: P
       </div>
       <main className="auth-card">
         <div className="auth-card__brand">
-          <WifiLogo busy={busy} />
+          <WifiLogo busy={busy} size={44} />
           <span>WiFiSense</span>
+          <span className="stamp auth-card__pass">Pase de acceso</span>
         </div>
-        <h1>{title}</h1>
+        <p className="auth-card__route stamp" aria-hidden="true">
+          <span>Tu Wi-Fi</span><i /><span>WiFiSense</span>
+        </p>
+        <h1 className="display">{title}</h1>
         <p className="auth-card__subtitle">{subtitle}</p>
         {children}
         {footer && <div className="auth-card__footer">{footer}</div>}
