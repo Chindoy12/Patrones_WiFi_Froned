@@ -1,0 +1,140 @@
+/*
+ * Design tokens. Every color, radius and font of the app lives here; the other style sheets only use var(--…), so a
+ * theme is just a set of these values (tests/designTokens.test.ts checks it).
+ *
+ * Dark is the default: a near-black canvas, an achromatic scale for text and hairlines, and a single violet signal
+ * (--accent) rationed to gauges, the primary action and one glow per page. Status colors (good, warn, bad) are
+ * functional, never decoration: they always go with a word or an icon.
+ */
+:root,
+:root[data-theme='dark'] {
+  --page-bg: radial-gradient(1000px 640px at 92% -12%, rgba(175, 80, 255, .16), transparent 62%),
+             radial-gradient(900px 520px at -10% 112%, rgba(175, 80, 255, .08), transparent 60%),
+             #090909;
+  --paper: #090909;
+  --surface: rgba(247, 249, 250, .035);
+  --surface-solid: #121213;
+  --surface-2: rgba(247, 249, 250, .055);
+  --surface-3: rgba(247, 249, 250, .09);
+  --frost: rgba(24, 23, 34, .72);
+  --ink: #f7f9fa;
+  --ink-soft: #f0f0f0;
+  --muted: #8e8f90;
+  --line: rgba(247, 249, 250, .12);
+  --line-soft: rgba(247, 249, 250, .07);
+  --line-strong: rgba(247, 249, 250, .24);
+  --accent: #af50ff;
+  --accent-ink: #e1bdff;
+  --accent-2: #e1bdff;
+  --accent-fill: #9b3ff0;
+  --accent-hover: #a94ff7;
+  --accent-soft: rgba(175, 80, 255, .14);
+  --accent-line: rgba(175, 80, 255, .45);
+  --accent-glow: rgba(175, 80, 255, .32);
+  --on-accent: #ffffff;
+  --good: #4fd18b;
+  --warn: #f2b84b;
+  --bad: #ff6b81;
+  --good-soft: rgba(79, 209, 139, .13);
+  --warn-soft: rgba(242, 184, 75, .13);
+  --bad-soft: rgba(255, 107, 129, .13);
+  --good-ink: #4fd18b;
+  --warn-ink: #f2b84b;
+  --bad-ink: #ff8a9c;
+  --bad-line: rgba(255, 107, 129, .4);
+  --input-bg: rgba(247, 249, 250, .04);
+  --input-line: rgba(247, 249, 250, .18);
+  --sidebar-bg: rgba(9, 9, 9, .72);
+  --sidebar-ink: #c9cacb;
+  --track: rgba(247, 249, 250, .08);
+  --chip: rgba(247, 249, 250, .06);
+  --chip-line: rgba(247, 249, 250, .2);
+  --overlay: rgba(4, 4, 6, .72);
+  --bloom: radial-gradient(120% 75% at 50% -8%, rgba(175, 80, 255, .30), rgba(175, 80, 255, .06) 55%, transparent 75%);
+  --chart-1: #af50ff;
+  --chart-2: #e1bdff;
+  --chart-grid: rgba(247, 249, 250, .08);
+  --net-node: #af50ff;
+  --net-link: rgba(225, 189, 255, .14);
+  --net-ripple: rgba(175, 80, 255, .5);
+  --net-wave-1: rgba(175, 80, 255, .05);
+  --net-wave-2: rgba(225, 189, 255, .025);
+  --net-wave-3: rgba(9, 9, 9, .5);
+  color-scheme: dark;
+}
+
+:root[data-theme='light'] {
+  --page-bg: radial-gradient(1000px 640px at 92% -12%, rgba(122, 43, 214, .10), transparent 62%), #f5f5f7;
+  --paper: #f5f5f7;
+  --surface: rgba(255, 255, 255, .78);
+  --surface-solid: #ffffff;
+  --surface-2: rgba(9, 9, 9, .035);
+  --surface-3: rgba(9, 9, 9, .07);
+  --frost: rgba(255, 255, 255, .78);
+  --ink: #090909;
+  --ink-soft: #1d1d1f;
+  --muted: #5b5c5e;
+  --line: rgba(9, 9, 9, .12);
+  --line-soft: rgba(9, 9, 9, .07);
+  --line-strong: rgba(9, 9, 9, .26);
+  --accent: #7a2bd6;
+  --accent-ink: #6d22c4;
+  --accent-2: #b67cf0;
+  --accent-fill: #7a2bd6;
+  --accent-hover: #6d22c4;
+  --accent-soft: rgba(122, 43, 214, .09);
+  --accent-line: rgba(122, 43, 214, .35);
+  --accent-glow: rgba(122, 43, 214, .18);
+  --on-accent: #ffffff;
+  --good: #1a8a4f;
+  --warn: #c27c0e;
+  --bad: #c4314b;
+  --good-soft: rgba(26, 138, 79, .1);
+  --warn-soft: rgba(194, 124, 14, .12);
+  --bad-soft: rgba(196, 49, 75, .09);
+  --good-ink: #157a45;
+  --warn-ink: #7d5306;
+  --bad-ink: #9b1f34;
+  --bad-line: rgba(196, 49, 75, .35);
+  --input-bg: #ffffff;
+  --input-line: rgba(9, 9, 9, .2);
+  --sidebar-bg: rgba(255, 255, 255, .7);
+  --sidebar-ink: #3a3b3d;
+  --track: rgba(9, 9, 9, .07);
+  --chip: rgba(9, 9, 9, .04);
+  --chip-line: rgba(9, 9, 9, .2);
+  --overlay: rgba(9, 9, 9, .45);
+  --bloom: radial-gradient(120% 75% at 50% -8%, rgba(122, 43, 214, .14), rgba(122, 43, 214, .03) 55%, transparent 75%);
+  --chart-1: #7a2bd6;
+  --chart-2: #b67cf0;
+  --chart-grid: rgba(9, 9, 9, .08);
+  --net-node: #7a2bd6;
+  --net-link: rgba(122, 43, 214, .14);
+  --net-ripple: rgba(122, 43, 214, .35);
+  --net-wave-1: rgba(122, 43, 214, .05);
+  --net-wave-2: rgba(182, 124, 240, .05);
+  --net-wave-3: rgba(255, 255, 255, .5);
+  color-scheme: light;
+}
+
+:root {
+  /* Inter stands in for a geometric sans, JetBrains Mono for the stamped labels and Lora italic for the display. */
+  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --font-display: 'Lora', Georgia, 'Times New Roman', serif;
+  --radius: 19.2px;
+  --radius-control: 8px;
+  --radius-small: 6px;
+  --radius-pill: 999px;
+  --tracking-stamp: .2em;
+  --glass: blur(14px) saturate(140%);
+  --frost-blur: blur(10px);
+  --shadow: none;
+  --shadow-hover: none;
+  --ease: cubic-bezier(.2, .7, .2, 1);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--ink);
+  background: var(--paper);
+}
