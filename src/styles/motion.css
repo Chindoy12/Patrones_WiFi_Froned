@@ -1,0 +1,16 @@
+/* Animated network behind the app and the gentle entrance of the cards. Everything here respects reduced motion. */
+/* z-index -1 inside the shell: above the page background, below every piece of content (text included) */
+.backdrop { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: -1; pointer-events: none; }
+
+.dash__card, .eu-card, .panel { animation: rise .5s var(--ease) both; }
+.dash > :nth-child(2) { animation-delay: .05s; }
+.dash > :nth-child(3) { animation-delay: .1s; }
+.dash > :nth-child(4) { animation-delay: .15s; }
+.dash > :nth-child(5) { animation-delay: .2s; }
+.dash > :nth-child(6) { animation-delay: .25s; }
+@keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+  .dash__card, .eu-card, .panel { animation: none; }
+}
