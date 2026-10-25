@@ -1,0 +1,46 @@
+/* Team area frame: frosted sidebar on the left, page on the right. */
+.shell { display: grid; grid-template-columns: 232px 1fr; min-height: 100vh; position: relative; z-index: 1; }
+.sidebar {
+  background: var(--sidebar-bg); color: var(--sidebar-ink); border-right: 1px solid var(--line);
+  display: flex; flex-direction: column; padding: 22px 14px; position: sticky; top: 0; height: 100vh;
+  backdrop-filter: var(--frost-blur); -webkit-backdrop-filter: var(--frost-blur);
+}
+.sidebar__top { display: flex; align-items: center; justify-content: space-between; }
+.sidebar__toggle { display: none; }
+.brand { display: inline-flex; align-items: center; gap: 10px; font-weight: 500; font-size: 1.1rem; letter-spacing: -.01em; color: var(--ink); }
+.sidebar__label { margin: 30px 12px 8px; }
+.sidebar nav { display: flex; flex-direction: column; gap: 2px; }
+.sidebar nav a {
+  position: relative; display: flex; align-items: center; gap: 11px; color: var(--sidebar-ink); text-decoration: none;
+  padding: 8px 12px; border-radius: var(--radius-control); font-size: .93rem;
+  transition: background .15s ease, color .15s ease;
+}
+.sidebar nav a svg { width: 18px; height: 18px; flex-shrink: 0; opacity: .8; }
+.sidebar nav a:hover { background: var(--surface-2); color: var(--ink); }
+/* The active section: a short violet beacon on the left and lavender text */
+.sidebar nav a.active { background: var(--accent-soft); color: var(--accent-ink); font-weight: 500; }
+.sidebar nav a.active svg { opacity: 1; }
+.sidebar nav a.active::before {
+  content: ''; position: absolute; left: -14px; top: 50%; width: 3px; height: 18px; margin-top: -9px;
+  border-radius: 0 3px 3px 0; background: var(--accent); box-shadow: 0 0 12px var(--accent-glow);
+}
+.sidebar__user { margin-top: auto; display: grid; gap: 2px; padding: 14px 12px 4px; border-top: 1px solid var(--line); }
+.sidebar__user small { color: var(--muted); }
+.sidebar__user .link-button { justify-self: start; padding: 0; margin-top: 8px; }
+.sidebar__user .theme-toggle { justify-self: start; margin-top: 10px; }
+.content { padding: 28px 36px 24px; min-width: 0; max-width: 1400px; display: flex; flex-direction: column; min-height: 100vh; }
+.content__page { flex: 1; min-width: 0; }
+
+@media (max-width: 760px) {
+  .shell { grid-template-columns: 1fr; }
+  .sidebar { position: sticky; z-index: 10; height: auto; padding: 12px 16px; }
+  .sidebar__toggle {
+    display: inline-block; background: var(--surface-2); border: 1px solid var(--line); color: var(--ink);
+    border-radius: var(--radius-control); padding: 6px 12px; font: inherit;
+  }
+  .sidebar nav, .sidebar__user, .sidebar__label { display: none; }
+  .sidebar--open nav { display: flex; margin-top: 12px; }
+  .sidebar--open .sidebar__user { display: grid; }
+  .sidebar nav a.active::before { left: -16px; }
+  .content { padding: 20px 16px 20px; }
+}
