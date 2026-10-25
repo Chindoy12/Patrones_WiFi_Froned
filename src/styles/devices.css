@@ -1,0 +1,53 @@
+/* Devices seen by an agent: a list like the Bluetooth or hotspot list of a phone, with its connection history. */
+.devlist { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 6px; }
+.devrow {
+  display: grid; grid-template-columns: auto 1fr auto auto; align-items: center; gap: 12px; padding: 10px 12px;
+  border-radius: 14px; background: var(--surface-2); border: 1px solid var(--line-soft); transition: border-color .15s ease;
+}
+.devrow:hover { border-color: var(--line); }
+.devrow__icon {
+  display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%;
+  background: var(--accent-soft); color: var(--accent-ink); border: 1px solid var(--accent-line);
+}
+.devrow.is-blocked { border-color: var(--bad-line); background: var(--bad-soft); }
+.devrow.is-blocked .devrow__icon { background: var(--bad-soft); color: var(--bad-ink); border-color: var(--bad-line); }
+.devrow__main { min-width: 0; display: grid; gap: 2px; }
+.devrow__name { font-weight: 500; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.devrow__sub { font-size: .82rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.devrow__input {
+  font: inherit; font-weight: 500; padding: 4px 8px; border: 1px solid var(--accent-line); border-radius: var(--radius-small);
+  background: var(--input-bg); color: var(--ink); width: 100%; max-width: 260px;
+}
+.devrow__dot { width: 9px; height: 9px; border-radius: 50%; background: var(--muted); opacity: .4; }
+.devrow.is-online .devrow__dot { background: var(--good); opacity: 1; box-shadow: 0 0 0 3px var(--good-soft); }
+.devrow__actions { display: inline-flex; gap: 4px; }
+.devrow__history { grid-column: 1 / -1; padding: 8px 2px 2px; border-top: 1px dashed var(--line-soft); }
+
+.devhistory { display: grid; gap: 8px; text-align: left; }
+.devhistory p { margin: 0; }
+.devhistory__strip { position: relative; height: 12px; border-radius: var(--radius-pill); background: var(--surface-3); margin-bottom: 16px; }
+.devhistory__strip i { position: absolute; top: 0; bottom: 0; border-radius: var(--radius-pill); background: var(--accent); }
+.devhistory__ticks { position: absolute; left: 0; right: 0; top: 16px; display: flex; justify-content: space-between; font-size: .7rem; color: var(--muted); font-family: var(--font-mono); }
+.devhistory__ticks b { font-weight: 400; }
+.devhistory__list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: .85rem; }
+.devhistory__list li { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.devhistory__list li.is-ongoing { font-weight: 500; }
+
+/* Older compact list of devices */
+.devices { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.devices li { display: grid; grid-template-columns: auto 1fr auto auto; align-items: center; gap: 10px; padding: 7px 10px; border-radius: 10px; background: var(--surface-2); font-size: .9rem; }
+.devices li i { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); opacity: .5; }
+.devices li.is-online i { background: var(--good); opacity: 1; }
+.devices__name code { color: var(--muted); margin-left: 4px; }
+.devices__state { color: var(--muted); font-size: .82rem; }
+
+@media (max-width: 760px) {
+  .devrow { grid-template-columns: auto 1fr auto; }
+  .devrow__dot { display: none; }
+  .devices li { grid-template-columns: auto 1fr auto; row-gap: 2px; }
+  .devices li .tag { grid-column: 3; grid-row: 1; }
+  .devices__state { grid-column: 2; grid-row: 2; }
+}
+@media (max-width: 560px) {
+  .devrow__sub { white-space: normal; }
+}
