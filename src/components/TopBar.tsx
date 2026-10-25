@@ -13,21 +13,26 @@ export function longDate(date: Date): string {
 
 interface Props {
   title: string;
+  /** Stamped label over the title that says which area this is, e.g. "Equipo · Panel". */
+  eyebrow?: string;
   /** Short connection state shown with the Wi-Fi icon, e.g. "Monitoreo activo". */
   status?: { label: string; ok: boolean };
   actions?: ReactNode;
 }
 
-/** Header of the dashboards: clock and date, a connection state and the theme switch. */
-export function TopBar({ title, status, actions }: Props) {
+/** Header of the dashboards: the title in display italic, clock and date, a connection state and the theme switch. */
+export function TopBar({ title, eyebrow, status, actions }: Props) {
   const now = useNow();
   return (
     <header className="topbar">
+      <div className="topbar__heading">
+        {eyebrow && <span className="stamp">{eyebrow}</span>}
+        <h1 className="topbar__title display">{title}</h1>
+      </div>
       <div className="topbar__time">
         <strong className="topbar__clock">{time.format(now)}</strong>
         <span className="topbar__date">{longDate(now)}</span>
       </div>
-      <h1 className="topbar__title">{title}</h1>
       <div className="topbar__end">
         {status && (
           <span className={`topbar__status ${status.ok ? 'is-ok' : 'is-down'}`}>
