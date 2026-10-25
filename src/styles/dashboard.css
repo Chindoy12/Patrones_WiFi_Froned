@@ -1,0 +1,52 @@
+/*
+ * Dashboard grid (team panel and Mi Wi-Fi). Cards are flat hairline panels with a stamped title; the hero card is the
+ * one place of the page with the violet bloom behind it.
+ */
+.dash { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr) minmax(0, 1fr); gap: 18px; }
+.dash__card {
+  position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 20px 22px; min-width: 0; display: flex; flex-direction: column; gap: 16px; overflow: hidden;
+}
+.dash__card--hero { grid-row: span 2; background: var(--bloom), var(--surface); border-color: var(--accent-line); }
+.dash__card--wide { grid-column: span 2; }
+.dash__card--full { grid-column: 1 / -1; }
+.dash__head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.dash__title {
+  display: inline-flex; align-items: center; gap: 9px; margin: 0; font-family: var(--font-mono); font-size: .7rem;
+  font-weight: 400; letter-spacing: var(--tracking-stamp); text-transform: uppercase; color: var(--ink-soft);
+}
+.dash__title .icon { color: var(--accent); }
+.dash__foot {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: .84rem; color: var(--muted); margin: auto 0 0;
+  padding-top: 12px; border-top: 1px solid var(--line-soft);
+}
+.dash__pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.dash__card > .dash__pair, .dash__card > .tiles:only-of-type { margin-block: auto; }
+.dash__lists { margin-top: 20px; }
+
+/* Older overview block (reports): health bar and big figures */
+.overview {
+  display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 24px; align-items: center;
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px 24px; margin-bottom: 20px;
+}
+.health__bar { display: flex; height: 14px; border-radius: var(--radius-pill); overflow: hidden; gap: 3px; background: var(--track); }
+.health__segment--normal { background: var(--accent); }
+.health__segment--warning { background: var(--warn); }
+.health__segment--critical { background: var(--bad); }
+.health__legend { display: flex; gap: 18px; flex-wrap: wrap; margin-top: 10px; }
+.health__legend strong { font-size: 1.5rem; font-weight: 300; margin-right: 2px; }
+.figures { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px 24px; margin: 0; }
+.figures dt { font-size: .82rem; color: var(--muted); }
+.figures dd { margin: 0; font-size: 1.6rem; font-weight: 300; letter-spacing: -.02em; }
+
+@media (max-width: 1100px) {
+  .dash { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .dash__card--hero, .dash__card--wide { grid-column: 1 / -1; grid-row: auto; }
+}
+@media (max-width: 1000px) {
+  .overview { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 760px) {
+  .dash { grid-template-columns: minmax(0, 1fr); }
+  .figures dd, .health__legend strong { font-size: 1.25rem; }
+}
