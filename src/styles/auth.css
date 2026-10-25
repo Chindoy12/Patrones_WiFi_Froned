@@ -1,0 +1,75 @@
+/*
+ * Login, sign-up and recovery: the page canvas with a violet glow and Wi-Fi rings rising from the horizon, a few slow
+ * signal streaks and a glass "access pass" card with a hairline border.
+ */
+.auth-shell {
+  position: relative; min-height: 100vh; display: grid; place-items: center; padding: 24px 16px; overflow: hidden;
+  background: radial-gradient(1100px 520px at 50% 118%, var(--accent-glow), transparent 62%), var(--page-bg);
+}
+.auth-shell::after {
+  /* Concentric rings rising from the horizon, like the arcs of a Wi-Fi signal; they fade toward the top */
+  content: ''; position: absolute; inset: 0; pointer-events: none; opacity: .45;
+  background: repeating-radial-gradient(circle at 50% 108%, transparent 0 calc(13vmin - 1px), var(--accent-line) calc(13vmin - 1px) 13vmin);
+  -webkit-mask: linear-gradient(to top, currentColor, transparent 75%);
+  mask: linear-gradient(to top, currentColor, transparent 75%);
+}
+.auth-shell__streaks { position: absolute; inset: 0; pointer-events: none; }
+.auth-shell__streaks span {
+  position: absolute; left: -30%; width: 160%; height: 1px; opacity: 0;
+  background: linear-gradient(90deg, transparent, var(--accent-line) 44%, var(--accent-2) 50%, var(--accent-line) 56%, transparent);
+  animation: auth-streak 9s linear infinite;
+}
+.auth-shell__streaks span:nth-child(1) { top: 16%; transform: rotate(-14deg); animation-delay: 0s; }
+.auth-shell__streaks span:nth-child(2) { top: 34%; transform: rotate(-20deg); animation-delay: 1.8s; animation-duration: 10s; }
+.auth-shell__streaks span:nth-child(3) { top: 52%; transform: rotate(-11deg); animation-delay: 3.6s; }
+.auth-shell__streaks span:nth-child(4) { top: 70%; transform: rotate(-24deg); animation-delay: .9s; animation-duration: 11s; }
+.auth-shell__streaks span:nth-child(5) { top: 86%; transform: rotate(-16deg); animation-delay: 5.4s; }
+@keyframes auth-streak {
+  0% { opacity: 0; translate: -25% 0; }
+  15% { opacity: .8; }
+  60% { opacity: .35; }
+  100% { opacity: 0; translate: 25% 0; }
+}
+
+.auth-card {
+  position: relative; z-index: 1; width: min(430px, 100%); padding: 30px 32px 28px; color: var(--ink);
+  background: var(--frost); border: 1px solid var(--line-strong); border-radius: var(--radius);
+  backdrop-filter: blur(18px) saturate(140%); -webkit-backdrop-filter: blur(18px) saturate(140%);
+  animation: auth-card-in .6s var(--ease) both;
+}
+@keyframes auth-card-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+
+.auth-card__brand { display: flex; align-items: center; gap: 10px; font-weight: 500; font-size: 1.2rem; letter-spacing: -.01em; }
+.auth-card__pass { margin-left: auto; padding: 3px 9px; border: 1px solid var(--line); border-radius: var(--radius-pill); font-size: .6rem; }
+/* "TU WI-FI ——— WIFISENSE": the route of the pass, with a node at each end */
+.auth-card__route { display: flex; align-items: center; gap: 10px; margin: 22px 0 0; font-size: .62rem; }
+.auth-card__route i { position: relative; flex: 1; height: 1px; background: var(--line-strong); }
+.auth-card__route i::before, .auth-card__route i::after {
+  content: ''; position: absolute; top: -4px; width: 9px; height: 9px; border-radius: 50%; background: var(--accent);
+  box-shadow: 0 0 10px var(--accent-glow);
+}
+.auth-card__route i::before { left: 0; }
+.auth-card__route i::after { right: 0; background: var(--paper); border: 1px solid var(--accent); }
+.auth-card h1 { margin: 18px 0 6px; font-size: 2.3rem; line-height: 1.05; }
+.auth-card__subtitle { margin: 0 0 22px; color: var(--muted); }
+.auth-card .field label { color: var(--ink-soft); font-size: .86rem; }
+.auth-card .field input, .auth-card .password input { padding: 11px 14px; }
+.auth-card .password input { padding-right: 50px; }
+.auth-card input::placeholder { color: var(--muted); }
+.auth-card input:-webkit-autofill { -webkit-text-fill-color: var(--ink); transition: background-color 9999s; }
+.auth-card .password__toggle { right: 8px; }
+.auth-card .button { width: 100%; margin-top: 6px; padding: 12px; border-radius: var(--radius-pill); font-weight: 500; }
+.auth-card .button:disabled { cursor: not-allowed; }
+.auth-card .button[href] { display: block; text-decoration: none; }
+.auth-card__forgot { margin: -4px 0 14px; text-align: right; font-size: .88rem; }
+.auth-card__footer { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--line); text-align: center; font-size: .92rem; color: var(--muted); }
+.auth-card__footer a { font-weight: 500; }
+
+@media (max-width: 480px) {
+  .auth-card { padding: 24px 20px; }
+  .auth-card h1 { font-size: 2rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .auth-shell__streaks span, .auth-card { animation: none; }
+  .auth-shell__streaks span { opacity: .3; }
+}
