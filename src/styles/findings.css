@@ -1,0 +1,32 @@
+/* Security findings and the anomaly verdict: the severity reads in words, the left rule repeats it in color. */
+.findings { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.finding {
+  display: grid; grid-template-columns: 96px 1fr; gap: 12px; padding: 13px 15px; border-radius: 14px;
+  background: var(--surface-2); border: 1px solid var(--line-soft); border-left: 3px solid var(--muted);
+}
+.finding p { margin: 4px 0 0; }
+.finding__severity {
+  display: inline-flex; align-items: center; gap: 4px; align-self: start; justify-self: start; padding: 2px 8px;
+  border-radius: var(--radius-pill); background: var(--chip); font-family: var(--font-mono); font-size: .62rem;
+  letter-spacing: .12em; text-transform: uppercase;
+}
+.finding__action { display: flex; gap: 6px; align-items: flex-start; color: var(--accent-ink); font-weight: 500; }
+.finding__action .icon { margin-top: 4px; }
+.finding--critical, .finding--high { border-left-color: var(--bad); }
+.finding--critical .finding__severity, .finding--high .finding__severity { background: var(--bad-soft); color: var(--bad-ink); }
+.finding--medium { border-left-color: var(--warn); }
+.finding--medium .finding__severity { background: var(--warn-soft); color: var(--warn-ink); }
+.finding--low { border-left-color: var(--accent-line); }
+.finding--info { border-left-color: var(--accent); }
+.finding--info .finding__severity { background: var(--accent-soft); color: var(--accent-ink); }
+
+.agent__verdict { display: flex; gap: 12px; align-items: flex-start; padding: 13px 15px; border-radius: 14px; border: 1px solid transparent; }
+.agent__verdict p { margin: 4px 0 0; text-align: left; }
+.agent__verdict--ok { background: var(--accent-soft); border-color: var(--accent-line); }
+.agent__verdict--ok .icon { color: var(--accent-ink); }
+.agent__verdict--bad { background: var(--bad-soft); border-color: var(--bad-line); }
+.agent__verdict--bad .icon { color: var(--bad-ink); }
+
+@media (max-width: 760px) {
+  .finding { grid-template-columns: minmax(0, 1fr); }
+}
