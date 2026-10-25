@@ -4,7 +4,8 @@ import { App } from './App';
 import './index.css';
 import { applyTheme, storedTheme } from './theme';
 
-applyTheme(storedTheme());
+// Shown before the first render so the page never flashes in the other theme; nothing is saved until the person chooses.
+applyTheme(storedTheme(), false);
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
