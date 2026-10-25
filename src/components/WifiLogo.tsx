@@ -2,14 +2,15 @@ interface Props {
   size?: number;
   /** Faster pulse while a request is in progress. */
   busy?: boolean;
-  /** Darker resting arcs for light backgrounds. */
-  onLight?: boolean;
 }
 
-/** Wi-Fi mark whose dot and arcs light up from the bottom one by one, like a signal loading. */
-export function WifiLogo({ size = 56, busy = false, onLight = false }: Props) {
+/**
+ * Wi-Fi mark whose dot and arcs light up from the bottom one by one, like a signal loading. Its colors come from the
+ * theme tokens, so the same mark works on the dark and on the light design.
+ */
+export function WifiLogo({ size = 56, busy = false }: Props) {
   return (
-    <svg className={`wifi-logo${busy ? ' wifi-logo--busy' : ''}${onLight ? ' wifi-logo--on-light' : ''}`} width={size} height={size} viewBox="0 0 64 64"
+    <svg className={`wifi-logo${busy ? ' wifi-logo--busy' : ''}`} width={size} height={size} viewBox="0 0 64 64"
          aria-hidden="true">
       <circle className="wifi-logo__dot" cx="32" cy="50" r="4.5" />
       <path className="wifi-logo__arc wifi-logo__arc--1" d="M22.5 40.5A13.4 13.4 0 0 1 41.5 40.5" />
