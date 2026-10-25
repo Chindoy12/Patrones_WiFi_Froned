@@ -1,0 +1,13 @@
+/* "¿Cuál es este equipo?": find a device by turning its Wi-Fi off and on. */
+.devlist__identify { margin-top: 12px; display: inline-flex; align-items: center; gap: 6px; }
+.identify {
+  margin-top: 12px; padding: 14px 16px; border-radius: 14px; border: 1px solid var(--accent-line);
+  background: var(--bloom), var(--surface-2); display: grid; gap: 10px; text-align: left;
+}
+.identify p { margin: 0; }
+.identify__head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.identify__head strong { display: inline-flex; align-items: center; gap: 6px; font-weight: 500; }
+.identify__wait { display: flex; align-items: flex-start; gap: 10px; }
+.identify__found .icon { vertical-align: -3px; margin-right: 4px; color: var(--accent-ink); }
+.identify__name { display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap; }
+.identify__name .field { flex: 1 1 220px; margin: 0; }
