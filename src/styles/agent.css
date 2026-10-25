@@ -1,0 +1,62 @@
+/* Agent (Mi Wi-Fi and the team sensor): connection state, pairing code, counts and the facts it reports. */
+.agent .eu-section__head { flex-wrap: wrap; }
+.agent__state { display: inline-flex; align-items: center; gap: 8px; font-size: .88rem; font-weight: 500; color: var(--muted); }
+.agent__state i { width: 9px; height: 9px; border-radius: 50%; background: var(--muted); }
+.agent__state--on { color: var(--good-ink); }
+.agent__state--on i { background: var(--good); animation: ping 2s ease-out infinite; }
+@keyframes ping {
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--good) 60%, transparent); }
+  100% { box-shadow: 0 0 0 10px transparent; }
+}
+
+.agent__intro { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 24px; align-items: center; }
+.agent__intro h3 { margin: 0 0 8px; font-size: 1.25rem; font-weight: 400; }
+.agent__features { list-style: none; padding: 0; margin: 14px 0 0; display: grid; gap: 8px; }
+.agent__features li { display: flex; align-items: center; gap: 10px; }
+.agent__features .icon, .agent__keybar .icon, .agent__prefs .icon { color: var(--accent); }
+.agent__cta { display: grid; gap: 10px; }
+.agent__steps { margin: 0; padding-left: 20px; display: grid; gap: 8px; }
+.agent__steps li::marker { color: var(--accent); font-family: var(--font-mono); }
+.agent__steps .button { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; }
+.agent__waiting { display: flex; align-items: center; gap: 10px; margin: 0; font-weight: 500; }
+.agent__pulse { width: 12px; height: 12px; border-radius: 50%; background: var(--accent); animation: ping-accent 1.6s ease-out infinite; }
+@keyframes ping-accent { 0% { box-shadow: 0 0 0 0 var(--accent-line); } 100% { box-shadow: 0 0 0 14px transparent; } }
+.agent__keybar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 16px 0 0; color: var(--muted); font-size: .88rem; }
+.agent__keyactions { margin-left: auto; display: inline-flex; gap: 8px; }
+.agent__alert { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+
+/* Pairing: the one-time code, big and mono, inside a violet hairline */
+.agent__pairing { display: grid; grid-template-columns: minmax(0, 220px) minmax(0, 1fr); gap: 14px 24px; align-items: start; }
+.agent__pairing > p, .agent__pairing > .link-button { grid-column: 1 / -1; justify-self: start; }
+.agent__pairing > p.small { text-align: left; }
+.agent__code {
+  display: grid; gap: 6px; justify-items: center; text-align: center; padding: 18px 16px; border-radius: 16px;
+  background: var(--bloom), var(--surface-2); border: 1px solid var(--accent-line);
+}
+.agent__code strong { font-family: var(--font-mono); font-size: 2rem; font-weight: 500; letter-spacing: .12em; color: var(--accent-ink); }
+.agent__code strong.is-expired { color: var(--muted); text-decoration: line-through; }
+
+/* Big count of connected devices */
+.agent__count { display: flex; align-items: baseline; gap: 10px; }
+.agent__count strong { font-size: 3.8rem; font-weight: 300; line-height: 1; color: var(--ink); letter-spacing: -.04em; }
+.agent__count span { color: var(--muted); }
+.agent__countpill {
+  margin-left: auto; min-width: 2.2em; padding: 1px 10px; border-radius: var(--radius-pill); text-align: center;
+  font-size: 1rem; font-weight: 500; color: var(--accent-ink); background: var(--accent-soft); border: 1px solid var(--accent-line);
+}
+.agent__facts { margin: 0; display: grid; gap: 8px; }
+.agent__facts div { display: flex; justify-content: space-between; gap: 12px; font-size: .92rem; border-bottom: 1px solid var(--line-soft); padding-bottom: 7px; }
+.agent__facts dt { color: var(--muted); }
+.agent__facts dd { margin: 0; font-weight: 500; text-align: right; overflow-wrap: anywhere; }
+.agent code { font-family: var(--font-mono); font-size: .86em; }
+.sparkline { width: 100%; height: 44px; }
+.sparkline polyline { fill: none; stroke: var(--accent); stroke-width: 2; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
+.account .notice { margin-top: 0; }
+
+@media (max-width: 760px) {
+  .agent__intro, .agent__pairing { grid-template-columns: minmax(0, 1fr); }
+  .agent__keyactions { margin-left: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .agent__state--on i, .agent__pulse { animation: none; }
+}
