@@ -41,8 +41,8 @@ export function HistoryPage() {
             <section className="panel">
               <h2>Latencia y jitter (ms)</h2>
               <MetricChart data={rows} series={[
-                { key: 'latencyMs', label: 'Latencia', color: 'var(--accent)' },
-                { key: 'jitterMs', label: 'Jitter', color: 'var(--warn)' },
+                { key: 'latencyMs', label: 'Latencia', color: 'var(--chart-1)' },
+                { key: 'jitterMs', label: 'Jitter', color: 'var(--chart-2)' },
               ]} />
             </section>
             <section className="panel">
@@ -51,11 +51,11 @@ export function HistoryPage() {
             </section>
             <section className="panel">
               <h2>Intensidad de señal (dBm)</h2>
-              <MetricChart data={rows} series={[{ key: 'signalStrengthDbm', label: 'RSSI', color: 'var(--ink)' }]} />
+              <MetricChart data={rows} series={[{ key: 'signalStrengthDbm', label: 'RSSI', color: 'var(--chart-2)' }]} />
             </section>
             <section className="panel">
               <h2>Ancho de banda (Mbps)</h2>
-              <MetricChart data={rows} series={[{ key: 'bandwidthMbps', label: 'Ancho de banda', color: 'var(--good)' }]} />
+              <MetricChart data={rows} series={[{ key: 'bandwidthMbps', label: 'Ancho de banda', color: 'var(--chart-1)' }]} />
             </section>
           </div>
         )}
