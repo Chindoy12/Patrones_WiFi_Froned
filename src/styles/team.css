@@ -1,0 +1,17 @@
+/* Team pages: the sensor of a network (Redes) and the real home networks of the end users. */
+.sensor h2 { margin-top: 0; }
+.sensor__intro p { max-width: 70ch; }
+.sensor__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; margin-top: 14px; }
+.sensor__facts { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px 24px; margin: 0; }
+.sensor__facts dt { color: var(--muted); font-size: .84rem; }
+.sensor__facts dd { margin: 2px 0 0; }
+
+.unet__totals { margin-bottom: 18px; }
+.unet__filter { display: inline-flex; align-items: center; gap: 8px; font-size: .9rem; color: var(--muted); cursor: pointer; }
+.unet td { vertical-align: middle; }
+.unet tr.is-attention { background: var(--bad-soft); }
+.unet__sub { display: block; margin-top: 2px; }
+.unet__tag { margin-left: 8px; }
+.unet__bad { display: inline-flex; align-items: center; gap: 4px; color: var(--bad-ink); font-weight: 500; }
+.unet__ok { display: inline-flex; align-items: center; gap: 4px; color: var(--good-ink); }
+.unet .agent__state { font-size: .85rem; }
