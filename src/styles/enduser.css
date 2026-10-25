@@ -1,0 +1,56 @@
+/* End-user area (Mi Wi-Fi): a frosted bar on top, the dashboard and the user's networks below. */
+.eu { position: relative; z-index: 1; min-height: 100vh; color: var(--ink); display: flex; flex-direction: column; }
+.eu__bar {
+  position: sticky; top: 0; z-index: 5; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 12px clamp(16px, 4vw, 40px); background: var(--frost); border-bottom: 1px solid var(--line);
+  backdrop-filter: var(--frost-blur); -webkit-backdrop-filter: var(--frost-blur);
+}
+.eu__brand { display: inline-flex; align-items: center; gap: 8px; font-weight: 500; font-size: 1.1rem; letter-spacing: -.01em; color: var(--ink); }
+.eu__account { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.eu__user { font-size: .9rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 40vw; }
+.eu__main { flex: 1; width: min(1140px, 100%); margin: 0 auto; padding: 28px clamp(16px, 4vw, 40px) 28px; }
+
+/* First visit: the welcome card glows violet, the one bloom of the page while there is no dashboard yet */
+.eu-hero {
+  border-radius: var(--radius); padding: 28px 30px; margin-bottom: 28px; color: var(--ink);
+  background: var(--bloom), var(--surface); border: 1px solid var(--accent-line);
+}
+.eu-hero h1, .eu-hero h2 { margin: 0 0 8px; font-size: clamp(2rem, 4vw, 2.6rem); line-height: 1.05; overflow-wrap: anywhere; }
+.eu-hero p { margin: 0; color: var(--muted); max-width: 60ch; }
+
+.eu-section { margin-top: 32px; }
+.eu-section__head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.eu-section__head h2 { margin: 0; font-size: 1.35rem; font-weight: 300; letter-spacing: -.02em; }
+.eu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+.eu-card {
+  background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 20px 22px; min-width: 0; text-align: left;
+}
+.eu-card h3 { margin: 0 0 12px; font-size: 1.1rem; font-weight: 500; overflow-wrap: anywhere; }
+.eu-card__facts { margin: 0 0 14px; display: grid; gap: 7px; }
+.eu-card__facts div { display: flex; justify-content: space-between; gap: 12px; font-size: .92rem; padding-bottom: 7px; border-bottom: 1px solid var(--line-soft); }
+.eu-card__facts dt { color: var(--muted); }
+.eu-card__facts dd { margin: 0; font-weight: 500; text-align: right; overflow-wrap: anywhere; }
+.eu-card__actions { display: flex; gap: 8px; }
+.eu-card--add {
+  display: grid; place-items: center; min-height: 170px; font: inherit; font-weight: 500; color: var(--accent-ink); cursor: pointer;
+  border: 1px dashed var(--accent-line); background: transparent;
+}
+.eu-card--add:hover { background: var(--accent-soft); border-color: var(--accent); }
+.eu-card--add span { font-size: 1.8rem; font-weight: 300; display: block; text-align: center; }
+.eu-form .field input { width: 100%; }
+.eu-form__actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* Network chooser: pills */
+.eu-networks { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.eu-networks button {
+  font: inherit; font-size: .92rem; padding: 7px 16px; border-radius: var(--radius-pill); border: 1px solid var(--line);
+  background: transparent; color: var(--ink); cursor: pointer;
+}
+.eu-networks button:hover { border-color: var(--line-strong); }
+.eu-networks button[aria-pressed='true'] { background: var(--accent-fill); border-color: transparent; color: var(--on-accent); font-weight: 500; }
+
+@media (max-width: 520px) {
+  .eu__user { display: none; }
+  .eu-hero { padding: 22px 20px; }
+}
