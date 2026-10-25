@@ -5,7 +5,9 @@ import { roleLabel } from '../format';
 import { ErrorBoundary } from './ErrorBoundary';
 import { Icon, type IconName } from './Icon';
 import { NetworkBackdrop } from './NetworkBackdrop';
+import { SiteFooter } from './SiteFooter';
 import { ThemeToggle } from './ThemeToggle';
+import { WifiLogo } from './WifiLogo';
 
 const SECTIONS: { to: string; label: string; icon: IconName }[] = [
   { to: '/', label: 'Panel', icon: 'home' },
@@ -36,7 +38,7 @@ export function Layout() {
       <aside className={`sidebar ${open ? 'sidebar--open' : ''}`}>
         <div className="sidebar__top">
           <span className="brand">
-            <img src="/favicon.svg" alt="" width="28" height="28" />
+            <WifiLogo size={30} />
             WiFiSense
           </span>
           <button className="sidebar__toggle" aria-expanded={open} aria-controls="main-nav"
@@ -44,6 +46,7 @@ export function Layout() {
             {open ? 'Cerrar' : 'Menú'}
           </button>
         </div>
+        <span className="stamp sidebar__label" aria-hidden="true">Secciones</span>
         <nav id="main-nav" aria-label="Secciones">
           {sections.map((s) => (
             <NavLink key={s.to} to={s.to} end={s.to === '/'} onClick={() => setOpen(false)}>
@@ -62,11 +65,14 @@ export function Layout() {
       </aside>
       <main className="content">
         {/* Only the page changes while the next one loads, or if it fails; the menu stays in place. */}
-        <ErrorBoundary resetKey={pathname}>
-          <Suspense fallback={<p className="notice page-loading" role="status" aria-busy="true">Cargando…</p>}>
-            <Outlet />
-          </Suspense>
-        </ErrorBoundary>
+        <div className="content__page">
+          <ErrorBoundary resetKey={pathname}>
+            <Suspense fallback={<p className="notice page-loading" role="status" aria-busy="true">Cargando…</p>}>
+              <Outlet />
+            </Suspense>
+          </ErrorBoundary>
+        </div>
+        <SiteFooter />
       </main>
     </div>
   );
