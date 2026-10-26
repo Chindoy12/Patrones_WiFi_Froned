@@ -36,7 +36,7 @@ export function NetworksPage() {
       <PageHeader title="Redes"
                   description="Redes Wi-Fi del equipo. Cada una se mide con su sensor: el agente WiFiSense instalado en un computador conectado a ella."
                   actions={can('ADMIN') && (
-                    <button className="button" onClick={() => setShowForm((v) => !v)}>
+                    <button className={showForm ? 'button button--quiet' : 'button'} onClick={() => setShowForm((v) => !v)}>
                       {showForm ? 'Cancelar' : 'Registrar red'}
                     </button>
                   )} />
@@ -63,12 +63,12 @@ export function NetworksPage() {
                   {rows.map((n) => (
                     <tr key={n.id} className={n.id === sensorOf ? 'is-selected' : undefined}>
                       <td><StatusBadge value={n.status} /></td>
-                      <td><strong>{n.ssid}</strong><br /><small className="muted">{n.bssid}</small></td>
-                      <td>{n.locationName} · {n.zoneName}</td>
-                      <td>{n.frequencyBand} · {n.channel}</td>
+                      <td><strong>{n.ssid}</strong><small className="table__sub table__mono muted">{n.bssid}</small></td>
+                      <td>{n.locationName}<small className="table__sub muted">{n.zoneName}</small></td>
+                      <td className="table__nowrap">{n.frequencyBand} · {n.channel}</td>
                       <td>{n.securityType}</td>
                       <td><SensorCell network={n} label={statusLabel[n.dataSourceType]} /></td>
-                      <td>{formatDateTime(n.lastCollectedAt)}</td>
+                      <td className="table__nowrap">{formatDateTime(n.lastCollectedAt)}</td>
                       <td className="table__actions">
                         {n.dataSourceType === 'AGENT' && (
                           <button className="link-button" onClick={() => setSensorOf(n.id === sensorOf ? null : n.id)}
