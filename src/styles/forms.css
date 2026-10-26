@@ -1,9 +1,11 @@
 /* Forms: quiet inputs with a hairline that turns violet on focus. */
-.field { display: grid; gap: 5px; margin-bottom: 14px; }
+/* Label, control and help stack from the top: a long help text in one field no longer stretches its neighbors. */
+.field { display: grid; gap: 6px; align-content: start; margin-bottom: 16px; min-width: 0; }
 .field > span, .field > label { font-size: .85rem; font-weight: 500; }
 .field--inline { display: inline-flex; align-items: center; gap: 8px; margin: 0; }
 .field small { display: block; margin-top: 4px; font-size: .8rem; line-height: 1.4; }
 .field__error { color: var(--bad-ink); }
+.field input:not([type='checkbox']):not([type='radio']), .field select { width: 100%; min-width: 0; min-height: 42px; }
 .field input, .field select, .password input, .list select, .dash__select {
   font: inherit; padding: 9px 12px; border: 1px solid var(--input-line); border-radius: var(--radius-control);
   background: var(--input-bg); color: var(--ink); transition: border-color .15s ease, box-shadow .15s ease;
@@ -31,8 +33,12 @@
 .rules li span { display: inline-block; width: 1.1em; font-weight: 700; }
 .rules li.is-ok { color: var(--good-ink); }
 
-.form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0 16px; }
-.form-grid__actions { grid-column: 1 / -1; display: flex; gap: 12px; align-items: center; justify-content: flex-end; }
+.form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 4px 20px; align-items: start; }
+.form-grid__actions {
+  grid-column: 1 / -1; display: flex; gap: 12px; align-items: center; justify-content: flex-end;
+  padding-top: 16px; margin-top: 4px; border-top: 1px solid var(--line-soft);
+}
+.form-grid__actions .notice { margin: 0 auto 0 0; }
 .checks { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-bottom: 14px; }
 .choices { border: 0; padding: 0; margin: 18px 0; }
 .choices legend { font-weight: 500; margin-bottom: 8px; }
