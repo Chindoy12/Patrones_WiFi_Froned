@@ -1,5 +1,5 @@
 /* "¿Cuál es este equipo?": find a device by turning its Wi-Fi off and on. */
-.devlist__identify { margin-top: 12px; display: inline-flex; align-items: center; gap: 6px; }
+.devlist__identify { display: inline-flex; align-items: center; gap: 6px; margin-right: auto; }
 .identify {
   margin-top: 12px; padding: 14px 16px; border-radius: 14px; border: 1px solid var(--accent-line);
   background: var(--bloom), var(--surface-2); display: grid; gap: 10px; text-align: left;
