@@ -16,3 +16,7 @@
 .table__actions { white-space: nowrap; }
 .table__actions .link-button + .link-button { margin-left: 14px; }
 .actions { white-space: nowrap; }
+/* Second line inside a cell (the BSSID under the SSID, the zone under the place) and cells that must stay on one line */
+.table__sub { display: block; margin-top: 2px; font-size: .8rem; }
+.table__mono { font-family: var(--font-mono); font-size: .74rem; letter-spacing: .02em; }
+.table td.table__nowrap { white-space: nowrap; }
