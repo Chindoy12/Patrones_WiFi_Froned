@@ -79,6 +79,11 @@ protocolo (UDP, TCP, ICMP…) se muestra con los mismos medidores circulares, de
 - **Reconocer cada equipo:** desde el agente 1.7.0 cada equipo llega con su tipo (celular, computador, TV, impresora,
   cámara, parlante, consola o dispositivo inteligente), el modelo que anuncia y dos marcas: «Este computador (agente)»
   y «Router». Un equipo sin nombre se llama por su tipo («Celular o tableta 2», «TV o Chromecast 1»).
+- **Lista de equipos con filtros** (`DeviceFilters`): «Todos», «Conectados» y «Sin nombre» con su cantidad, búsqueda por
+  nombre o marca (desde 8 equipos) y el orden: este computador y el router, los conectados con nombre, los demás
+  conectados y al final los que se fueron. Dice cuántos no dicen su nombre y por qué, y cada uno tiene «Ponerle
+  nombre». El número de «Celular o tableta 3» no cambia al filtrar. Desde el agente 1.8.0 también llegan los nombres
+  que los equipos dicen al pedir dirección por DHCP.
 - **¿Cuál es este equipo?** (`IdentifyWizard`, en Mi Wi-Fi, el panel del sensor y Dispositivos; en el equipo solo
   ADMIN): el agente reporta cada minuto durante 10 minutos; el usuario apaga el Wi-Fi del equipo, la página ve cuál
   desapareció, lo vuelve a encender, se confirma que volvió y le pone nombre. Si desaparecen varios a la vez, el que
@@ -154,7 +159,7 @@ Administrador además registra redes).
 npm install
 cp .env.example .env        # VITE_API_URL=http://localhost:8080
 npm run dev                 # http://localhost:5173
-npm test                    # 171 pruebas
+npm test                    # 176 pruebas
 npm run build               # tipos + build de producción en dist/
 ```
 
