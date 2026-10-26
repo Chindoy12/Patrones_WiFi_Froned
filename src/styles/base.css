@@ -13,7 +13,7 @@ a:hover { text-decoration-thickness: 2px; }
 code { font-family: var(--font-mono); font-size: .88em; }
 .num { font-variant-numeric: tabular-nums; }
 .muted { color: var(--muted); }
-.small { font-size: .85rem; margin: 0; text-align: center; }
+.small { font-size: .85rem; margin: 0; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 ::selection { background: var(--accent-soft); color: var(--ink); }
 
