@@ -1,4 +1,21 @@
 /* Devices seen by an agent: a list like the Bluetooth or hotspot list of a phone, with its connection history. */
+
+/* Summary and filters above the list: Todos / Conectados / Sin nombre, a search box and why some have no name */
+.devfilters { display: grid; gap: 10px; margin: 14px 0 4px; }
+.devfilters__bar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.devfilters__count {
+  display: inline-block; min-width: 1.8em; margin-left: 4px; padding: 0 6px; border-radius: var(--radius-pill);
+  font-size: .78rem; font-variant-numeric: tabular-nums; background: var(--chip); color: var(--muted);
+}
+.segmented button[aria-pressed='true'] .devfilters__count { background: var(--accent-soft); color: var(--accent-ink); }
+.devfilters__search {
+  display: flex; align-items: center; gap: 8px; flex: 0 1 300px; margin-left: auto; padding: 0 12px; border: 1px solid var(--input-line);
+  border-radius: var(--radius-control); background: var(--input-bg); color: var(--muted);
+}
+.devfilters__search:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.devfilters__search input { flex: 1; min-width: 0; padding: 9px 0; border: 0; background: none; color: var(--ink); font: inherit; outline: none; }
+.devfilters__why { margin: 0; font-size: .84rem; line-height: 1.5; }
+.devlist__none { margin: 14px 0 0; }
 .devlist { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 6px; }
 .devrow {
   display: grid; grid-template-columns: auto 1fr auto auto; align-items: center; gap: 12px; padding: 10px 12px;
@@ -21,6 +38,7 @@
 .devrow__dot { width: 9px; height: 9px; border-radius: 50%; background: var(--muted); opacity: .4; }
 .devrow.is-online .devrow__dot { background: var(--good); opacity: 1; box-shadow: 0 0 0 3px var(--good-soft); }
 .devrow__actions { display: inline-flex; gap: 4px; }
+.devrow__nameit { font-size: .82rem; font-weight: 400; }
 .devrow__history { grid-column: 1 / -1; padding: 8px 2px 2px; border-top: 1px dashed var(--line-soft); }
 
 .devhistory { display: grid; gap: 8px; text-align: left; }
@@ -42,6 +60,7 @@
 .devices__state { color: var(--muted); font-size: .82rem; }
 
 @media (max-width: 760px) {
+  .devfilters__search { flex-basis: 100%; }
   .devrow { grid-template-columns: auto 1fr auto; }
   .devrow__dot { display: none; }
   .devices li { grid-template-columns: auto 1fr auto; row-gap: 2px; }
@@ -49,5 +68,7 @@
   .devices__state { grid-column: 2; grid-row: 2; }
 }
 @media (max-width: 560px) {
+  .devrow { grid-template-columns: auto minmax(0, 1fr); row-gap: 8px; }
+  .devrow__actions { grid-column: 2; justify-self: start; }
   .devrow__sub { white-space: normal; }
 }
