@@ -8,6 +8,7 @@ import type {
   AlertPreferences, DeviceKind, DeviceSessionHistory, FindingSeverity, HomeNetwork, IdentifyMode, SecurityAssessment,
   SecurityGrade, WifiAuthentication,
 } from '../types';
+import { DeviceFilters, type DeviceView, hasOwnName, visibleDevices } from './DeviceFilters';
 import { DeviceHistory } from './DeviceHistory';
 import { IdentifyWizard } from './IdentifyWizard';
 import { Gauge, type GaugeStatus } from './Gauge';
@@ -572,25 +573,31 @@ export function DeviceList({ devices, onChange, updateDevice, loadHistory, team 
 }) {
   const [guide, setGuide] = useState<AgentDevice | null>(null);
   const [wizard, setWizard] = useState(false);
+  const [view, setView] = useState<DeviceView>('all');
+  const [query, setQuery] = useState('');
   if (devices.length === 0) {
     return <p className="muted">Aún no hay equipos. Aparecen con el primer reporte del {team ? 'sensor' : 'agente'}.</p>;
   }
+  // Names are numbered on the whole list, so "Celular o tableta 3" keeps its number whatever is filtered or sorted.
   const names = deviceNames(devices);
+  const shown = visibleDevices(devices, names, view, query);
   return (
     <>
-      {identify && canManage && !wizard && (
-        <button className="button button--quiet devlist__identify" onClick={() => setWizard(true)}>
-          <Icon name="search" size={16} /> ¿Cuál es este equipo?
-        </button>
-      )}
+      <DeviceFilters devices={devices} view={view} onView={setView} query={query} onQuery={setQuery} team={team}
+                     actions={identify && canManage && !wizard && (
+                       <button className="button button--quiet devlist__identify" onClick={() => setWizard(true)}>
+                         <Icon name="search" size={16} /> ¿Cuál es este equipo?
+                       </button>
+                     )} />
       {identify && wizard && (
         <IdentifyWizard devices={devices} names={names} latestAt={latestAt} start={identify} reload={onChange}
                         rename={(id, label) => updateDevice(id, { label, authorized: true })} team={team}
                         onClose={() => { setWizard(false); onChange(); }} />
       )}
+      {shown.length === 0 && <p className="muted devlist__none">Ningún equipo coincide con lo que buscas.</p>}
       <ul className="devlist">
-        {devices.map((d, i) => (
-          <DeviceRow key={d.id} device={d} shownName={names[i]} onChange={onChange} updateDevice={updateDevice}
+        {shown.map((i) => devices[i]).map((d, k) => (
+          <DeviceRow key={d.id} device={d} shownName={names[shown[k]]} onChange={onChange} updateDevice={updateDevice}
                      loadHistory={loadHistory} team={team} canManage={canManage} onBlocked={() => setGuide(d)} />
         ))}
       </ul>
@@ -645,6 +652,11 @@ function DeviceRow({ device, shownName, onChange, updateDevice, loadHistory, tea
             {device.role === 'SELF' && <span className="tag">{team ? 'Computador del sensor' : 'Este computador (agente)'}</span>}
             {device.role === 'ROUTER' && <span className="tag">Router</span>}
             {!device.authorized && <span className="tag tag--danger">No autorizado</span>}
+            {canManage && !hasOwnName(device) && (
+              <button className="link-button devrow__nameit" onClick={() => { setName(''); setEditing(true); }}>
+                Ponerle nombre
+              </button>
+            )}
           </span>
         )}
         <span className="devrow__sub">
