@@ -20,3 +20,5 @@
 .uses__item strong { font-size: .8rem; font-weight: 500; }
 .tips { margin: 0; padding-left: 18px; display: grid; gap: 8px; }
 .tips li::marker { color: var(--accent); }
+/* Short notes right under a gauge or a big button read as its caption: centered */
+.gauge + .small, .dash__card--hero > .small, .agent__cta > .small { text-align: center; }
