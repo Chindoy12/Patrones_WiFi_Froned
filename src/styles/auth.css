@@ -1,75 +1,109 @@
 /*
- * Login, sign-up and recovery: the page canvas with a violet glow and Wi-Fi rings rising from the horizon, a few slow
- * signal streaks and a glass "access pass" card with a hairline border.
+ * Login, sign-up and recovery: a midnight canvas with a blueprint grid and a spotlight from the top, the illuminated
+ * WiFiSense wordmark, a glass card lit from below and, behind it, the live drawing of how a Wi-Fi network works
+ * (WifiNetworkFlow). Every color comes from the --auth-* and --flow-* tokens, so the light theme works too.
  */
 .auth-shell {
-  position: relative; min-height: 100vh; display: grid; place-items: center; padding: 24px 16px; overflow: hidden;
-  background: radial-gradient(1100px 520px at 50% 118%, var(--accent-glow), transparent 62%), var(--page-bg);
+  position: relative; min-height: 100vh; overflow: hidden; display: grid; justify-items: center; align-content: center;
+  gap: 26px; padding: 40px 16px 32px; color: var(--auth-ink);
+  background:
+    radial-gradient(60% 45% at 50% -8%, var(--auth-spotlight), transparent 70%),
+    var(--auth-canvas);
 }
-.auth-shell::after {
-  /* Concentric rings rising from the horizon, like the arcs of a Wi-Fi signal; they fade toward the top */
-  content: ''; position: absolute; inset: 0; pointer-events: none; opacity: .45;
-  background: repeating-radial-gradient(circle at 50% 108%, transparent 0 calc(13vmin - 1px), var(--accent-line) calc(13vmin - 1px) 13vmin);
-  -webkit-mask: linear-gradient(to top, currentColor, transparent 75%);
-  mask: linear-gradient(to top, currentColor, transparent 75%);
+/* Blueprint grid that fades toward the edges */
+.auth-shell__grid {
+  position: absolute; inset: 0; pointer-events: none;
+  background-image: linear-gradient(var(--auth-grid) 1px, transparent 1px),
+                    linear-gradient(90deg, var(--auth-grid) 1px, transparent 1px);
+  background-size: 80px 80px; background-position: center top;
+  -webkit-mask: radial-gradient(75% 70% at 50% 40%, currentColor, transparent);
+  mask: radial-gradient(75% 70% at 50% 40%, currentColor, transparent);
 }
-.auth-shell__streaks { position: absolute; inset: 0; pointer-events: none; }
-.auth-shell__streaks span {
-  position: absolute; left: -30%; width: 160%; height: 1px; opacity: 0;
-  background: linear-gradient(90deg, transparent, var(--accent-line) 44%, var(--accent-2) 50%, var(--accent-line) 56%, transparent);
-  animation: auth-streak 9s linear infinite;
+.auth-flow { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; }
+.auth-hero, .auth-card, .auth-below { position: relative; z-index: 1; }
+
+/* Eyebrow flanked by two fading hairlines, and the wordmark lit from behind */
+.auth-hero { display: grid; justify-items: center; gap: 4px; text-align: center; }
+.auth-hero__eyebrow { display: flex; align-items: center; gap: 14px; margin: 0; }
+.auth-hero__eyebrow span {
+  font-family: var(--font-mono); font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; color: var(--auth-muted);
 }
-.auth-shell__streaks span:nth-child(1) { top: 16%; transform: rotate(-14deg); animation-delay: 0s; }
-.auth-shell__streaks span:nth-child(2) { top: 34%; transform: rotate(-20deg); animation-delay: 1.8s; animation-duration: 10s; }
-.auth-shell__streaks span:nth-child(3) { top: 52%; transform: rotate(-11deg); animation-delay: 3.6s; }
-.auth-shell__streaks span:nth-child(4) { top: 70%; transform: rotate(-24deg); animation-delay: .9s; animation-duration: 11s; }
-.auth-shell__streaks span:nth-child(5) { top: 86%; transform: rotate(-16deg); animation-delay: 5.4s; }
-@keyframes auth-streak {
-  0% { opacity: 0; translate: -25% 0; }
-  15% { opacity: .8; }
-  60% { opacity: .35; }
-  100% { opacity: 0; translate: 25% 0; }
+.auth-hero__eyebrow::before, .auth-hero__eyebrow::after {
+  content: ''; width: 72px; height: 1px; background: linear-gradient(90deg, transparent, var(--auth-edge-strong), transparent);
+}
+.auth-hero__wordmark {
+  margin: 0; font-family: var(--font-wordmark); font-weight: 500; font-size: clamp(3rem, 8vw, 5.6rem); line-height: 1.05;
+  letter-spacing: -.02em; background: var(--auth-wordmark); -webkit-background-clip: text; background-clip: text;
+  color: transparent; filter: drop-shadow(0 0 18px var(--accent-glow));
 }
 
+/* The glass card */
 .auth-card {
-  position: relative; z-index: 1; width: min(430px, 100%); padding: 30px 32px 28px; color: var(--ink);
-  background: var(--frost); border: 1px solid var(--line-strong); border-radius: var(--radius);
-  backdrop-filter: blur(18px) saturate(140%); -webkit-backdrop-filter: blur(18px) saturate(140%);
+  width: min(400px, 100%); padding: 28px 28px 24px; border-radius: 16px; background: var(--auth-card);
+  box-shadow: var(--auth-card-shadow); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
   animation: auth-card-in .6s var(--ease) both;
 }
-@keyframes auth-card-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
-
-.auth-card__brand { display: flex; align-items: center; gap: 10px; font-weight: 500; font-size: 1.2rem; letter-spacing: -.01em; }
-.auth-card__pass { margin-left: auto; padding: 3px 9px; border: 1px solid var(--line); border-radius: var(--radius-pill); font-size: .6rem; }
-/* "TU WI-FI ——— WIFISENSE": the route of the pass, with a node at each end */
-.auth-card__route { display: flex; align-items: center; gap: 10px; margin: 22px 0 0; font-size: .62rem; }
-.auth-card__route i { position: relative; flex: 1; height: 1px; background: var(--line-strong); }
-.auth-card__route i::before, .auth-card__route i::after {
-  content: ''; position: absolute; top: -4px; width: 9px; height: 9px; border-radius: 50%; background: var(--accent);
-  box-shadow: 0 0 10px var(--accent-glow);
+@keyframes auth-card-in { from { opacity: 0; transform: translateY(12px) scale(.98); } to { opacity: 1; transform: none; } }
+.auth-card__mark {
+  display: grid; place-items: center; width: 52px; height: 52px; margin: 0 auto 14px; border-radius: 50%;
+  background: var(--auth-field); box-shadow: inset 0 0 0 1px var(--auth-edge);
 }
-.auth-card__route i::before { left: 0; }
-.auth-card__route i::after { right: 0; background: var(--paper); border: 1px solid var(--accent); }
-.auth-card h1 { margin: 18px 0 6px; font-size: 2.3rem; line-height: 1.05; }
-.auth-card__subtitle { margin: 0 0 22px; color: var(--muted); }
-.auth-card .field label { color: var(--ink-soft); font-size: .86rem; }
-.auth-card .field input, .auth-card .password input { padding: 11px 14px; }
-.auth-card .password input { padding-right: 50px; }
-.auth-card input::placeholder { color: var(--muted); }
-.auth-card input:-webkit-autofill { -webkit-text-fill-color: var(--ink); transition: background-color 9999s; }
-.auth-card .password__toggle { right: 8px; }
-.auth-card .button { width: 100%; margin-top: 6px; padding: 12px; border-radius: var(--radius-pill); font-weight: 500; }
+.auth-card h1 { margin: 0 0 6px; font-size: 1.3rem; font-weight: 500; letter-spacing: -.01em; text-align: center; color: var(--auth-ink); }
+.auth-card__subtitle { margin: 0 0 22px; text-align: center; font-size: .92rem; color: var(--auth-muted); }
+.auth-card .field label, .auth-card .field > span { color: var(--auth-ink); font-size: .84rem; font-weight: 500; }
+.auth-card .field input, .auth-card .password input {
+  padding: 10px 12px; border-radius: 6px; border: 0; background: var(--auth-field); color: var(--auth-ink);
+  box-shadow: inset 0 0 0 1px var(--auth-edge);
+}
+.auth-card .password input { padding-right: 48px; }
+.auth-card .field input:focus, .auth-card .password input:focus {
+  outline: none; box-shadow: inset 0 0 0 1px var(--auth-edge-strong), 0 0 0 3px var(--accent-soft);
+}
+.auth-card input::placeholder { color: var(--auth-muted); opacity: .7; }
+.auth-card input:-webkit-autofill { -webkit-text-fill-color: var(--auth-ink); transition: background-color 9999s; }
+.auth-card .password__toggle { right: 6px; color: var(--auth-muted); }
+.auth-card .rules { background: var(--auth-field); border-color: var(--auth-edge); }
+.auth-card .button {
+  width: 100%; margin-top: 6px; padding: 11px; border-radius: var(--radius-pill); background: var(--auth-cta);
+  color: var(--on-accent); font-weight: 500;
+}
+.auth-card .button:hover:not(:disabled) { background: var(--auth-cta-hover); }
 .auth-card .button:disabled { cursor: not-allowed; }
 .auth-card .button[href] { display: block; text-decoration: none; }
-.auth-card__forgot { margin: -4px 0 14px; text-align: right; font-size: .88rem; }
-.auth-card__footer { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--line); text-align: center; font-size: .92rem; color: var(--muted); }
+.auth-card__forgot { margin: -4px 0 14px; text-align: right; font-size: .86rem; }
+.auth-card__footer {
+  margin-top: 20px; padding-top: 16px; text-align: center; font-size: .9rem; color: var(--auth-muted);
+  border-top: 1px solid var(--auth-edge);
+}
 .auth-card__footer a { font-weight: 500; }
 
-@media (max-width: 480px) {
-  .auth-card { padding: 24px 20px; }
-  .auth-card h1 { font-size: 2rem; }
+/* Under the card: what the drawing means, and the theme switch as a pill */
+.auth-below { display: grid; justify-items: center; gap: 12px; max-width: 520px; text-align: center; }
+.auth-below__flow { margin: 0; font-size: .82rem; line-height: 1.5; color: var(--auth-muted); }
+.auth-below__flow span { color: var(--auth-ink); }
+.auth-below .theme-toggle { border-radius: var(--radius-pill); border-color: var(--auth-edge); color: var(--auth-muted); font-size: .82rem; }
+
+/* A laptop screen (768px high or so): everything, theme switch included, fits without scrolling */
+@media (max-height: 820px) {
+  .auth-shell { gap: 18px; padding: 24px 16px 22px; }
+  .auth-hero__wordmark { font-size: clamp(3rem, 7vw, 4.6rem); }
+  .auth-card { padding: 22px 28px 20px; }
+  .auth-card__mark { width: 46px; height: 46px; margin-bottom: 10px; }
+  .auth-card__subtitle { margin-bottom: 16px; }
+  .auth-card__footer { margin-top: 16px; padding-top: 14px; }
+}
+
+/* Phone or portrait tablet: the drawing leaves the background and becomes a band under the card, so it never runs
+   over the wordmark or the form */
+@media (max-width: 720px), (max-aspect-ratio: 11/10) {
+  .auth-flow { position: relative; inset: auto; order: 9; width: 100%; max-width: 560px; height: 230px; pointer-events: auto; }
+  .auth-below { order: 10; }
+}
+@media (max-width: 520px) {
+  .auth-shell { gap: 20px; padding-top: 28px; }
+  .auth-card { padding: 22px 18px 20px; }
+  .auth-hero__eyebrow::before, .auth-hero__eyebrow::after { width: 36px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .auth-shell__streaks span, .auth-card { animation: none; }
-  .auth-shell__streaks span { opacity: .3; }
+  .auth-card { animation: none; }
 }
