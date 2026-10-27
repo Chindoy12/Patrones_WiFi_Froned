@@ -127,9 +127,15 @@ Administrador además registra redes).
 
 ## Inicio de sesión y cuentas
 
-- **Login y registro** comparten el mismo diseño: anillos Wi-Fi que suben desde el horizonte, tarjeta de vidrio como
-  un «pase de acceso» (Tu Wi-Fi → WiFiSense) y el logo Wi-Fi que se enciende de abajo hacia arriba, arco por arco, como si estuviera cargando (más rápido mientras
-  se envía el formulario). Con «reducir movimiento» activado en el sistema, las animaciones se detienen.
+- **Login, registro y recuperación** comparten el mismo diseño: lienzo de medianoche con cuadrícula de plano, la marca
+  «WiFiSense» iluminada (Space Grotesk), una tarjeta de vidrio con el botón principal en forma de píldora y, detrás, un
+  dibujo vivo de **cómo funciona una red Wi-Fi**, en capas como una red neuronal: equipos → puntos de acceso → router →
+  Internet (`WifiNetworkFlow`). Los paquetes suben en violeta y la respuesta vuelve en azul; el punto de acceso ondea
+  cuando pasa un paquete. Al pasar el puntero (o tocar) un equipo se ilumina su ruta; al hacer clic en un espacio vacío
+  se conecta un equipo nuevo: primero se asocia al punto de acceso más cercano (línea punteada) y luego pide su
+  dirección (DHCP). En celular el dibujo pasa a una franja bajo la tarjeta para no tapar el formulario. Es solo
+  decoración: oculto para lectores de pantalla, en pausa con la pestaña oculta y quieto con «reducir movimiento».
+  El logo Wi-Fi de la tarjeta se enciende arco por arco mientras se envía el formulario.
 - **Registro público** en `/registro` para usuarios finales: requisitos de la contraseña en vivo y confirmación. El
   rol siempre lo asigna el backend (`USER`); el formulario nunca lo envía.
 - **Equipo:** el administrador crea hasta 3 cuentas en **Usuarios**, con los mismos requisitos de contraseña.
@@ -159,7 +165,7 @@ Administrador además registra redes).
 npm install
 cp .env.example .env        # VITE_API_URL=http://localhost:8080
 npm run dev                 # http://localhost:5173
-npm test                    # 176 pruebas
+npm test                    # 182 pruebas
 npm run build               # tipos + build de producción en dist/
 ```
 
