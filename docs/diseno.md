@@ -11,7 +11,7 @@ encienden en la oscuridad.
 |---|---|
 | Un solo color de señal | `--accent` (#af50ff) solo en los medidores, la acción principal, el resplandor de una tarjeta por página y el indicador del menú. El texto en violeta usa `--accent-ink` (lavanda), que sí es legible. |
 | Superficies planas, sin sombras | Las tarjetas son un lavado translúcido con una línea fina (`--line`). Al pasar el puntero se aclara la línea; nada proyecta sombra. |
-| Tipografía editorial | **Inter** (300 en cifras grandes) para todo; **JetBrains Mono** en mayúsculas y muy espaciada para las "etiquetas sello" de cada tarjeta; **Lora itálica** solo para el título grande de los dashboards y del inicio de sesión (nunca menos de 32 px). |
+| Tipografía editorial | **Inter** (300 en cifras grandes) para todo; **JetBrains Mono** en mayúsculas y muy espaciada para las "etiquetas sello" de cada tarjeta; **Lora itálica** solo para el título grande de los dashboards (nunca menos de 32 px); **Space Grotesk** 500 solo para la marca «WiFiSense» del inicio de sesión. |
 | Colores de estado solo con palabras | Verde, ámbar y rosa son funcionales (bien, advertencia, mal) y siempre van con una palabra o un ícono. |
 | Un resplandor por página | La tarjeta principal (Salud de la red, Calidad de tu red o el saludo de bienvenida) lleva el degradado violeta `--bloom`; las demás no. |
 
@@ -45,8 +45,14 @@ navegador (clave `wifisense.theme.v2`; la clave vieja guardaba "claro" para todo
   uno, como los saltos de un paquete. El nodo repite el estado en color; el texto lo dice.
 - **Encabezado de los dashboards** (`TopBar`): etiqueta sello del área ("Equipo · Monitoreo en vivo", "Mi Wi-Fi"),
   título en Lora itálica, reloj y acciones en una franja de vidrio esmerilado.
-- **Inicio de sesión** (`AuthShell`): tarjeta de vidrio como un "pase de acceso" con la ruta *Tu Wi-Fi → WiFiSense*
-  y anillos concéntricos que suben desde el horizonte, como un Wi-Fi.
+- **Inicio de sesión** (`AuthShell` + `WifiNetworkFlow`): lienzo `--auth-canvas` con cuadrícula de plano y un foco
+  desde arriba, etiqueta en mono entre dos líneas, la marca con degradado `--auth-wordmark`, tarjeta de vidrio
+  (`--auth-card`, radio 16, campos de radio 6) con el botón en píldora `--auth-cta` y el cambio de tema debajo. Detrás,
+  la red Wi-Fi dibujada en capas como una red neuronal: equipos → puntos de acceso → router → Internet, con paquetes de
+  subida (`--flow-up`) y de respuesta (`--flow-down`). Es interactiva: el puntero sobre un equipo muestra su ruta y un
+  clic en un espacio vacío conecta un equipo nuevo al punto de acceso más cercano. En pantallas angostas o verticales
+  el dibujo se vuelve una franja bajo la tarjeta. Los colores del inicio de sesión son los tokens `--auth-*` y
+  `--flow-*`, definidos para los dos temas.
 - **Fondo animado** (`NetworkBackdrop`): red de nodos violeta; cuando un paquete llega, el nodo responde con dos
   anillos que se expanden, como una señal. Con «reducir movimiento» queda quieto.
 - **Pie de página** (`SiteFooter`): marca, la promesa de privacidad del agente (las MAC nunca salen del computador) y
