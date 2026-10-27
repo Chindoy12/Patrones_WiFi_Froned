@@ -60,6 +60,24 @@
   --net-wave-1: rgba(175, 80, 255, .05);
   --net-wave-2: rgba(225, 189, 255, .025);
   --net-wave-3: rgba(9, 9, 9, .5);
+  /* Login: a midnight canvas with a blueprint grid, a spotlight from the top and a glass card lit from below */
+  --auth-canvas: #05060f;
+  --auth-grid: rgba(186, 215, 247, .06);
+  --auth-spotlight: rgba(124, 145, 182, .45);
+  --auth-wordmark: linear-gradient(180deg, #d8ecf8 0%, #98c0ef 100%);
+  --auth-ink: #d1e4fa;
+  --auth-muted: #9da7ba;
+  --auth-edge: rgba(186, 215, 247, .12);
+  --auth-edge-strong: rgba(186, 215, 247, .26);
+  --auth-field: rgba(199, 211, 234, .06);
+  --auth-card: rgba(5, 6, 15, .9);
+  --auth-card-shadow: inset 0 1px 1px rgba(216, 236, 248, .2), inset 0 24px 48px rgba(168, 216, 245, .06),
+                      0 16px 32px rgba(0, 0, 0, .3), 0 0 0 1px rgba(186, 215, 247, .12);
+  --auth-cta: #663af3;
+  --auth-cta-hover: #7650f5;
+  --flow-up: #af50ff;
+  --flow-down: #98c0ef;
+  --flow-node: #d1e4fa;
   color-scheme: dark;
 }
 
@@ -114,6 +132,22 @@
   --net-wave-1: rgba(122, 43, 214, .05);
   --net-wave-2: rgba(182, 124, 240, .05);
   --net-wave-3: rgba(255, 255, 255, .5);
+  --auth-canvas: #f5f6fa;
+  --auth-grid: rgba(9, 9, 9, .05);
+  --auth-spotlight: rgba(122, 43, 214, .16);
+  --auth-wordmark: linear-gradient(180deg, #1d1d1f 0%, #5b3fa8 100%);
+  --auth-ink: #1d1d1f;
+  --auth-muted: #5b5c5e;
+  --auth-edge: rgba(9, 9, 9, .12);
+  --auth-edge-strong: rgba(9, 9, 9, .26);
+  --auth-field: rgba(9, 9, 9, .03);
+  --auth-card: rgba(255, 255, 255, .9);
+  --auth-card-shadow: inset 0 1px 1px rgba(255, 255, 255, .9), 0 16px 32px rgba(9, 9, 9, .08), 0 0 0 1px rgba(9, 9, 9, .1);
+  --auth-cta: #663af3;
+  --auth-cta-hover: #5a2fe0;
+  --flow-up: #7a2bd6;
+  --flow-down: #2f6fd0;
+  --flow-node: #3a3b3d;
   color-scheme: light;
 }
 
@@ -122,6 +156,7 @@
   --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   --font-display: 'Lora', Georgia, 'Times New Roman', serif;
+  --font-wordmark: 'Space Grotesk', 'Inter', system-ui, sans-serif;
   --radius: 19.2px;
   --radius-control: 8px;
   --radius-small: 6px;
