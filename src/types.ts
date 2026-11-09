@@ -623,6 +623,7 @@ export interface WeeklyReport {
   security: { latestScore: number; latestGrade: SecurityGrade; lowestScore: number } | null;
   highlights: string[];
 }
+
 /** Life of a scan of the nearby Wi-Fi networks. */
 export type ScanStatus = 'PENDING' | 'RUNNING' | 'COMPLETED' | 'FAILED';
 export type ScanOrigin = 'MANUAL' | 'SCHEDULED';
@@ -797,3 +798,34 @@ export interface CaptureInput {
   maxPackets: number;
 }
 
+export type AuditOutcome = 'SUCCESS' | 'DENIED' | 'FAILED';
+
+export interface AuditEvent {
+  id: number;
+  occurredAt: string;
+  actorUsername: string | null;
+  actorRole: string | null;
+  action: string;
+  actionLabel: string;
+  outcome: AuditOutcome;
+  targetType: string | null;
+  targetId: number | null;
+  networkId: number | null;
+  detail: string | null;
+}
+
+export interface AuditPage {
+  items: AuditEvent[];
+  page: number;
+  size: number;
+  total: number;
+}
+
+export interface RetentionPolicy {
+  code: string;
+  title: string;
+  days: number;
+  what: string;
+  setting: string;
+  afterwards: string;
+}
