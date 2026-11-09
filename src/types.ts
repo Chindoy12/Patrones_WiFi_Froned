@@ -724,3 +724,29 @@ export interface RouterInfo {
 export type CaptureStatus = 'PENDING' | 'RUNNING' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
 export type CaptureTool = 'NPCAP' | 'PKTMON' | 'RAW_SOCKET' | 'PACKET_SOCKET';
 
+export interface Capture {
+  id: number;
+  status: CaptureStatus;
+  purpose: string;
+  requestedBy: number | null;
+  requestedAt: string;
+  startedAt: string | null;
+  finishedAt: string | null;
+  cancelRequested: boolean;
+  maxSeconds: number;
+  maxPackets: number;
+  maxBytes: number;
+  failureReason: string | null;
+  failureMessage: string | null;
+  stopReason: 'DURATION' | 'PACKET_LIMIT' | 'BYTE_LIMIT' | 'CANCELLED' | null;
+  stopMessage: string | null;
+  captureTool: CaptureTool | null;
+  captureToolLabel: string | null;
+  interfaceName: string | null;
+  durationMs: number | null;
+  packetCount: number | null;
+  byteCount: number | null;
+  /** AI or RULES (the backend's own analysis when the AI was not available). */
+  analyzedWith: 'AI' | 'RULES' | null;
+}
+
