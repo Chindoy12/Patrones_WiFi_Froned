@@ -54,3 +54,12 @@ export function timeline(detail: CaptureDetail): { second: number; packets: numb
     second, packets: bySecond.get(second) ?? 0,
   }));
 }
+
+/** What the tool dropped, said as a loss of the capture (never of the network). */
+export function droppedText(detail: CaptureDetail): string {
+  const { droppedByTool, packets } = detail.totals;
+  if (droppedByTool === null) return 'La herramienta no informa paquetes perdidos.';
+  if (droppedByTool === 0) return 'La herramienta no perdió paquetes.';
+  return `La herramienta no alcanzó a guardar ${formatCount(droppedByTool)} paquetes `
+    + `(${share(droppedByTool, (packets ?? 0) + droppedByTool)}): es una pérdida de la captura, no de la red.`;
+}
