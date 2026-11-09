@@ -115,6 +115,8 @@ protocolo (UDP, TCP, ICMP…) se muestra con los mismos medidores circulares, de
   página sigue la captura cada 3 segundos y permite detenerla. El resultado: totales, protocolos, servicios, paquetes
   por segundo, la pérdida de la herramienta dicha como pérdida de la captura (no de la red), hechos medidos y posibles
   explicaciones con su confianza, en bloques separados, y qué no incluye la captura. Lo desconocido se ve «—».
+- **Auditoría** (`AuditPage`, solo administrador): quién hizo cada operación sensible, cuándo, sobre qué y con qué
+  resultado (incluidos los intentos sin permiso), con filtros y páginas; y cuánto tiempo se guarda cada cosa.
 - **Reporte semanal** (Reportes): lunes a domingo en hora de Colombia, lo más importante en frases, los totales frente a
   la semana anterior, cada día, protocolos, equipos y seguridad. «Descargar CSV (Excel)» usa punto y coma y coma
   decimal, como lo abre Excel en español; «Imprimir o guardar PDF» imprime solo el reporte (`@media print`).
