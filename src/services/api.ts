@@ -6,8 +6,8 @@ import type {
   AnomalyCauseCount, AuthResponse, ConnectionTest, ConnectionTestInput, NearbyNetworks, WifiScan, WifiScanDetail,
   DashboardSummary, DataSourceType, Device, HomeNetwork, HomeNetworkInput, IdentifyMode, Location, Measurement,
   Network, NetworkQuality, NetworkReport, WeeklyReport, ProtocolStatistic, SensorStatus, StaffRole, Strategy,
-  SystemStatus, TeamNetworks, TrafficSession, User, Zone, Capture, CaptureCapabilities, CaptureDetail, CaptureInput,
-  NearbyAnalysis, RouterInfo,
+  SystemStatus, TeamNetworks, TrafficSession, User, Zone, AuditPage, Capture, CaptureCapabilities, CaptureDetail,
+  CaptureInput, NearbyAnalysis, RouterInfo,
 } from '../types';
 
 export interface NetworkInput {
@@ -126,6 +126,10 @@ export const api = {
     apiClient.get<CaptureDetail>(`/api/networks/${networkId}/sensor/captures/${captureId}`),
   cancelCapture: (networkId: number, captureId: number) =>
     apiClient.post<Capture>(`/api/networks/${networkId}/sensor/captures/${captureId}/cancel`),
+  /** The audit of the sensitive operations and the retention rules (ADMIN only). */
+  audit: (filters: { action?: string; outcome?: string; page?: number; size?: number }) =>
+    apiClient.get<AuditPage>('/api/admin/audit', filters),
+  auditActions: () => apiClient.get<{ code: string; label: string }[]>('/api/admin/audit/actions'),
   sensorDeviceSessions: (networkId: number, fingerprint: string, days = 7) =>
     apiClient.get<DeviceSessionHistory>(`/api/networks/${networkId}/sensor/devices/${fingerprint}/sessions`, { days }),
 
