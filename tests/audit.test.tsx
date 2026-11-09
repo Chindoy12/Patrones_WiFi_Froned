@@ -55,4 +55,13 @@ describe('Auditoría', () => {
     await user.click(await screen.findByRole('button', { name: 'Siguientes' }));
     expect(api.audit).toHaveBeenLastCalledWith({ action: 'USER_DELETED', outcome: 'DENIED', page: 1, size: 25 });
   });
+
+  it('explica cuánto se guarda cada cosa y que los archivos de captura no salen del sensor', async () => {
+    render(<AuditPage />);
+
+    const policies = await screen.findByRole('table', { name: 'Retención de datos' });
+    expect(within(policies).getByText('Hasta terminar')).toBeInTheDocument();
+    expect(within(policies).getByText('Nunca sale del computador.')).toBeInTheDocument();
+    expect(within(policies).getByText('365 días')).toBeInTheDocument();
+  });
 });
