@@ -76,4 +76,21 @@ describe('Capturas técnicas', () => {
 
     expect(await screen.findByText('El sensor no ha reportado en los últimos minutos.')).toBeInTheDocument();
   });
+
+  it('separa los hechos medidos de las posibles explicaciones y dice qué tan segura es cada una', async () => {
+    const user = userEvent.setup();
+    render(<CapturesPage />);
+
+    await user.click(await screen.findByText('Revisar la difusión ARP del laboratorio'));
+
+    const facts = await screen.findByRole('region', { name: 'Hechos medidos' });
+    const guesses = screen.getByRole('region', { name: 'Posibles explicaciones' });
+    expect(within(facts).getByText('Volumen capturado')).toBeInTheDocument();
+    expect(within(guesses).getByText('Muchas preguntas ARP')).toBeInTheDocument();
+    expect(within(guesses).getByText('Confianza baja (45 %)')).toBeInTheDocument();
+    expect(within(facts).queryByText(/Confianza/)).not.toBeInTheDocument();
+    expect(screen.getByText(/no incluye lo que los demás equipos envían/)).toBeInTheDocument();
+    expect(screen.getByText(/no de la red/)).toBeInTheDocument();
+    expect(screen.getByRole('table', { name: 'Servicios más usados' })).toHaveTextContent('HTTPS');
+  });
 });
