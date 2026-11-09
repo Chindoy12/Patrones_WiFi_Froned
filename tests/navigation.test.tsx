@@ -38,4 +38,9 @@ describe('etiqueta de identificación de un equipo', () => {
     render(<IdentityTag device={base} />);
     expect(screen.getByText('Estimado')).toHaveAttribute('title', 'Estimado por el fabricante o el tipo');
   });
+
+  it('un nombre que confirman el equipo y el router se marca como confirmado', () => {
+    render(<IdentityTag device={{ ...base, hostname: 'Portatil-de-Ana', identification: 'CONFIRMED' }} />);
+    expect(screen.getByText('Confirmado')).toBeInTheDocument();
+  });
 });
