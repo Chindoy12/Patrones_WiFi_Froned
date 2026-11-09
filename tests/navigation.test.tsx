@@ -21,4 +21,10 @@ describe('menú del equipo', () => {
     expect(screen.getByRole('link', { name: /Capturas técnicas/ })).toHaveAttribute('href', '/captures');
     expect(screen.getByRole('link', { name: /Auditoría/ })).toHaveAttribute('href', '/audit');
   });
+
+  it('un analista no las ve (y el backend se las niega igual)', () => {
+    as('ANALYST');
+    expect(screen.queryByRole('link', { name: /Capturas técnicas/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /Auditoría/ })).not.toBeInTheDocument();
+  });
 });
