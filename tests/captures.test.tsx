@@ -29,4 +29,15 @@ describe('Capturas técnicas', () => {
     expect(within(tools).getByText('Npcap.')).toBeInTheDocument();
     expect(screen.getByText(/sin permisos de administrador/)).toBeInTheDocument();
   });
+
+  it('cuando no se puede capturar dice cada motivo y no deja pedir', async () => {
+    vi.mocked(api.captureCapabilities).mockResolvedValue(capabilities({
+      canCapture: false, blockers: ['En el computador del sensor no se han permitido las capturas técnicas.',
+        'El computador del sensor no tiene una herramienta de captura que pueda usar.'] }));
+    render(<CapturesPage />);
+
+    const blockers = await screen.findByRole('list', { name: 'Lo que impide capturar' });
+    expect(within(blockers).getAllByRole('listitem')).toHaveLength(2);
+    expect(screen.getByRole('button', { name: /Pedir captura/ })).toBeDisabled();
+  });
 });
