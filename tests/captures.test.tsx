@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { CapturesPage } from '../src/pages/CapturesPage';
 import { api } from '../src/services/api';
+import { ApiError } from '../src/services/apiClient';
 import { capabilities, capture, detail, lab } from './captureFixtures';
 
 vi.mock('../src/services/api', () => ({
@@ -62,5 +63,17 @@ describe('Capturas técnicas', () => {
 
     expect(api.requestCapture).toHaveBeenCalledWith(4, { purpose: 'Medir la difusión en la sala 2', maxSeconds: 20,
       maxPackets: 5000 });
+  });
+
+  it('muestra el motivo del servidor cuando rechaza el pedido', async () => {
+    const user = userEvent.setup();
+    vi.mocked(api.requestCapture).mockRejectedValue(new ApiError(409, 'El sensor no ha reportado en los últimos minutos.'));
+    render(<CapturesPage />);
+
+    await user.type(await screen.findByLabelText('Propósito autorizado'), 'Medir la difusión en la sala 2');
+    await user.click(screen.getByRole('checkbox'));
+    await user.click(screen.getByRole('button', { name: /Pedir captura/ }));
+
+    expect(await screen.findByText('El sensor no ha reportado en los últimos minutos.')).toBeInTheDocument();
   });
 });
