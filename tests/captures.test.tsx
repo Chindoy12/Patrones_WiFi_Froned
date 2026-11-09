@@ -131,4 +131,18 @@ describe('Capturas técnicas', () => {
     expect(await screen.findByText(/Ninguna red del equipo tiene sensor/)).toBeInTheDocument();
     expect(api.captureCapabilities).not.toHaveBeenCalled();
   });
+
+  it('una captura que falló muestra el motivo real, sin resultados inventados', async () => {
+    const user = userEvent.setup();
+    vi.mocked(api.captures).mockResolvedValue([capture({ status: 'FAILED', failureReason: 'NO_CONSENT',
+      failureMessage: 'En el computador del sensor no se han permitido las capturas técnicas.', packetCount: null })]);
+    vi.mocked(api.captureDetail).mockResolvedValue(detail({ capture: capture({ status: 'FAILED',
+      failureMessage: 'En el computador del sensor no se han permitido las capturas técnicas.' }) }));
+    render(<CapturesPage />);
+
+    await user.click(await screen.findByText('Revisar la difusión ARP del laboratorio'));
+
+    expect(await screen.findByRole('status')).toHaveTextContent('no se han permitido');
+    expect(screen.queryByRole('region', { name: 'Hechos medidos' })).not.toBeInTheDocument();
+  });
 });
