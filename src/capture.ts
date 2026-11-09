@@ -28,3 +28,7 @@ export function isCaptureActive(capture: Capture | null | undefined): boolean {
 export function bytesOrUnknown(bytes: number | null | undefined): string {
   return bytes === null || bytes === undefined ? '—' : formatBytes(bytes);
 }
+
+export function formatCount(value: number | null | undefined): string {
+  return value === null || value === undefined ? '—' : value.toLocaleString('es-CO');
+}
