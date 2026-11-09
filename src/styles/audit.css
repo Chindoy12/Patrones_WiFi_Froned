@@ -1,0 +1,4 @@
+/* Auditoría: filters, the read-only table and the pages. */
+.audit__filters { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+.audit__table td { vertical-align: top; }
+.audit__pages { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 12px; }
