@@ -32,3 +32,10 @@ export function bytesOrUnknown(bytes: number | null | undefined): string {
 export function formatCount(value: number | null | undefined): string {
   return value === null || value === undefined ? '—' : value.toLocaleString('es-CO');
 }
+
+/** Share of a part (0-100, rounded); "—" when the whole is unknown or zero. */
+export function share(part: number | null | undefined, whole: number | null | undefined): string {
+  if (part === null || part === undefined || !whole) return '—';
+  const pct = (100 * part) / whole;
+  return pct > 0 && pct < 1 ? '<1 %' : `${Math.round(pct)} %`;
+}
