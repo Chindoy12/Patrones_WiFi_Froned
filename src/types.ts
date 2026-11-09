@@ -771,3 +771,29 @@ export interface CaptureScenario {
   explanation: string;
 }
 
+/** What the sensor of a network can capture now, and every reason that blocks a capture. */
+export interface CaptureCapabilities {
+  sensorInstalled: boolean;
+  sensorOnline: boolean;
+  lastReportAt: string | null;
+  agentVersion: string | null;
+  platform: string | null;
+  agentSupportsCapture: boolean;
+  checkedAt: string | null;
+  elevated: boolean | null;
+  consent: boolean | null;
+  tools: { code: CaptureTool; label: string; available: boolean; note: string }[];
+  monitorMode: 'SUPPORTED' | 'UNSUPPORTED' | 'UNKNOWN';
+  interfaces: number | null;
+  scenarios: CaptureScenario[];
+  canCapture: boolean;
+  blockers: string[];
+  limits: { defaultSeconds: number; maxSeconds: number; defaultPackets: number; maxPackets: number; maxBytes: number };
+}
+
+export interface CaptureInput {
+  purpose: string;
+  maxSeconds: number;
+  maxPackets: number;
+}
+
