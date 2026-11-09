@@ -63,3 +63,19 @@ export function droppedText(detail: CaptureDetail): string {
   return `La herramienta no alcanzó a guardar ${formatCount(droppedByTool)} paquetes `
     + `(${share(droppedByTool, (packets ?? 0) + droppedByTool)}): es una pérdida de la captura, no de la red.`;
 }
+
+/** Validation of the form, with the server's own limits. */
+export function captureFormErrors(purpose: string, seconds: number, packets: number,
+                                  limits: { maxSeconds: number; maxPackets: number }): string[] {
+  const errors: string[] = [];
+  const text = purpose.trim();
+  if (text.length < 10) errors.push('Escribe el propósito de la captura (al menos 10 caracteres).');
+  if (text.length > 200) errors.push('El propósito debe tener como máximo 200 caracteres.');
+  if (!Number.isInteger(seconds) || seconds < 5 || seconds > limits.maxSeconds) {
+    errors.push(`La duración debe estar entre 5 y ${limits.maxSeconds} segundos.`);
+  }
+  if (!Number.isInteger(packets) || packets < 100 || packets > limits.maxPackets) {
+    errors.push(`Los paquetes deben estar entre 100 y ${formatCount(limits.maxPackets)}.`);
+  }
+  return errors;
+}
