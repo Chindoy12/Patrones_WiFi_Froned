@@ -124,6 +124,8 @@ export const api = {
     apiClient.post<Capture>(`/api/networks/${networkId}/sensor/captures`, input),
   captureDetail: (networkId: number, captureId: number) =>
     apiClient.get<CaptureDetail>(`/api/networks/${networkId}/sensor/captures/${captureId}`),
+  cancelCapture: (networkId: number, captureId: number) =>
+    apiClient.post<Capture>(`/api/networks/${networkId}/sensor/captures/${captureId}/cancel`),
   sensorDeviceSessions: (networkId: number, fingerprint: string, days = 7) =>
     apiClient.get<DeviceSessionHistory>(`/api/networks/${networkId}/sensor/devices/${fingerprint}/sessions`, { days }),
 
