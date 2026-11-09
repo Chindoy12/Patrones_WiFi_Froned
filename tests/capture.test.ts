@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { bytesOrUnknown, droppedText, formatCount, isCaptureActive, percent, share, timeline } from '../src/capture';
+import {
+  bytesOrUnknown, captureFormErrors, droppedText, formatCount, isCaptureActive, percent, share, timeline,
+} from '../src/capture';
 import { capture, detail } from './captureFixtures';
 
 describe('ayudas de las capturas técnicas', () => {
@@ -36,5 +38,13 @@ describe('ayudas de las capturas técnicas', () => {
     expect(isCaptureActive(capture({ status: 'RUNNING' }))).toBe(true);
     expect(isCaptureActive(capture({ status: 'CANCELLED' }))).toBe(false);
     expect(isCaptureActive(null)).toBe(false);
+  });
+
+  it('el formulario exige propósito y respeta los límites del servidor', () => {
+    const limits = { maxSeconds: 120, maxPackets: 20000 };
+    expect(captureFormErrors('corto', 30, 5000, limits)).toEqual(['Escribe el propósito de la captura (al menos 10 caracteres).']);
+    expect(captureFormErrors('Revisar la red del laboratorio', 300, 50, limits)).toHaveLength(2);
+    expect(captureFormErrors('Revisar la red del laboratorio', 30, 5000, limits)).toEqual([]);
+    expect(captureFormErrors('x'.repeat(201), 30, 5000, limits)).toContain('El propósito debe tener como máximo 200 caracteres.');
   });
 });
