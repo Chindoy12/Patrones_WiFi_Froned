@@ -6,7 +6,7 @@ import type {
   AnomalyCauseCount, AuthResponse, ConnectionTest, ConnectionTestInput, NearbyNetworks, WifiScan, WifiScanDetail,
   DashboardSummary, DataSourceType, Device, HomeNetwork, HomeNetworkInput, IdentifyMode, Location, Measurement,
   Network, NetworkQuality, NetworkReport, WeeklyReport, ProtocolStatistic, SensorStatus, StaffRole, Strategy,
-  SystemStatus, TeamNetworks, TrafficSession, User, Zone, NearbyAnalysis, RouterInfo,
+  SystemStatus, TeamNetworks, TrafficSession, User, Zone, Capture, CaptureCapabilities, NearbyAnalysis, RouterInfo,
 } from '../types';
 
 export interface NetworkInput {
@@ -114,6 +114,11 @@ export const api = {
   identifySensorDevice: (networkId: number) => apiClient.post<IdentifyMode>(`/api/networks/${networkId}/sensor/identify`),
   /** The router of a team network, as its sensor sees it. */
   teamRouter: (networkId: number) => apiClient.get<RouterInfo>(`/api/networks/${networkId}/sensor/router`),
+  /** Technical captures of a team network (ADMIN only; the backend refuses everyone else and audits it). */
+  captureCapabilities: (networkId: number) =>
+    apiClient.get<CaptureCapabilities>(`/api/networks/${networkId}/sensor/captures/capabilities`),
+  captures: (networkId: number, limit = 20) =>
+    apiClient.get<Capture[]>(`/api/networks/${networkId}/sensor/captures`, { limit }),
   sensorDeviceSessions: (networkId: number, fingerprint: string, days = 7) =>
     apiClient.get<DeviceSessionHistory>(`/api/networks/${networkId}/sensor/devices/${fingerprint}/sessions`, { days }),
 
