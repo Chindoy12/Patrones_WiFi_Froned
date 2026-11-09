@@ -1,6 +1,6 @@
 import { render, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { FindingList } from '../src/components/FindingList';
+import { confidenceWord, FindingList } from '../src/components/FindingList';
 import type { Finding } from '../src/types';
 
 const fact: Finding = { code: 'TRAFFIC_VOLUME', severity: 'INFO', title: 'Volumen capturado',
@@ -34,5 +34,12 @@ describe('Hechos e inferencias (FindingList)', () => {
 
     expect(screen.getByText('La IA no encontró nada que explicar.')).toBeInTheDocument();
     expect(screen.queryByRole('listitem')).not.toBeInTheDocument();
+  });
+
+  it('la confianza en palabras: baja, media y alta', () => {
+    expect(confidenceWord(0.35)).toBe('baja');
+    expect(confidenceWord(0.5)).toBe('media');
+    expect(confidenceWord(0.74)).toBe('media');
+    expect(confidenceWord(0.75)).toBe('alta');
   });
 });
