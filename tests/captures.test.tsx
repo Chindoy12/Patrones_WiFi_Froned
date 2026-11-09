@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { CapturesPage } from '../src/pages/CapturesPage';
@@ -92,5 +92,18 @@ describe('Capturas técnicas', () => {
     expect(screen.getByText(/no incluye lo que los demás equipos envían/)).toBeInTheDocument();
     expect(screen.getByText(/no de la red/)).toBeInTheDocument();
     expect(screen.getByRole('table', { name: 'Servicios más usados' })).toHaveTextContent('HTTPS');
+  });
+
+  it('una captura en curso se puede detener y la página la sigue', async () => {
+    const user = userEvent.setup();
+    vi.mocked(api.captures).mockResolvedValue([capture({ status: 'RUNNING', packetCount: null })]);
+    vi.mocked(api.cancelCapture).mockResolvedValue(capture({ status: 'RUNNING', cancelRequested: true }));
+    render(<CapturesPage />);
+
+    await user.click(await screen.findByRole('button', { name: 'Detener' }));
+
+    expect(api.cancelCapture).toHaveBeenCalledWith(4, 12);
+    await waitFor(() => expect(api.captures).toHaveBeenCalledTimes(2));
+    expect(screen.getByRole('button', { name: /Pedir captura/ })).toBeDisabled();
   });
 });
