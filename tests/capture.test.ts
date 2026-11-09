@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { bytesOrUnknown, droppedText, formatCount, percent, share, timeline } from '../src/capture';
-import { detail } from './captureFixtures';
+import { bytesOrUnknown, droppedText, formatCount, isCaptureActive, percent, share, timeline } from '../src/capture';
+import { capture, detail } from './captureFixtures';
 
 describe('ayudas de las capturas técnicas', () => {
   it('dicen «—» para lo que la herramienta no informó, nunca 0', () => {
@@ -29,5 +29,12 @@ describe('ayudas de las capturas técnicas', () => {
     expect(timeline(detail())).toEqual([{ second: 0, packets: 40 }, { second: 1, packets: 0 },
       { second: 2, packets: 400 }]);
     expect(timeline(detail({ intervals: [] }))).toEqual([]);
+  });
+
+  it('solo una captura que espera o corre está activa', () => {
+    expect(isCaptureActive(capture({ status: 'PENDING' }))).toBe(true);
+    expect(isCaptureActive(capture({ status: 'RUNNING' }))).toBe(true);
+    expect(isCaptureActive(capture({ status: 'CANCELLED' }))).toBe(false);
+    expect(isCaptureActive(null)).toBe(false);
   });
 });
