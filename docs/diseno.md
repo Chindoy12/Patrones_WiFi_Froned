@@ -62,6 +62,9 @@ navegador (clave `wifisense.theme.v2`; la clave vieja guardaba "claro" para todo
   con `--accent-soft`, «Sin contraseña» (`badge--bad`) y «Débil» (`badge--warn`) siempre con su palabra, y el aviso de
   resultado viejo en `--warn-soft`. En pantallas angostas cada fila es una tarjeta con sus etiquetas
   (`td[data-label]::before`).
+- **Hechos e inferencias** (`FindingList`, `findings.css`): dos bloques separados con su título
+  («Hechos medidos», «Posibles explicaciones»); las inferencias llevan el borde izquierdo punteado y una barra de
+  confianza con su palabra (baja, media, alta) y su porcentaje, para que una suposición nunca se lea como una medición.
 - **Gráficas** (`MetricChart`): la serie principal con un relleno que se desvanece, cuadrícula punteada y un tooltip
   que sigue el tema.
 
