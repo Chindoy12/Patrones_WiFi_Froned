@@ -108,6 +108,13 @@ protocolo (UDP, TCP, ICMP…) se muestra con los mismos medidores circulares, de
 - **De dónde sale cada nombre** (`IdentityTag` en la lista de equipos): «Tu nombre», «Confirmado» (el equipo y el
   router coinciden), «Anunciado», «Del router», «De la red», «Estimado» (solo fabricante o tipo) o «Desconocido»
   (`src/identification.ts`). Una estimación nunca se ve como el nombre.
+- **Capturas técnicas** (`CapturesPage`, solo administrador; el backend se lo niega a todos los demás y lo audita):
+  primero dice si se puede capturar y cada motivo que lo impide, qué herramienta tiene el sensor y los cuatro escenarios
+  de lo que una captura puede ver (A el computador del sensor, B puerto espejo, C modo monitor, D router). El formulario
+  pide el propósito autorizado, la duración y los paquetes dentro de los límites del servidor, y una confirmación. La
+  página sigue la captura cada 3 segundos y permite detenerla. El resultado: totales, protocolos, servicios, paquetes
+  por segundo, la pérdida de la herramienta dicha como pérdida de la captura (no de la red), hechos medidos y posibles
+  explicaciones con su confianza, en bloques separados, y qué no incluye la captura. Lo desconocido se ve «—».
 - **Reporte semanal** (Reportes): lunes a domingo en hora de Colombia, lo más importante en frases, los totales frente a
   la semana anterior, cada día, protocolos, equipos y seguridad. «Descargar CSV (Excel)» usa punto y coma y coma
   decimal, como lo abre Excel en español; «Imprimir o guardar PDF» imprime solo el reporte (`@media print`).
