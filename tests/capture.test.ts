@@ -9,4 +9,10 @@ describe('ayudas de las capturas técnicas', () => {
     expect(share(3, 0)).toBe('—');
     expect(percent(null, 10)).toBe(0);
   });
+
+  it('una parte muy pequeña no se redondea a cero', () => {
+    expect(share(2, 1200)).toBe('<1 %');
+    expect(share(300, 1200)).toBe('25 %');
+    expect(percent(300, 1200)).toBe(25);
+  });
 });
