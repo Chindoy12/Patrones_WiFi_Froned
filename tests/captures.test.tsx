@@ -106,4 +106,21 @@ describe('Capturas técnicas', () => {
     await waitFor(() => expect(api.captures).toHaveBeenCalledTimes(2));
     expect(screen.getByRole('button', { name: /Pedir captura/ })).toBeDisabled();
   });
+
+  it('cuando la captura en curso termina vuelve a revisar si se puede capturar', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      vi.mocked(api.captures).mockResolvedValueOnce([capture({ status: 'RUNNING', packetCount: null })])
+        .mockResolvedValue([capture()]);
+      render(<CapturesPage />);
+      await screen.findByRole('button', { name: 'Detener' });
+      expect(api.captureCapabilities).toHaveBeenCalledTimes(1);
+
+      await vi.advanceTimersByTimeAsync(3_500);
+
+      await waitFor(() => expect(api.captureCapabilities).toHaveBeenCalledTimes(2));
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });
