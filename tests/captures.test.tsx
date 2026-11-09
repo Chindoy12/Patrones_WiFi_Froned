@@ -1,4 +1,5 @@
 import { render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { CapturesPage } from '../src/pages/CapturesPage';
 import { api } from '../src/services/api';
@@ -39,5 +40,27 @@ describe('Capturas técnicas', () => {
     const blockers = await screen.findByRole('list', { name: 'Lo que impide capturar' });
     expect(within(blockers).getAllByRole('listitem')).toHaveLength(2);
     expect(screen.getByRole('button', { name: /Pedir captura/ })).toBeDisabled();
+  });
+
+  it('pide propósito y confirmación antes de enviar, y envía los límites elegidos', async () => {
+    const user = userEvent.setup();
+    vi.mocked(api.requestCapture).mockResolvedValue(capture({ id: 13, status: 'PENDING', packetCount: null }));
+    render(<CapturesPage />);
+
+    await user.click(await screen.findByRole('button', { name: /Pedir captura/ }));
+    const errors = screen.getByRole('alert');
+    expect(errors).toHaveTextContent('Escribe el propósito');
+    expect(errors).toHaveTextContent('Confirma que la captura está autorizada');
+    expect(api.requestCapture).not.toHaveBeenCalled();
+
+    await user.type(screen.getByLabelText('Propósito autorizado'), '  Medir la difusión en la sala 2  ');
+    const seconds = screen.getByLabelText('Duración (segundos)');
+    await user.clear(seconds);
+    await user.type(seconds, '20');
+    await user.click(screen.getByRole('checkbox'));
+    await user.click(screen.getByRole('button', { name: /Pedir captura/ }));
+
+    expect(api.requestCapture).toHaveBeenCalledWith(4, { purpose: 'Medir la difusión en la sala 2', maxSeconds: 20,
+      maxPackets: 5000 });
   });
 });
