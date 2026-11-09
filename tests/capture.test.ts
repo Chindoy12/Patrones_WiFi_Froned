@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { bytesOrUnknown, droppedText, formatCount, percent, share } from '../src/capture';
+import { bytesOrUnknown, droppedText, formatCount, percent, share, timeline } from '../src/capture';
 import { detail } from './captureFixtures';
 
 describe('ayudas de las capturas técnicas', () => {
@@ -23,5 +23,11 @@ describe('ayudas de las capturas técnicas', () => {
       .toBe('La herramienta no informa paquetes perdidos.');
     expect(droppedText(detail({ totals: { ...detail().totals, droppedByTool: 0 } })))
       .toBe('La herramienta no perdió paquetes.');
+  });
+
+  it('la línea de tiempo llena con ceros los segundos sin paquetes', () => {
+    expect(timeline(detail())).toEqual([{ second: 0, packets: 40 }, { second: 1, packets: 0 },
+      { second: 2, packets: 400 }]);
+    expect(timeline(detail({ intervals: [] }))).toEqual([]);
   });
 });
