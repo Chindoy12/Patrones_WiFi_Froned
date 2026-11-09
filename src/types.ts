@@ -720,3 +720,7 @@ export interface RouterInfo {
   steps: string[];
 }
 
+/** Life of a technical capture of a team network. */
+export type CaptureStatus = 'PENDING' | 'RUNNING' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
+export type CaptureTool = 'NPCAP' | 'PKTMON' | 'RAW_SOCKET' | 'PACKET_SOCKET';
+
