@@ -28,7 +28,8 @@ export function Layout() {
     ...SECTIONS,
     ...(can('ADMIN', 'ANALYST') ? [{ to: '/user-networks', label: 'Redes de usuarios', icon: 'router' as const }] : []),
     ...(can('ADMIN') ? [{ to: '/users', label: 'Usuarios', icon: 'users' as const },
-      { to: '/captures', label: 'Capturas técnicas', icon: 'shield' as const }] : []),
+      { to: '/captures', label: 'Capturas técnicas', icon: 'shield' as const },
+      { to: '/audit', label: 'Auditoría', icon: 'key' as const }] : []),
   ];
   const [open, setOpen] = useState(false);
   const { pathname } = useLocation();
