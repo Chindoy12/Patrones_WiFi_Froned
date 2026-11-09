@@ -1,4 +1,5 @@
 import { render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AuditPage } from '../src/pages/AuditPage';
 import { api } from '../src/services/api';
@@ -40,5 +41,18 @@ describe('Auditoría', () => {
     expect(within(rows[1]).getByText('Sin permiso')).toBeInTheDocument();
     expect(rows[2]).toHaveTextContent('Sistema');
     expect(screen.getByText('1–25 de 60')).toBeInTheDocument();
+  });
+
+  it('filtra por operación y resultado y pasa de página', async () => {
+    const user = userEvent.setup();
+    render(<AuditPage />);
+    await screen.findByRole('table', { name: 'Auditoría' });
+
+    await user.selectOptions(screen.getByLabelText('Resultado'), 'DENIED');
+    await user.selectOptions(screen.getByLabelText('Operación'), 'USER_DELETED');
+    expect(api.audit).toHaveBeenLastCalledWith({ action: 'USER_DELETED', outcome: 'DENIED', page: 0, size: 25 });
+
+    await user.click(await screen.findByRole('button', { name: 'Siguientes' }));
+    expect(api.audit).toHaveBeenLastCalledWith({ action: 'USER_DELETED', outcome: 'DENIED', page: 1, size: 25 });
   });
 });
