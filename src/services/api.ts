@@ -6,8 +6,8 @@ import type {
   AnomalyCauseCount, AuthResponse, ConnectionTest, ConnectionTestInput, NearbyNetworks, WifiScan, WifiScanDetail,
   DashboardSummary, DataSourceType, Device, HomeNetwork, HomeNetworkInput, IdentifyMode, Location, Measurement,
   Network, NetworkQuality, NetworkReport, WeeklyReport, ProtocolStatistic, SensorStatus, StaffRole, Strategy,
-  SystemStatus, TeamNetworks, TrafficSession, User, Zone, Capture, CaptureCapabilities, CaptureInput, NearbyAnalysis,
-  RouterInfo,
+  SystemStatus, TeamNetworks, TrafficSession, User, Zone, Capture, CaptureCapabilities, CaptureDetail, CaptureInput,
+  NearbyAnalysis, RouterInfo,
 } from '../types';
 
 export interface NetworkInput {
@@ -122,6 +122,8 @@ export const api = {
     apiClient.get<Capture[]>(`/api/networks/${networkId}/sensor/captures`, { limit }),
   requestCapture: (networkId: number, input: CaptureInput) =>
     apiClient.post<Capture>(`/api/networks/${networkId}/sensor/captures`, input),
+  captureDetail: (networkId: number, captureId: number) =>
+    apiClient.get<CaptureDetail>(`/api/networks/${networkId}/sensor/captures/${captureId}`),
   sensorDeviceSessions: (networkId: number, fingerprint: string, days = 7) =>
     apiClient.get<DeviceSessionHistory>(`/api/networks/${networkId}/sensor/devices/${fingerprint}/sessions`, { days }),
 
