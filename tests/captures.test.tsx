@@ -123,4 +123,12 @@ describe('Capturas técnicas', () => {
       vi.useRealTimers();
     }
   });
+
+  it('sin redes con sensor explica cómo empezar', async () => {
+    vi.mocked(api.networks).mockResolvedValue([{ ...lab, dataSourceType: 'SIMULATION' }]);
+    render(<CapturesPage />);
+
+    expect(await screen.findByText(/Ninguna red del equipo tiene sensor/)).toBeInTheDocument();
+    expect(api.captureCapabilities).not.toHaveBeenCalled();
+  });
 });
