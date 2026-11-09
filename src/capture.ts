@@ -1,4 +1,4 @@
-import type { CaptureScenario, CaptureStatus } from './types';
+import type { Capture, CaptureScenario, CaptureStatus } from './types';
 
 /**
  * Pure helpers of the technical captures: labels, tones and the numbers of a result. Nothing is estimated: a count the
@@ -18,3 +18,7 @@ export const scenarioStatusLabel: Record<CaptureScenario['status'], string> = {
   AVAILABLE: 'Disponible', UNAVAILABLE: 'No disponible', NOT_VERIFIABLE: 'No se puede comprobar',
   NOT_IMPLEMENTED: 'No lo hace WiFiSense',
 };
+
+export function isCaptureActive(capture: Capture | null | undefined): boolean {
+  return capture?.status === 'PENDING' || capture?.status === 'RUNNING';
+}
