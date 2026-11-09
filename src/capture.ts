@@ -1,5 +1,5 @@
 import { formatBytes } from './format';
-import type { Capture, CaptureScenario, CaptureStatus } from './types';
+import type { Capture, CaptureDetail, CaptureScenario, CaptureStatus } from './types';
 
 /**
  * Pure helpers of the technical captures: labels, tones and the numbers of a result. Nothing is estimated: a count the
@@ -44,4 +44,13 @@ export function share(part: number | null | undefined, whole: number | null | un
 export function percent(part: number | null | undefined, whole: number | null | undefined): number {
   if (part === null || part === undefined || !whole) return 0;
   return Math.min(100, Math.max(0, (100 * part) / whole));
+}
+
+/** Packets per second of every second of the capture (missing seconds are 0) and the busiest one. */
+export function timeline(detail: CaptureDetail): { second: number; packets: number }[] {
+  const last = Math.max(0, ...detail.intervals.map((i) => i.second));
+  const bySecond = new Map(detail.intervals.map((i) => [i.second, i.packets]));
+  return Array.from({ length: detail.intervals.length ? last + 1 : 0 }, (_, second) => ({
+    second, packets: bySecond.get(second) ?? 0,
+  }));
 }
