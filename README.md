@@ -91,6 +91,17 @@ protocolo (UDP, TCP, ICMP…) se muestra con los mismos medidores circulares, de
 - **Historial de conexiones:** el reloj de cada equipo (en Mi Wi-Fi, en el panel del sensor y en Dispositivos) muestra
   cuándo estuvo conectado en los últimos 7 días: una franja con las 24 horas de hoy, cada periodo («2:10 p. m. → 3:05
   p. m.») y el total. Un equipo cuenta como desconectado después de faltar unos 10 minutos (dos reportes).
+- **Redes cercanas** (`NearbyNetworksPanel`, Mi Wi-Fi): las redes Wi-Fi que alcanza a ver la antena del computador
+  del agente, con señal (barras y %), canal, banda, seguridad anunciada y cuántas veces se ha visto cada punto de
+  acceso. «Escanear ahora» pide un escaneo al agente y la página lo sigue cada 4 segundos (esperando al agente →
+  escaneando → completado o falló con el motivo que dio el agente, por ejemplo el permiso de ubicación de Windows);
+  además hay un escaneo programado cada hora. Filtros por nombre o marca, por señal y por seguridad; aviso cuando el
+  resultado tiene más de 2,5 horas; historial de escaneos. El botón dice por qué no se puede (sin agente, agente
+  apagado, escaneo en curso o unos segundos después del anterior). Lo que el sistema no reportó se muestra «—», nunca
+  se inventa, y la página explica que ver una red no la hace tuya ni es la medición de tu conexión. En el celular
+  cada red es una tarjeta. Los filtros y etiquetas están en `src/nearby.ts`. **«Analizar con IA»** (solo cuando la
+  persona lo pide) muestra la lectura del último escaneo: hechos medidos en un bloque y posibles explicaciones con su
+  confianza en otro, más la incertidumbre (`NearbyAnalysisSection`).
 - **Reporte semanal** (Reportes): lunes a domingo en hora de Colombia, lo más importante en frases, los totales frente a
   la semana anterior, cada día, protocolos, equipos y seguridad. «Descargar CSV (Excel)» usa punto y coma y coma
   decimal, como lo abre Excel en español; «Imprimir o guardar PDF» imprime solo el reporte (`@media print`).
