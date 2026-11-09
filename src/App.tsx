@@ -30,6 +30,7 @@ const ReportsPage = page(() => import('./pages/ReportsPage'), 'ReportsPage');
 const UsersPage = page(() => import('./pages/UsersPage'), 'UsersPage');
 const UserNetworksPage = page(() => import('./pages/UserNetworksPage'), 'UserNetworksPage');
 const CapturesPage = page(() => import('./pages/CapturesPage'), 'CapturesPage');
+const AuditPage = page(() => import('./pages/AuditPage'), 'AuditPage');
 
 function Loading() {
   return <p className="notice page-loading" role="status" aria-busy="true">Cargando…</p>;
@@ -67,6 +68,7 @@ export function App() {
                 <Route path="user-networks" element={<RequireAnalyst><UserNetworksPage /></RequireAnalyst>} />
                 <Route path="users" element={<RequireAdmin><UsersPage /></RequireAdmin>} />
                 <Route path="captures" element={<RequireAdmin><CapturesPage /></RequireAdmin>} />
+                <Route path="audit" element={<RequireAdmin><AuditPage /></RequireAdmin>} />
               </Route>
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
