@@ -1,13 +1,11 @@
 import { apiClient } from './apiClient';
 import { sealPassword } from './passwordCipher';
 import type {
-  Account, AgentDevice, AgentOverview, DeviceSessionHistory, AgentPairingCode, AlertPreferences, AiModelOverview,
-  AiModelVersion, AiPrediction, AiTrainingStatus, Alert, AlertStatus, AnalysisResult, AnalysisType,
-  AnomalyCauseCount, AuthResponse, ConnectionTest, ConnectionTestInput, NearbyNetworks, WifiScan, WifiScanDetail,
-  DashboardSummary, DataSourceType, Device, HomeNetwork, HomeNetworkInput, IdentifyMode, Location, Measurement,
-  Network, NetworkQuality, NetworkReport, WeeklyReport, ProtocolStatistic, SensorStatus, StaffRole, Strategy,
-  SystemStatus, TeamNetworks, TrafficSession, User, Zone, AuditPage, Capture, CaptureCapabilities, CaptureDetail,
-  CaptureInput, NearbyAnalysis, RouterInfo,
+  Account, AgentDevice, AgentOverview, DeviceSessionHistory, AgentPairingCode, AlertPreferences, AiModelOverview, AiModelVersion, AiPrediction, AiTrainingStatus, Alert, AlertStatus, AnalysisResult, AnalysisType, AnomalyCauseCount, AuthResponse,
+  ConnectionTest, ConnectionTestInput, NearbyNetworks, WifiScan, WifiScanDetail, DashboardSummary, DataSourceType, Device, HomeNetwork, HomeNetworkInput, IdentifyMode, Location,
+  Measurement, Network, NetworkQuality, NetworkReport, WeeklyReport, ProtocolStatistic, SensorStatus, StaffRole, Strategy, SystemStatus,
+  TeamNetworks, TrafficSession, User, Zone, AuditPage, Capture, CaptureCapabilities, CaptureDetail, CaptureInput,
+  NearbyAnalysis, RetentionPolicy, RouterInfo,
 } from '../types';
 
 export interface NetworkInput {
@@ -130,6 +128,7 @@ export const api = {
   audit: (filters: { action?: string; outcome?: string; page?: number; size?: number }) =>
     apiClient.get<AuditPage>('/api/admin/audit', filters),
   auditActions: () => apiClient.get<{ code: string; label: string }[]>('/api/admin/audit/actions'),
+  retentionPolicies: () => apiClient.get<RetentionPolicy[]>('/api/admin/policies'),
   sensorDeviceSessions: (networkId: number, fingerprint: string, days = 7) =>
     apiClient.get<DeviceSessionHistory>(`/api/networks/${networkId}/sensor/devices/${fingerprint}/sessions`, { days }),
 
