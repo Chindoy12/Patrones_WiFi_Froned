@@ -65,6 +65,10 @@ navegador (clave `wifisense.theme.v2`; la clave vieja guardaba "claro" para todo
 - **Hechos e inferencias** (`FindingList`, `findings.css`): dos bloques separados con su título
   («Hechos medidos», «Posibles explicaciones»); las inferencias llevan el borde izquierdo punteado y una barra de
   confianza con su palabra (baja, media, alta) y su porcentaje, para que una suposición nunca se lea como una medición.
+- **Capturas técnicas** (`CapturesPage`, `captures.css`): los motivos que impiden capturar en una caja `--bad-soft`,
+  las herramientas con una insignia «Lista»/«No», los cuatro escenarios como tarjetas con su estado en palabras, los
+  totales en una grilla de mosaicos con etiqueta sello, barras de protocolos y una línea de tiempo de barras verticales
+  (`--chart-1`) con su descripción para lectores de pantalla.
 - **Gráficas** (`MetricChart`): la serie principal con un relleno que se desvanece, cuadrícula punteada y un tooltip
   que sigue el tema.
 
