@@ -750,3 +750,24 @@ export interface Capture {
   analyzedWith: 'AI' | 'RULES' | null;
 }
 
+/** One capture with everything it counted; observed (facts) and inferred (with confidence) are never mixed. */
+export interface CaptureDetail {
+  capture: Capture;
+  totals: { packets: number | null; bytes: number | null; droppedByTool: number | null; malformed: number | null;
+    inboundBytes: number | null; outboundBytes: number | null; broadcast: number | null; multicast: number | null;
+    localHosts: number | null; remoteHosts: number | null };
+  protocols: { protocol: string; packets: number; bytes: number }[];
+  ports: { transport: 'TCP' | 'UDP'; port: number; service: string | null; packets: number; bytes: number }[];
+  intervals: { second: number; packets: number; bytes: number }[];
+  observed: Finding[];
+  inferred: Finding[];
+  scope: string;
+}
+
+export interface CaptureScenario {
+  code: 'LOCAL_HOST' | 'SHARED_INTERFACE' | 'MONITOR_MODE' | 'ROUTER';
+  title: string;
+  status: 'AVAILABLE' | 'UNAVAILABLE' | 'NOT_VERIFIABLE' | 'NOT_IMPLEMENTED';
+  explanation: string;
+}
+
