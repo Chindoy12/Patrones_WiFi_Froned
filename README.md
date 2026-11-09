@@ -117,6 +117,8 @@ protocolo (UDP, TCP, ICMP…) se muestra con los mismos medidores circulares, de
   explicaciones con su confianza, en bloques separados, y qué no incluye la captura. Lo desconocido se ve «—».
 - **Auditoría** (`AuditPage`, solo administrador): quién hizo cada operación sensible, cuándo, sobre qué y con qué
   resultado (incluidos los intentos sin permiso), con filtros y páginas; y cuánto tiempo se guarda cada cosa.
+- **¿Qué hace cada cosa?** (`FunctionGuide`): diferencia el escaneo de redes cercanas, la medición de la conexión, los
+  equipos de la red, la captura técnica y la administración del router.
 - **Reporte semanal** (Reportes): lunes a domingo en hora de Colombia, lo más importante en frases, los totales frente a
   la semana anterior, cada día, protocolos, equipos y seguridad. «Descargar CSV (Excel)» usa punto y coma y coma
   decimal, como lo abre Excel en español; «Imprimir o guardar PDF» imprime solo el reporte (`@media print`).
