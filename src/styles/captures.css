@@ -43,3 +43,7 @@
 .capture-result__timeline { display: flex; align-items: flex-end; gap: 2px; height: 90px; padding: 6px;
   border-radius: 12px; background: var(--surface-2); border: 1px solid var(--line-soft); }
 .capture-result__timeline i { flex: 1 1 0; min-width: 1px; border-radius: 2px 2px 0 0; background: var(--chart-1); }
+
+@media (max-width: 760px) {
+  .capture-result__bars li { grid-template-columns: 6em 1fr 3.5em; }
+}
