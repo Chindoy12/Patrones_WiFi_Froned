@@ -1,0 +1,15 @@
+/* Technical captures (Capturas técnicas): what blocks a capture, the four scenarios, the form and the result. */
+.captures { display: grid; gap: 18px; }
+.captures__head { display: flex; align-items: center; gap: 10px; }
+.captures__head h2 { margin: 0; }
+.captures__blockers { list-style: none; margin: 12px 0; padding: 12px 14px; display: grid; gap: 6px; border-radius: 12px;
+  background: var(--bad-soft); border: 1px solid var(--bad-line); color: var(--bad-ink); }
+.captures__blockers li { display: flex; gap: 8px; align-items: flex-start; }
+.captures__blockers .icon { margin-top: 3px; flex: none; }
+.captures__tools, .captures__scenarios { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 8px; }
+.captures__tools li { display: flex; gap: 10px; align-items: flex-start; }
+.captures__tools .badge { flex: none; min-width: 3.4em; text-align: center; }
+.captures__scenarios li { padding: 10px 12px; border-radius: 12px; background: var(--surface-2);
+  border: 1px solid var(--line-soft); }
+.captures__scenarios strong { margin-right: 8px; }
+.captures__scenarios p { margin: 6px 0 0; line-height: 1.5; }
