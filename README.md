@@ -102,6 +102,12 @@ protocolo (UDP, TCP, ICMP…) se muestra con los mismos medidores circulares, de
   cada red es una tarjeta. Los filtros y etiquetas están en `src/nearby.ts`. **«Analizar con IA»** (solo cuando la
   persona lo pide) muestra la lectura del último escaneo: hechos medidos en un bloque y posibles explicaciones con su
   confianza en otro, más la incertidumbre (`NearbyAnalysisSection`).
+- **Tu router** (`RouterPanel`, en Mi Wi-Fi y en Dispositivos del equipo): fabricante y modelo que vio el agente y, sin
+  rodeos, lo que WiFiSense no puede hacer (lista oficial de clientes, bloquear, cambiar la contraseña), con los pasos
+  para hacerlo en el router. Ningún botón finge administrar el router.
+- **De dónde sale cada nombre** (`IdentityTag` en la lista de equipos): «Tu nombre», «Confirmado» (el equipo y el
+  router coinciden), «Anunciado», «Del router», «De la red», «Estimado» (solo fabricante o tipo) o «Desconocido»
+  (`src/identification.ts`). Una estimación nunca se ve como el nombre.
 - **Reporte semanal** (Reportes): lunes a domingo en hora de Colombia, lo más importante en frases, los totales frente a
   la semana anterior, cada día, protocolos, equipos y seguridad. «Descargar CSV (Excel)» usa punto y coma y coma
   decimal, como lo abre Excel en español; «Imprimir o guardar PDF» imprime solo el reporte (`@media print`).
