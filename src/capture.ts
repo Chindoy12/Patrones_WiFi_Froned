@@ -1,3 +1,4 @@
+import { formatBytes } from './format';
 import type { Capture, CaptureScenario, CaptureStatus } from './types';
 
 /**
@@ -21,4 +22,9 @@ export const scenarioStatusLabel: Record<CaptureScenario['status'], string> = {
 
 export function isCaptureActive(capture: Capture | null | undefined): boolean {
   return capture?.status === 'PENDING' || capture?.status === 'RUNNING';
+}
+
+/** 1 536 -> "1.5 KB"; unknown -> "—" (the tool did not say it). */
+export function bytesOrUnknown(bytes: number | null | undefined): string {
+  return bytes === null || bytes === undefined ? '—' : formatBytes(bytes);
 }
