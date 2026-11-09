@@ -57,6 +57,11 @@ navegador (clave `wifisense.theme.v2`; la clave vieja guardaba "claro" para todo
   anillos que se expanden, como una señal. Con «reducir movimiento» queda quieto.
 - **Pie de página** (`SiteFooter`): marca, la promesa de privacidad del agente (las MAC nunca salen del computador) y
   la zona horaria de los reportes semanales.
+- **Redes cercanas** (`NearbyNetworksPanel`): barra con el estado del escaneo (insignia de color con su palabra) y el
+  botón, tabla con la señal en cuatro barras como en un celular, «Tu conexión» con `tag--accent` y la fila resaltada
+  con `--accent-soft`, «Sin contraseña» (`badge--bad`) y «Débil» (`badge--warn`) siempre con su palabra, y el aviso de
+  resultado viejo en `--warn-soft`. En pantallas angostas cada fila es una tarjeta con sus etiquetas
+  (`td[data-label]::before`).
 - **Gráficas** (`MetricChart`): la serie principal con un relleno que se desvanece, cuadrícula punteada y un tooltip
   que sigue el tema.
 
