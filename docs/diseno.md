@@ -69,6 +69,10 @@ navegador (clave `wifisense.theme.v2`; la clave vieja guardaba "claro" para todo
   las herramientas con una insignia «Lista»/«No», los cuatro escenarios como tarjetas con su estado en palabras, los
   totales en una grilla de mosaicos con etiqueta sello, barras de protocolos y una línea de tiempo de barras verticales
   (`--chart-1`) con su descripción para lectores de pantalla.
+- **Router y guía de funciones** (`router.css`): capacidades del router con insignia «Disponible»/«No disponible» y los
+  pasos en un desplegable; la guía «¿Qué hace cada cosa?» como un desplegable con un ícono por función. La etiqueta de
+  identificación de un equipo usa `badge--good` (tu nombre o confirmado), neutra (anunciado, del router, de la red) o
+  `badge--warn` (estimado o desconocido).
 - **Gráficas** (`MetricChart`): la serie principal con un relleno que se desvanece, cuadrícula punteada y un tooltip
   que sigue el tema.
 
@@ -77,7 +81,7 @@ navegador (clave `wifisense.theme.v2`; la clave vieja guardaba "claro" para todo
 `src/index.css` solo importa las hojas de `src/styles/`, una por área: base y tokens; marco (`shell`, `topbar`,
 `page`, `footer`); piezas (`panels`, `buttons`, `forms`, `feedback`, `tables`, `lists`, `gauge`, `tiles`, `strip`,
 `wifi-logo`); áreas (`dashboard`, `auth`, `enduser`, `connection`, `agent`, `devices`, `findings`, `identify`,
-`alerts`, `modal`, `channels`, `ai`, `team`, `weekly`); y al final `motion` y `print`. Antes todo estaba en un solo
+`alerts`, `modal`, `channels`, `nearby`, `router`, `captures`, `audit`, `ai`, `team`, `weekly`); y al final `motion` y `print`. Antes todo estaba en un solo
 archivo de 800 líneas.
 
 ## Lo que no se tomó de la referencia
