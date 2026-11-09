@@ -39,3 +39,9 @@ export function share(part: number | null | undefined, whole: number | null | un
   const pct = (100 * part) / whole;
   return pct > 0 && pct < 1 ? '<1 %' : `${Math.round(pct)} %`;
 }
+
+/** Numeric share for a bar (0-100); 0 when unknown. */
+export function percent(part: number | null | undefined, whole: number | null | undefined): number {
+  if (part === null || part === undefined || !whole) return 0;
+  return Math.min(100, Math.max(0, (100 * part) / whole));
+}
