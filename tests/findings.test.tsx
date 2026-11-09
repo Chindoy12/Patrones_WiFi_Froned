@@ -28,4 +28,11 @@ describe('Hechos e inferencias (FindingList)', () => {
     expect(within(block).getByText(/Repite la captura en otro momento/)).toBeInTheDocument();
     expect(within(block).getByText('Atención')).toBeInTheDocument();
   });
+
+  it('una lista vacía muestra su mensaje en lugar de inventar algo', () => {
+    render(<FindingList findings={[]} kind="inferences" empty="La IA no encontró nada que explicar." />);
+
+    expect(screen.getByText('La IA no encontró nada que explicar.')).toBeInTheDocument();
+    expect(screen.queryByRole('listitem')).not.toBeInTheDocument();
+  });
 });
