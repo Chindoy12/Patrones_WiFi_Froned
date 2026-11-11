@@ -11,7 +11,7 @@ demuestra.
 | **Componentes guardia** | `src/auth/guards.tsx` (`RequireAuth`, `RequireStaff`, `RequireEndUser`, `RequireAnalyst`, `RequireAdmin`) | Cada ruta declara quién puede entrar envolviendo la página; la regla no se repite dentro de cada pantalla | `guards.test.tsx` |
 | **Custom Hook** | `src/hooks/useApi.ts`, `useNow.ts`, `useOnline.ts`, `useNetworkSelection.ts` | Cargar datos (cargando, error, recargar), el reloj y la conexión se escriben una vez y los usan todas las páginas | `components.test.tsx`, pruebas de cada página |
 | **Single-flight** | `src/services/apiClient.ts`: `renewSession()` | Si varias peticiones encuentran el token vencido a la vez, la sesión se renueva **una sola vez** (el refresh token sirve una vez: dos renovaciones cerrarían la sesión) | `apiClient.test.ts` ("renews an expired token…") |
-| **Lazy loading por área** | `src/App.tsx` (`React.lazy`) | Un usuario final nunca descarga las páginas del equipo ni la librería de gráficas | `npm run build` (un archivo por página) |
+| **Lazy loading por área** (Proxy virtual) | `src/App.tsx` (`React.lazy`) | Un usuario final nunca descarga las páginas del equipo ni la librería de gráficas. Cada página es un *proxy virtual*: tiene la misma forma que el componente real (se usa igual en las rutas) y solo descarga el real la primera vez que alguien entra; mientras tanto `Suspense` muestra «Cargando». Los proxies de protección y de caché de la IA están en el backend (`PATTERNS.md`, sección 9) | `npm run build` (un archivo por página) |
 
 ## Error Boundary
 
