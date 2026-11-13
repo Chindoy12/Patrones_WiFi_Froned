@@ -12,7 +12,11 @@ import { ApiError } from '../src/services/apiClient';
 
 vi.mock('../src/services/api', () => ({ api: { me: vi.fn(), login: vi.fn(), register: vi.fn() } }));
 
-const renderLogin = () => render(<MemoryRouter><AuthProvider><LoginPage /></AuthProvider></MemoryRouter>);
+// these tests are about the form: the welcome was already seen (Avance 29), so /login opens on the login
+const renderLogin = () => {
+  localStorage.setItem('wifisense.welcome.v1', 'seen');
+  return render(<MemoryRouter><AuthProvider><LoginPage /></AuthProvider></MemoryRouter>);
+};
 
 describe('StatusBadge', () => {
   it('shows the Spanish label and the tone for the status', () => {
