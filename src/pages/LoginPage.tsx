@@ -3,7 +3,7 @@ import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { USERNAME_MAX } from '../auth/credentials';
 import { homePath } from '../auth/guards';
-import { AuthShell } from '../components/AuthShell';
+import { LandingShell } from '../components/landing/LandingShell';
 import { PasswordInput } from '../components/PasswordInput';
 import { ApiError } from '../services/apiClient';
 
@@ -35,7 +35,7 @@ export function LoginPage() {
   }
 
   return (
-    <AuthShell title="Inicia sesión" subtitle="Mide y entiende la calidad de tu conexión Wi-Fi." busy={busy}
+    <LandingShell title="Inicia sesión" subtitle="Mide y entiende la calidad de tu conexión Wi-Fi." busy={busy}
                footer={<>¿No tienes cuenta? <Link to="/registro">Crea una aquí</Link></>}>
       <form onSubmit={submit} noValidate>
         <div className="field">
@@ -51,6 +51,6 @@ export function LoginPage() {
           {busy ? 'Ingresando…' : 'Ingresar'}
         </button>
       </form>
-    </AuthShell>
+    </LandingShell>
   );
 }
