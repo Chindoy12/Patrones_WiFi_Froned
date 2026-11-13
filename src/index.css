@@ -45,6 +45,7 @@
 @import './styles/ai.css';
 @import './styles/team.css';
 @import './styles/weekly.css';
+@import './styles/landing.css';
 
 /* Last: motion and print adjust everything above */
 @import './styles/motion.css';

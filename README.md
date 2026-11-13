@@ -25,6 +25,7 @@ src/components/             layout, AuthShell (login y registro), WifiLogo anima
                             ErrorBoundary (una página que falla muestra un mensaje en vez de dejar la pantalla en blanco)
 src/pages/                  una página por sección
 src/pages/miwifi/           Mi Wi-Fi en pantallas (Avance 27): el marco con el menú y una pantalla por cada cosa
+src/components/landing/     el inicio (Avance 28): la escena 3D de partículas (WebGL) y la historia al desplazarse
 src/auth/credentials.ts     límites de usuario (40, nombre o correo) y contraseña (10–12) y reglas de contraseña
 tests/                      pruebas de apiClient, reglas de arquitectura y seguridad, y componentes
 .github/workflows/pagina.yml  tipos, pruebas, build y npm audit en cada Pull Request
@@ -157,7 +158,9 @@ protocolo (UDP, TCP, ICMP…) se muestra con los mismos medidores circulares, de
 - **Carga por áreas:** cada página se descarga al entrar (`React.lazy`); un usuario final no descarga las páginas del
   equipo ni la librería de gráficas.
 - **Modo oscuro y claro:** oscuro por defecto; el botón de tema cambia todos los colores (tokens en
-  `src/styles/tokens.css`) y la elección se recuerda en el navegador.
+  `src/styles/tokens.css`) y la elección se recuerda en el navegador. El tema nuevo entra como una **ola suave** que
+  sale del botón (view transitions con un borde difuminado), en vez de poner toda la pantalla blanca o negra de golpe;
+  los navegadores sin view transitions funden los colores y con «reducir movimiento» el cambio es inmediato.
 Las acciones se muestran según el rol (Observador consulta; Analista recolecta, analiza y gestiona alertas;
 Administrador además registra redes).
 
@@ -176,7 +179,16 @@ Administrador además registra redes).
 
 ## Inicio de sesión y cuentas
 
-- **Login, registro y recuperación** comparten el mismo diseño: lienzo de medianoche con cuadrícula de plano, la marca
+- **El inicio** (`/login`, Avance 28) es una página que se recorre: el login sigue en la primera pantalla y detrás hay
+  una **escena 3D** de miles de triángulos de colores (`ParticleStage`, WebGL propio, sin librerías). Primero forman el
+  **símbolo Wi-Fi**; al bajar se **desintegran por toda la pantalla** mientras el texto cuenta cómo se ve hoy una red
+  (invisible y regada), se vuelven a juntar en un **router** cuando se explica el agente y la IA, y terminan en un
+  **planeta** con una órbita y enlaces entre lugares: «todo se conecta». Cada sección marca su forma con
+  `data-stage` y cada punto sale en su propio momento, así la forma se deshace y se rehace como algo vivo. En celular la
+  escena queda centrada y tenue detrás del texto; sin WebGL no se dibuja y la página se lee igual; con «reducir
+  movimiento» la forma cambia sin volar; se pausa con la pestaña oculta. Los colores son los tokens `--particle-*`.
+  Registro y recuperación siguen con el diseño de abajo.
+- **Registro y recuperación** (y antes el login) comparten el mismo diseño: lienzo de medianoche con cuadrícula de plano, la marca
   «WiFiSense» iluminada (Space Grotesk), una tarjeta de vidrio con el botón principal en forma de píldora y, detrás, un
   dibujo vivo de **cómo funciona una red Wi-Fi**, en capas como una red neuronal: equipos → puntos de acceso → router →
   Internet (`WifiNetworkFlow`). Los paquetes suben en violeta y la respuesta vuelve en azul; el punto de acceso ondea
@@ -214,7 +226,7 @@ Administrador además registra redes).
 npm install
 cp .env.example .env        # VITE_API_URL=http://localhost:8080
 npm run dev                 # http://localhost:5173
-npm test                    # 270 pruebas
+npm test                    # 288 pruebas
 npm run build               # tipos + build de producción en dist/
 ```
 

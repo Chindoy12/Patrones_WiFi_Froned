@@ -10,6 +10,26 @@
 .dash > :nth-child(6) { animation-delay: .25s; }
 @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 
+/*
+ * Theme switch: the new theme spreads from the switch like a wave with a soft edge (view transitions, see
+ * switchTheme in theme.ts). The old picture stays still underneath while the new one is revealed by a growing circle
+ * whose edge fades over a wide band, so the eyes never get a flash of white or black.
+ */
+@property --wave-r { syntax: '<length>'; inherits: false; initial-value: 0px; }
+:root[data-theme-wave]::view-transition-old(root),
+:root[data-theme-wave]::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+:root[data-theme-wave]::view-transition-new(root) {
+  -webkit-mask-image: radial-gradient(circle at var(--wave-x) var(--wave-y), black var(--wave-r), transparent calc(var(--wave-r) + 30vmax));
+  mask-image: radial-gradient(circle at var(--wave-x) var(--wave-y), black var(--wave-r), transparent calc(var(--wave-r) + 30vmax));
+  animation: theme-wave 1.6s cubic-bezier(.4, 0, .2, 1) both;
+}
+@keyframes theme-wave { from { --wave-r: -30vmax; } to { --wave-r: 160vmax; } }
+/* Browsers without view transitions: the colors fade instead of jumping */
+.theme-fade, .theme-fade * {
+  transition: background-color 1.4s ease, color 1.4s ease, border-color 1.4s ease, fill 1.4s ease, stroke 1.4s ease,
+    box-shadow 1.4s ease !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }
   .dash__card, .eu-card, .panel { animation: none; }
