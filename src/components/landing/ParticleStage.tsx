@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useTheme } from '../../theme';
 import { buildClouds, type Clouds, PALETTE_SIZE, pointCount } from './particleShapes';
 import {
-  CAMERA_Z, FIELD_OF_VIEW, LAST_STAGE, LOOP, perspective, SHAPE, stageLayout, type StageLayout,
+  CAMERA_Z, FIELD_OF_VIEW, LAST_STAGE, LOOP, perspective, SHAPE, stageLayout, type StageLayout, toWorld,
 } from './stageProgress';
 
 /**
@@ -10,6 +10,9 @@ import {
  * the screen, gather again into a router and become a planet with links around it. The page says which step of the
  * loop to show (`stage`, see stageProgress.ts) and the scene travels there; every point leaves at its own moment, so
  * the shape comes apart and comes together like a living thing.
+ *
+ * It answers the visitor (Avance 29): the triangles move away from the pointer (or the finger) as if they dodged it,
+ * and a click (or a tap) on an empty spot makes them burst and come back together.
  *
  * Drawn with WebGL directly (no libraries): one draw call, the shapes live on the graphics card and the browser only
  * sends a few numbers each frame. Decoration only: hidden from assistive technology. Without WebGL it draws nothing
@@ -37,6 +40,10 @@ uniform float uTime;
 uniform float uFocal;
 uniform float uAlpha;
 uniform vec2 uTilt;
+uniform vec2 uPointer;
+uniform float uPush;
+uniform vec2 uBurstAt;
+uniform float uBurst;
 uniform vec3 uPlace[4];
 uniform vec3 uPalette[${PALETTE_SIZE}];
 varying vec3 vColor;
@@ -81,6 +88,12 @@ void main() {
   front *= 1.0 - 0.6 * aSea * planet;
   p += vec3(sin(uTime * 0.7 + aSeed * 60.0), cos(uTime * 0.6 + aSeed * 50.0), sin(uTime * 0.5 + aSeed * 70.0)) * 0.03;
   p = turnX(turnY(p, uTilt.x), uTilt.y);
+  // the pointer pushes the triangles near it away; a click throws them out and they come back
+  float reach = (${CAMERA_Z.toFixed(1)} - p.z) / ${CAMERA_Z.toFixed(1)};
+  vec2 away = p.xy - uPointer * reach;
+  p.xy += normalize(away + 0.0001) * uPush * 0.5 * exp(-dot(away, away) / 0.35);
+  vec2 blast = p.xy - uBurstAt * reach;
+  p += vec3(normalize(blast + 0.0001) * (0.6 + aSeed), (aSeed - 0.5) * 2.4) * uBurst * 1.8 * exp(-length(blast) * 0.32);
 
   float depth = ${CAMERA_Z.toFixed(1)} - p.z;
   gl_Position = uProjection * vec4(p.x, p.y, p.z - ${CAMERA_Z.toFixed(1)}, 1.0);
@@ -147,6 +160,11 @@ function palette(): Float32Array {
   return colors;
 }
 
+/** A press on a link, a button, a field or the card is not a press on the scene. */
+function onControl(target: EventTarget | null): boolean {
+  return target instanceof Element && target.closest('a, button, input, label, select, textarea, .auth-card') !== null;
+}
+
 function compile(gl: WebGLRenderingContext, type: number, source: string): WebGLShader | null {
   const shader = gl.createShader(type);
   if (!shader) return null;
@@ -192,7 +210,8 @@ function createScene(canvas: HTMLCanvasElement): Scene | null {
     gl.vertexAttribPointer(location, size, gl.FLOAT, false, 0, 0);
   }
   const uniforms = Object.fromEntries(
-    ['uProjection', 'uStage', 'uTime', 'uFocal', 'uAlpha', 'uTilt', 'uPlace', 'uPalette']
+    ['uProjection', 'uStage', 'uTime', 'uFocal', 'uAlpha', 'uTilt', 'uPointer', 'uPush', 'uBurstAt', 'uBurst', 'uPlace',
+      'uPalette']
       .map((name) => [name, gl.getUniformLocation(program, name)]),
   );
   gl.enable(gl.BLEND);
@@ -202,7 +221,7 @@ function createScene(canvas: HTMLCanvasElement): Scene | null {
 }
 
 /** `stage`: the step of the loop to show (0 to LAST_STAGE); the scene travels there smoothly. */
-export function ParticleStage({ stage: wanted = 0 }: { stage?: number }) {
+export function ParticleStage({ stage: wanted }: { stage: number }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const sceneRef = useRef<Scene | null>(null);
   const wantedRef = useRef(wanted);
@@ -229,6 +248,8 @@ export function ParticleStage({ stage: wanted = 0 }: { stage?: number }) {
     let stage = wantedRef.current;
     let frame = 0;
     const tilt = { x: 0, y: 0, goalX: 0, goalY: 0 };
+    const pointer = { x: 0, y: 0, push: 0, movedAt: -1e9 };
+    const burst = { x: 0, y: 0, power: 0 };
     const start = performance.now();
 
     function resize() {
@@ -254,9 +275,15 @@ export function ParticleStage({ stage: wanted = 0 }: { stage?: number }) {
       if (stage === LAST_STAGE && target < LAST_STAGE) stage = 0;
       tilt.x += (tilt.goalX - tilt.x) * 0.05;
       tilt.y += (tilt.goalY - tilt.y) * 0.05;
+      pointer.push += ((now - pointer.movedAt < 900 ? 1 : 0) - pointer.push) * 0.06;
+      burst.power *= 0.955;
       gl.uniform1f(u.uStage, Math.min(Math.max(stage, 0), LAST_STAGE));
       gl.uniform1f(u.uTime, reduced ? 0 : (now - start) / 1000);
       gl.uniform2f(u.uTilt, tilt.x, tilt.y);
+      gl.uniform2f(u.uPointer, pointer.x, pointer.y);
+      gl.uniform1f(u.uPush, reduced ? 0 : pointer.push);
+      gl.uniform2f(u.uBurstAt, burst.x, burst.y);
+      gl.uniform1f(u.uBurst, reduced ? 0 : burst.power);
       gl.clear(gl.COLOR_BUFFER_BIT);
       gl.drawArrays(gl.POINTS, 0, clouds.count);
     }
@@ -269,6 +296,13 @@ export function ParticleStage({ stage: wanted = 0 }: { stage?: number }) {
     function onPointer(event: PointerEvent) {
       tilt.goalX = (event.clientX / window.innerWidth - 0.5) * 0.25;
       tilt.goalY = (event.clientY / window.innerHeight - 0.5) * 0.12;
+      [pointer.x, pointer.y] = toWorld(event.clientX, event.clientY, window.innerWidth, window.innerHeight);
+      pointer.movedAt = performance.now();
+    }
+    function onPress(event: PointerEvent) {
+      if (onControl(event.target)) return;
+      [burst.x, burst.y] = toWorld(event.clientX, event.clientY, window.innerWidth, window.innerHeight);
+      burst.power = 1;
     }
     function onVisibility() {
       cancelAnimationFrame(frame);
@@ -284,13 +318,17 @@ export function ParticleStage({ stage: wanted = 0 }: { stage?: number }) {
       frame = requestAnimationFrame(loop);
     }
     window.addEventListener('resize', resize);
-    if (!reduced) window.addEventListener('pointermove', onPointer, { passive: true });
+    if (!reduced) {
+      window.addEventListener('pointermove', onPointer, { passive: true });
+      window.addEventListener('pointerdown', onPress, { passive: true });
+    }
     document.addEventListener('visibilitychange', onVisibility);
     return () => {
       cancelAnimationFrame(frame);
       redrawRef.current = () => undefined;
       window.removeEventListener('resize', resize);
       window.removeEventListener('pointermove', onPointer);
+      window.removeEventListener('pointerdown', onPress);
       document.removeEventListener('visibilitychange', onVisibility);
       // the context is not lost on purpose: React may mount the same canvas again (StrictMode), and the browser frees
       // it with the canvas when the page goes away
