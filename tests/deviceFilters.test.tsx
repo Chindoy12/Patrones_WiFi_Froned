@@ -1,9 +1,20 @@
-import { render, screen, within } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
-import { DeviceList, deviceNames } from '../src/components/AgentPanel';
+import { deviceNames } from '../src/components/AgentPanel';
+import { DeviceCatalog } from '../src/components/DeviceCatalog';
 import { hasOwnName, visibleDevices } from '../src/components/DeviceFilters';
 import type { AgentDevice } from '../src/types';
+
+/** The devices of a network as the page shows them, starting at `search` («?tipo=celulares» opens that category). */
+function renderCatalog(list: AgentDevice[], search = '', updateDevice = vi.fn()) {
+  return render(
+    <MemoryRouter initialEntries={[`/devices${search}`]}>
+      <DeviceCatalog devices={list} onChange={vi.fn()} updateDevice={updateDevice} team />
+    </MemoryRouter>,
+  );
+}
 
 function device(id: string, extra: Partial<AgentDevice> = {}): AgentDevice {
   return {
@@ -50,15 +61,18 @@ describe('Lista de equipos', () => {
   });
 
   it('says how many have no name, why, and how to name them', async () => {
-    render(<DeviceList devices={devices} onChange={vi.fn()} updateDevice={vi.fn()} team />);
+    renderCatalog(devices);
 
-    expect(screen.getByRole('button', { name: 'Sin nombre 6' })).toBeInTheDocument();
     expect(screen.getByText(/6 equipos no dicen su nombre/)).toHaveTextContent('muchas redes de universidades');
+    await userEvent.click(screen.getByRole('link', { name: /Celulares y tabletas: 8/ }));
+    expect(screen.getByRole('button', { name: 'Sin nombre 6' })).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole('button', { name: 'Sin nombre 6' }));
-    const list = document.querySelector('.devlist') as HTMLElement;
-    expect(within(list).queryByText('iPhone-6')).not.toBeInTheDocument();
-    expect(within(list).getAllByRole('listitem')).toHaveLength(6);
+    const rows = () => document.querySelectorAll('.devrow');
+    expect(screen.queryByText('iPhone-6')).not.toBeInTheDocument();
+    expect(rows()).toHaveLength(5);  // the one seen weeks ago waits folded
+    await userEvent.click(screen.getByRole('button', { name: 'Mostrar el equipo visto antes' }));
+    expect(rows()).toHaveLength(6);
 
     await userEvent.type(screen.getByRole('searchbox', { name: 'Buscar equipo' }), 'nada así');
     expect(screen.getByText('Ningún equipo coincide con lo que buscas.')).toBeInTheDocument();
@@ -66,7 +80,7 @@ describe('Lista de equipos', () => {
 
   it('offers to name a device that has none, right on its row', async () => {
     const updateDevice = vi.fn().mockResolvedValue({});
-    render(<DeviceList devices={[device('a')]} onChange={vi.fn()} updateDevice={updateDevice} team />);
+    renderCatalog([device('a')], '?tipo=celulares', updateDevice);
 
     await userEvent.click(screen.getByRole('button', { name: 'Ponerle nombre' }));
     await userEvent.type(screen.getByRole('textbox', { name: 'Nombre del equipo' }), 'Celular de Juan{Enter}');
