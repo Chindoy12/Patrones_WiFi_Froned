@@ -1,0 +1,86 @@
+/*
+ * Start page (Avance 28): a deep canvas with the 3D scene of triangles fixed behind (ParticleStage), a bar with the
+ * brand, the login in the first screen and the story below, told in large, light type that floats on the canvas with
+ * no boxes. Colors come from the --auth-*, --particle-* and --landing-* tokens, so both themes work.
+ */
+.landing { position: relative; min-height: 100vh; color: var(--auth-ink); background: var(--auth-canvas); overflow-x: clip; }
+.particle-stage { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; }
+.landing__bar, .landing__hero, .story { position: relative; z-index: 1; }
+
+/* The bar: brand on the left, «Cómo funciona», the theme switch and «Crear cuenta» on the right */
+.landing__bar {
+  position: sticky; top: 0; z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  max-width: 1280px; margin: 0 auto; padding: 18px 32px;
+}
+.landing__bar::before {
+  content: ''; position: absolute; inset: 0 -50vw; z-index: -1; pointer-events: none;
+  background: linear-gradient(var(--auth-canvas) 35%, transparent);
+}
+.landing__brand {
+  display: inline-flex; align-items: center; gap: 10px; font-family: var(--font-wordmark); font-weight: 500;
+  font-size: 1.15rem; letter-spacing: -.01em;
+}
+.landing__nav { display: flex; align-items: center; gap: 18px; }
+.landing__navlink {
+  color: var(--auth-muted); text-decoration: none; font-size: .78rem; font-weight: 600; letter-spacing: .06em;
+  text-transform: uppercase;
+}
+.landing__navlink:hover { color: var(--auth-ink); }
+.landing__nav .theme-toggle {
+  border-radius: var(--radius-pill); border-color: var(--auth-edge); color: var(--auth-muted); font-size: .8rem;
+}
+.landing__signup, .story__cta {
+  display: inline-flex; align-items: center; padding: 10px 18px; border: 0; border-radius: var(--radius-pill);
+  background: var(--auth-cta); color: var(--on-accent); font: inherit; font-size: .78rem; font-weight: 600;
+  letter-spacing: .06em; text-transform: uppercase; text-decoration: none; cursor: pointer;
+}
+.landing__signup:hover, .story__cta:hover { background: var(--auth-cta-hover); }
+
+/* First screen: the words and the login on the left, the Wi-Fi symbol of the scene on the right */
+.landing__hero {
+  display: grid; grid-template-columns: minmax(0, 470px); align-content: center; gap: 28px;
+  max-width: 1280px; min-height: calc(100vh - 76px); margin: 0 auto; padding: 8px 32px 72px;
+}
+.landing__eyebrow {
+  margin: 0 0 14px; font-family: var(--font-mono); font-size: .74rem; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--landing-label);
+}
+.landing__headline {
+  margin: 0; font-family: var(--font-wordmark); font-weight: 400; font-size: clamp(3rem, 6.4vw, 5.6rem);
+  line-height: .95; letter-spacing: -.045em; background: var(--auth-wordmark); -webkit-background-clip: text;
+  background-clip: text; color: transparent;
+}
+.landing__text { margin: 18px 0 0; max-width: 420px; font-size: 1.08rem; font-weight: 300; line-height: 1.55; color: var(--auth-muted); }
+.landing .landing__card { width: 100%; max-width: 420px; }
+.landing__scroll {
+  position: absolute; left: 50%; bottom: 22px; transform: translateX(-50%); display: inline-flex; gap: 8px;
+  color: var(--auth-muted); font-family: var(--font-mono); font-size: .72rem; letter-spacing: .1em;
+  text-transform: uppercase; text-decoration: none; white-space: nowrap;
+}
+.landing__scroll span { display: inline-block; animation: landing-nudge 1.8s var(--ease) infinite; }
+@keyframes landing-nudge { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(5px); } }
+
+/* A wide screen: the scene needs the right half next to the login */
+@media (min-width: 1100px) {
+  .landing__hero { grid-template-columns: minmax(0, 470px) 1fr; }
+  .landing__intro, .landing .landing__card { grid-column: 1; }
+}
+/* A laptop screen: a little tighter so the login fits without scrolling */
+@media (max-height: 820px) and (min-width: 761px) {
+  .landing__hero { gap: 20px; padding-bottom: 60px; }
+  .landing__headline { font-size: clamp(2.8rem, 5.4vw, 4.6rem); }
+  .landing__text { margin-top: 12px; font-size: 1rem; }
+  .landing .landing__card { padding: 20px 26px 18px; }
+  .landing .auth-card__mark { display: none; }
+}
+/* Phone: one column, the scene centered and faint behind the words */
+@media (max-width: 760px) {
+  .landing__bar { padding: 14px 16px; }
+  .landing__navlink, .landing__nav .theme-toggle span { display: none; }
+  .landing__nav { gap: 10px; }
+  .landing__signup { padding: 9px 14px; }
+  .landing__hero { padding: 36px 16px 84px; min-height: auto; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .landing__scroll span { animation: none; }
+}
