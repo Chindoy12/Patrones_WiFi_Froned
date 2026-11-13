@@ -18,6 +18,7 @@ export interface Clouds {
   scatter: Float32Array;
   router: Float32Array;
   brain: Float32Array;
+  shield: Float32Array;
   planet: Float32Array;
   /** Index of the palette color of each point (0 to PALETTE_SIZE - 1). */
   colors: Float32Array;
@@ -285,6 +286,42 @@ export function brainShape(target: Float32Array, n: number, rand: Rand) {
   }
 }
 
+/** Half the width of the shield at height y: straight sides that curve into a point at the bottom. */
+export function shieldWidth(y: number): number {
+  if (y > 1.3 || y < -1.6) return 0;
+  if (y >= 0.1) return 1.25 - 0.08 * Math.max(0, y - 1.1) * 5;
+  return 1.25 * Math.sqrt((y + 1.6) / 1.7);
+}
+
+/** Security and notices: a shield with a thick border and a check mark inside. */
+export function shieldShape(target: Float32Array, n: number, rand: Rand) {
+  const put = writer(target);
+  const [rim, face, check] = share(n, [0.45, 0.25, 0.3]);
+  let i = 0;
+  for (let k = 0; k < rim; k += 1) {
+    const top = rand() < 0.22;
+    const y = top ? 1.3 - rand() * 0.1 : -1.6 + rand() * 2.9;
+    const side = rand() < 0.5 ? -1 : 1;
+    const x = top ? (rand() * 2 - 1) * shieldWidth(1.25) : side * (shieldWidth(y) - rand() * 0.12);
+    put(i++, x, y, (rand() - 0.5) * 0.35);
+  }
+  for (let k = 0; k < face; k += 1) {
+    const y = -1.5 + rand() * 2.75;
+    const w = shieldWidth(y) * 0.88;
+    put(i++, (rand() * 2 - 1) * w, y, (rand() - 0.5) * 0.12 - 0.1);
+  }
+  const points: [number, number][] = [[-0.6, 0.0], [-0.15, -0.48], [0.68, 0.5]];
+  for (let k = 0; k < check; k += 1) {
+    const first = rand() < 0.4;
+    const [a, b] = first ? [points[0], points[1]] : [points[1], points[2]];
+    const t = rand();
+    const a2 = rand() * Math.PI * 2;
+    const rho = 0.13 * Math.sqrt(rand());
+    put(i++, a[0] + (b[0] - a[0]) * t + Math.cos(a2) * rho, a[1] + (b[1] - a[1]) * t + Math.sin(a2) * rho,
+      0.15 + (rand() - 0.5) * 0.18);
+  }
+}
+
 /** Builds every cloud for `count` points. The same seed always gives the same clouds. */
 export function buildClouds(count: number, seed = 2027): Clouds {
   const rand = random(seed);
@@ -292,7 +329,7 @@ export function buildClouds(count: number, seed = 2027): Clouds {
   const formed = count - ambient;
   const make = () => new Float32Array(count * 3);
   const clouds: Clouds = {
-    count, ambient, wifi: make(), devices: make(), scatter: make(), router: make(), brain: make(),
+    count, ambient, wifi: make(), devices: make(), scatter: make(), router: make(), brain: make(), shield: make(),
     planet: make(),
     colors: new Float32Array(count), seeds: new Float32Array(count), sizes: new Float32Array(count),
     sea: new Float32Array(count),
@@ -303,8 +340,9 @@ export function buildClouds(count: number, seed = 2027): Clouds {
   planetShape(clouds.planet, formed, rand, clouds.sea);
   devicesShape(clouds.devices, formed, rand);
   brainShape(clouds.brain, formed, rand);
+  shieldShape(clouds.shield, formed, rand);
   // the ambient points keep their scattered place in every shape
-  for (const shape of [clouds.wifi, clouds.devices, clouds.router, clouds.brain, clouds.planet]) {
+  for (const shape of [clouds.wifi, clouds.devices, clouds.router, clouds.brain, clouds.shield, clouds.planet]) {
     shape.set(clouds.scatter.subarray(formed * 3), formed * 3);
   }
   const big = Math.round(count * BIG_SHARE);
