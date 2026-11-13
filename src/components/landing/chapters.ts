@@ -12,8 +12,11 @@ export interface Chapter {
   shape: Shape;
 }
 
-/** How long each chapter stays before the next one: enough to read two lines calmly. */
-export const CHAPTER_MS = 10_000;
+/**
+ * How long each chapter stays before the next one (Avance 30: 6 seconds, the story felt long at 10). Whoever wants to
+ * read slowly pauses it with the round button.
+ */
+export const CHAPTER_MS = 6_000;
 
 export const CHAPTERS: Chapter[] = [
   {
