@@ -183,12 +183,12 @@ Administrador además registra redes).
   de colores (`ParticleStage`, WebGL propio, sin librerías) que forma el **símbolo Wi-Fi**, se **desintegra por toda
   la pantalla**, se junta en un **router** y termina en un **planeta** con una órbita y enlaces: «todo se conecta».
   Cada punto sale en su propio momento, así la forma se deshace y se rehace como algo vivo (Avance 28).
-  - **Bienvenida** (Avance 29): la primera visita cuenta la historia sola, un mensaje cada **10 segundos**, mientras la
+  - **Bienvenida** (Avance 29): la primera visita cuenta la historia sola, un mensaje cada **6 segundos**, mientras la
     escena cambia de forma. Los puntos de abajo saltan a cualquier parte (el actual se llena con el tiempo que queda),
     el botón redondo pausa y sigue, y **Comenzar** lleva al login en cualquier momento («Ya tengo cuenta» también).
     La escena responde: los triángulos esquivan el puntero (o el dedo) y un clic en un espacio vacío los hace estallar
     y volver a juntarse.
-  - **Login compacto:** cabe todo sin bajar; detrás, las figuras se siguen formando y deformando solas (una cada 10
+  - **Login compacto:** cabe todo sin bajar; detrás, las figuras se siguen formando y deformando solas (una cada 6
     segundos). Crear una cuenta se ofrece solo dentro de la tarjeta («¿No tienes cuenta? Crea una aquí»).
   - Quien ya vio la bienvenida entra directo al login (se recuerda en el navegador), con «Ver la presentación» para
     verla otra vez.
