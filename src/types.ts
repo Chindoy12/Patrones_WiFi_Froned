@@ -829,3 +829,50 @@ export interface RetentionPolicy {
   setting: string;
   afterwards: string;
 }
+
+/** «En vivo» (Avance 26): state of the live measurement of one network. */
+export type LiveState = 'LIVE' | 'WAITING' | 'NO_AGENT';
+
+/** One sample of the agent, every 2 seconds: what the computer uses now, latencies and its Wi-Fi link. */
+export interface LivePoint {
+  seq: number;
+  at: string;
+  downloadMbps: number | null;
+  uploadMbps: number | null;
+  internetMs: number | null;
+  internetLost: boolean;
+  gatewayMs: number | null;
+  gatewayLost: boolean;
+  signalPercent: number | null;
+  rxRateMbps: number | null;
+  txRateMbps: number | null;
+}
+
+export interface LiveNote {
+  level: 'OK' | 'WARN' | 'BAD';
+  text: string;
+}
+
+/** The last minute: means and peaks of the traffic, median latencies, jitter and loss, and what they mean. */
+export interface LiveSummary {
+  samples: number;
+  downloadMbps: number | null;
+  uploadMbps: number | null;
+  peakDownloadMbps: number | null;
+  peakUploadMbps: number | null;
+  internetMs: number | null;
+  jitterMs: number | null;
+  lossPct: number | null;
+  gatewayMs: number | null;
+  signalPercent: number | null;
+  notes: LiveNote[];
+}
+
+export interface LiveView {
+  state: LiveState;
+  watchingSince: string | null;
+  lastSampleAt: string | null;
+  lastSeq: number;
+  points: LivePoint[];
+  summary: LiveSummary;
+}
