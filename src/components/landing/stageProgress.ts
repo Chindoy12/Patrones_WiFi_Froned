@@ -37,31 +37,6 @@ export function stepFor(shape: Shape, from: number): number {
   return LOOP.indexOf(shape);
 }
 
-/** Stages of the scrolling start page (Avance 28), until the welcome replaces it. */
-export const STAGE = { wifi: 0, scatter: 1, router: 2, planet: 3 } as const;
-
-export interface Anchor {
-  /** Where the middle of the section is, in page pixels. */
-  at: number;
-  stage: number;
-}
-
-/** The stage when the middle of the screen is at `y` (page pixels), between the anchors of the sections. */
-export function stageAt(y: number, anchors: Anchor[]): number {
-  if (anchors.length === 0) return 0;
-  const sorted = [...anchors].sort((a, b) => a.at - b.at);
-  if (y <= sorted[0].at) return sorted[0].stage;
-  for (let i = 1; i < sorted.length; i += 1) {
-    const a = sorted[i - 1];
-    const b = sorted[i];
-    if (y <= b.at) {
-      const t = (y - a.at) / Math.max(1, b.at - a.at);
-      return a.stage + (b.stage - a.stage) * t;
-    }
-  }
-  return sorted[sorted.length - 1].stage;
-}
-
 /** Where each shape sits (x, y in world units at the center of the scene) and how big it is. */
 export interface Placement { x: number; y: number; scale: number }
 export interface StageLayout { places: Placement[]; alpha: number }
