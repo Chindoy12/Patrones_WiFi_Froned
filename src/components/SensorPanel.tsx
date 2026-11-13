@@ -6,6 +6,7 @@ import { api } from '../services/api';
 import type { AgentPairingCode, Network, SensorStatus } from '../types';
 import { AGENT_INSTALLER, AgentReports } from './AgentPanel';
 import { Icon } from './Icon';
+import { LivePanel } from './LivePanel';
 
 /** How a network's sensor looks in the table: connected, quiet for a while, or not installed yet. */
 export function sensorBadge(status: SensorStatus | null, now: Date = new Date()): { label: string; tone: string } {
@@ -110,6 +111,8 @@ export function SensorPanel({ network, canManage, onChange }: {
             </p>
           )}
           <SensorState status={current} />
+          <LivePanel key={`live-${network.id}`} team
+                     load={(after) => api.sensorLive(network.id, after)} />
           <SensorReport network={network} canManage={canManage} />
         </>
       ) : (

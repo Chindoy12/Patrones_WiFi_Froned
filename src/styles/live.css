@@ -1,0 +1,33 @@
+/* «En vivo» (Avance 26): what the computer of the agent uses right now, its latencies and two charts that move. */
+.live--team { margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--line-soft); }
+.live--team h3 { margin: 0; font-size: 1.1rem; font-weight: 400; }
+.live__head { flex-wrap: wrap; }
+.live__intro { display: grid; gap: 12px; justify-items: start; }
+.live__intro p { margin: 0; max-width: 70ch; }
+.live__state { display: inline-flex; align-items: center; gap: 8px; font-size: .88rem; font-weight: 500; color: var(--muted); }
+.live__state i { width: 9px; height: 9px; border-radius: 50%; background: var(--muted); }
+.live__state--live { color: var(--good-ink); }
+.live__state--live i { background: var(--good); animation: ping 2s ease-out infinite; }
+.live__state--waiting i { background: var(--accent); animation: ping-accent 1.6s ease-out infinite; }
+.live__state--no_agent { color: var(--bad-ink); }
+.live__state--no_agent i { background: var(--bad); }
+.live__waiting { display: flex; align-items: center; gap: 10px; margin: 0 0 14px; font-weight: 500; }
+.live__now { margin-bottom: 14px; }
+.live__charts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.live__chart { margin: 0; background: var(--surface-2); border: 1px solid var(--line-soft); border-radius: 14px; padding: 12px 14px 6px; min-width: 0; }
+.live__chart figcaption { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 12px; font-family: var(--font-mono); font-size: .7rem; letter-spacing: var(--tracking-stamp); text-transform: uppercase; color: var(--ink-soft); margin-bottom: 6px; }
+.live__legend { display: inline-flex; gap: 12px; text-transform: none; letter-spacing: 0; font-family: var(--font-sans, inherit); font-size: .78rem; color: var(--muted); }
+.live__legend span { display: inline-flex; align-items: center; gap: 6px; }
+.live__legend i { width: 14px; height: 3px; border-radius: 2px; }
+.live__summary { margin: 14px 0 0; font-variant-numeric: tabular-nums; }
+.live__notes { list-style: none; padding: 0; margin: 12px 0 0; display: grid; gap: 8px; }
+.live__note { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line-soft); }
+.live__note .icon { flex: none; margin-top: 2px; }
+.live__note--ok { background: var(--good-soft); color: var(--good-ink); }
+.live__note--warn { background: var(--warn-soft); color: var(--warn-ink); }
+.live__note--bad { background: var(--bad-soft); color: var(--bad-ink); border-color: var(--bad-line); }
+.live__foot { margin: 12px 0 6px; }
+
+@media (max-width: 760px) {
+  .live__charts { grid-template-columns: minmax(0, 1fr); }
+}

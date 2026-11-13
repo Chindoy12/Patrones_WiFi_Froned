@@ -5,7 +5,7 @@ import type {
   ConnectionTest, ConnectionTestInput, NearbyNetworks, WifiScan, WifiScanDetail, DashboardSummary, DataSourceType, Device, HomeNetwork, HomeNetworkInput, IdentifyMode, Location,
   Measurement, Network, NetworkQuality, NetworkReport, WeeklyReport, ProtocolStatistic, SensorStatus, StaffRole, Strategy, SystemStatus,
   TeamNetworks, TrafficSession, User, Zone, AuditPage, Capture, CaptureCapabilities, CaptureDetail, CaptureInput,
-  NearbyAnalysis, RetentionPolicy, RouterInfo,
+  NearbyAnalysis, RetentionPolicy, RouterInfo, LiveView,
 } from '../types';
 
 export interface NetworkInput {
@@ -86,6 +86,9 @@ export const api = {
     apiClient.get<NearbyAnalysis>(`/api/my/networks/${networkId}/nearby/analysis`),
   /** The router of a Mi Wi-Fi network: what is known of it and what WiFiSense cannot do with it. */
   myRouter: (networkId: number) => apiClient.get<RouterInfo>(`/api/my/networks/${networkId}/router`),
+  /** «En vivo»: asking keeps the agent measuring; `after` is the last sample the page already has. */
+  myLive: (networkId: number, after = 0) =>
+    apiClient.get<LiveView>(`/api/my/networks/${networkId}/live`, { after }),
 
   dashboard: () => apiClient.get<DashboardSummary>('/api/dashboard/summary'),
   /** Real home networks of the end users (ADMIN and ANALYST). */
@@ -113,6 +116,9 @@ export const api = {
   identifySensorDevice: (networkId: number) => apiClient.post<IdentifyMode>(`/api/networks/${networkId}/sensor/identify`),
   /** The router of a team network, as its sensor sees it. */
   teamRouter: (networkId: number) => apiClient.get<RouterInfo>(`/api/networks/${networkId}/sensor/router`),
+  /** «En vivo» of the sensor of a team network. */
+  sensorLive: (networkId: number, after = 0) =>
+    apiClient.get<LiveView>(`/api/networks/${networkId}/sensor/live`, { after }),
   /** Technical captures of a team network (ADMIN only; the backend refuses everyone else and audits it). */
   captureCapabilities: (networkId: number) =>
     apiClient.get<CaptureCapabilities>(`/api/networks/${networkId}/sensor/captures/capabilities`),
