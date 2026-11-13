@@ -172,6 +172,10 @@
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   --font-display: 'Lora', Georgia, 'Times New Roman', serif;
   --font-wordmark: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  /* Where the wave of a theme switch starts and how far it has spread (theme.ts and motion.css set them) */
+  --wave-x: 50vw;
+  --wave-y: 0px;
+  --wave-r: 0px;
   --radius: 19.2px;
   --radius-control: 8px;
   --radius-small: 6px;
