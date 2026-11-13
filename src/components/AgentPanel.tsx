@@ -381,20 +381,24 @@ export function groupAlerts(alerts: AgentAlert[]): AlertGroup[] {
   return [...groups.values()].sort((a, b) => b.at.localeCompare(a.at));
 }
 
-/** Short history of what WiFiSense noticed and (when the user wants it) emailed. */
-function AlertsCard({ alerts }: { alerts: AgentAlert[] }) {
+/** Short history of what WiFiSense noticed and (when the user wants it) emailed; a repeated notice is shown once. */
+export function AlertsCard({ alerts, limit = 8 }: { alerts: AgentAlert[]; limit?: number }) {
+  const groups = groupAlerts(alerts);
   return (
     <section className="dash__card" aria-labelledby="alerts-title">
       <h3 className="dash__title" id="alerts-title"><Icon name="bell" size={18} /> Avisos recientes</h3>
-      {alerts.length === 0 ? (
+      {groups.length === 0 ? (
         <p className="muted">Sin avisos todavía. Aquí verás los equipos nuevos, bajones de seguridad y anomalías.</p>
       ) : (
         <ul className="agent__alerts">
-          {alerts.slice(0, 8).map((a, i) => (
-            <li key={`${a.at}-${i}`} className={`agent__alerts-item agent__alerts-item--${a.type.toLowerCase()}`}>
+          {groups.slice(0, limit).map((a) => (
+            <li key={`${a.type}-${a.detail}`} className={`agent__alerts-item agent__alerts-item--${a.type.toLowerCase()}`}>
               <Icon name={ALERT_ICON[a.type]} size={16} />
-              <span>{a.detail}</span>
-              <time dateTime={a.at}>{formatDateTime(a.at)}</time>
+              <span>
+                {a.detail}
+                {a.count > 1 && <span className="agent__alerts-count" title="Veces que se repitió"> ×{a.count}</span>}
+              </span>
+              <time dateTime={a.at}>{a.count > 1 ? 'Último: ' : ''}{formatDateTime(a.at)}</time>
             </li>
           ))}
         </ul>

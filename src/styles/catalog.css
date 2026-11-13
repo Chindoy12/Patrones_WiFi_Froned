@@ -46,3 +46,6 @@ a.catcard:hover .catcard__go, a.catcard:focus-visible .catcard__go { opacity: 1;
 }
 .catgroup--online .catgroup__title { color: var(--good-ink); }
 .catgroup__unfold, .catgroup__more { margin-top: 10px; }
+
+/* a notice repeated is shown once, with how many times it happened */
+.agent__alerts-count { color: var(--accent-ink); font-weight: 500; white-space: nowrap; }
