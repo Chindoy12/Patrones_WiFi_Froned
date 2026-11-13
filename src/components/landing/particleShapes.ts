@@ -1,7 +1,8 @@
 /**
- * The four shapes of the start page, as clouds of the same number of points so every point can travel from one shape
- * to the next: the Wi-Fi symbol, the same points scattered all over the space, a router with its antennas and a planet
- * with an orbit and arcs that join distant places ("todo se conecta").
+ * The shapes of the start page, as clouds of the same number of points so every point can travel from one shape to
+ * the next: the Wi-Fi symbol, a laptop and a phone, the points scattered all over the space, a router with its
+ * antennas, a brain (the AI), a shield with a check (security and notices) and a planet with an orbit and arcs that
+ * join distant places ("todo se conecta"). One shape for each message of the welcome (Avance 31).
  *
  * Plain math, no WebGL: the clouds are built once with a seeded random generator (the same seed always gives the same
  * cloud, which the tests rely on) and ParticleStage uploads them to the graphics card. Units are world units: the
@@ -13,8 +14,11 @@ export interface Clouds {
   /** The last `ambient` points never form a shape: they float around the scene in every stage, like dust in the air. */
   ambient: number;
   wifi: Float32Array;
+  devices: Float32Array;
   scatter: Float32Array;
   router: Float32Array;
+  brain: Float32Array;
+  shield: Float32Array;
   planet: Float32Array;
   /** Index of the palette color of each point (0 to PALETTE_SIZE - 1). */
   colors: Float32Array;
@@ -215,14 +219,118 @@ export function planetShape(target: Float32Array, n: number, rand: Rand, sea?: F
   });
 }
 
-/** Builds the four clouds for `count` points. The same seed always gives the same clouds. */
+/** A point on a flat rectangle (w × h, centered): mostly on its border, the rest scattered inside, like a screen. */
+function onPanel(put: Put, i: number, rand: Rand, w: number, h: number, border: number) {
+  if (rand() < border) {
+    const along = rand() * 2 * (w + h);
+    const inset = (rand() - 0.5) * 0.08;
+    const [x, y] = along < w ? [along - w / 2, h / 2 + inset]
+      : along < 2 * w ? [along - w - w / 2, -h / 2 + inset]
+        : along < 2 * w + h ? [w / 2 + inset, along - 2 * w - h / 2]
+          : [-w / 2 + inset, along - 2 * w - h - h / 2];
+    put(i, x, y, (rand() - 0.5) * 0.06);
+  } else {
+    put(i, (rand() - 0.5) * w * 0.94, (rand() - 0.5) * h * 0.94, (rand() - 0.5) * 0.04);
+  }
+}
+
+/** The devices that come and go: an open laptop and, beside it, a phone, both seen a little from the side. */
+export function devicesShape(target: Float32Array, n: number, rand: Rand) {
+  const put = writer(target);
+  const panel = new Float32Array(3);
+  const at = writer(panel);
+  const [screen, base, phone, button] = share(n, [0.42, 0.26, 0.29, 0.03]);
+  let i = 0;
+  const lean = -0.28;  // the screen leans back
+  for (let k = 0; k < screen; k += 1) {
+    onPanel(at, 0, rand, 2.5, 1.55, 0.55);
+    const [x, y, z] = panel;
+    const yy = y + 0.78;
+    put(i++, x - 1.0, yy * Math.cos(lean) - 0.38, -0.55 + yy * Math.sin(lean) + z);
+  }
+  for (let k = 0; k < base; k += 1) {
+    onPanel(at, 0, rand, 2.7, 1.3, 0.45);
+    const [x, y, z] = panel;
+    put(i++, x - 1.0, -0.4 + z, -0.55 + y + 0.65);
+  }
+  for (let k = 0; k < phone; k += 1) {
+    onPanel(at, 0, rand, 0.82, 1.62, 0.6);
+    const [x, y, z] = panel;
+    put(i++, x + 1.35, y - 0.15, 0.3 + z);
+  }
+  for (let k = 0; k < button; k += 1) inBall(put, i++, rand, 0.06, 1.35, -0.82, 0.32);
+}
+
+/**
+ * The AI: a brain seen from above and in front (the scene tilts it), two long hemispheres with deep folds on the
+ * surface and a groove between them, and a short stem underneath at the back.
+ */
+export function brainShape(target: Float32Array, n: number, rand: Rand) {
+  const put = writer(target);
+  const [cortex, stem] = share(n, [0.95, 0.05]);
+  let i = 0;
+  while (i < cortex) {
+    const [x, y, z] = direction(rand);
+    // folds: points gather on the ridges, and the groove between the hemispheres stays empty
+    const fold = Math.sin(11 * z + 4 * y) * Math.sin(9 * y - 3 * x) + 0.7 * Math.sin(15 * x + 6 * z);
+    if (Math.abs(x) < 0.09 && y > -0.4) continue;
+    if (fold < 0 && rand() > 0.12) continue;
+    const r = 1 + 0.08 * fold;
+    const flat = y < -0.3 ? 0.7 : 1;  // flatter underneath
+    put(i++, x * 1.15 * r + Math.sign(x) * 0.07, y * 0.95 * r * flat, z * 1.6 * r);
+  }
+  for (let k = 0; k < stem; k += 1) {
+    const t = rand();
+    const a = rand() * Math.PI * 2;
+    put(i++, Math.cos(a) * 0.14, -0.6 - t * 0.55, -0.7 - t * 0.2 + Math.sin(a) * 0.14);
+  }
+}
+
+/** Half the width of the shield at height y: straight sides that curve into a point at the bottom. */
+export function shieldWidth(y: number): number {
+  if (y > 1.3 || y < -1.6) return 0;
+  if (y >= 0.1) return 1.25 - 0.08 * Math.max(0, y - 1.1) * 5;
+  return 1.25 * Math.sqrt((y + 1.6) / 1.7);
+}
+
+/** Security and notices: a shield with a thick border and a check mark inside. */
+export function shieldShape(target: Float32Array, n: number, rand: Rand) {
+  const put = writer(target);
+  const [rim, face, check] = share(n, [0.45, 0.25, 0.3]);
+  let i = 0;
+  for (let k = 0; k < rim; k += 1) {
+    const top = rand() < 0.22;
+    const y = top ? 1.3 - rand() * 0.1 : -1.6 + rand() * 2.9;
+    const side = rand() < 0.5 ? -1 : 1;
+    const x = top ? (rand() * 2 - 1) * shieldWidth(1.25) : side * (shieldWidth(y) - rand() * 0.12);
+    put(i++, x, y, (rand() - 0.5) * 0.35);
+  }
+  for (let k = 0; k < face; k += 1) {
+    const y = -1.5 + rand() * 2.75;
+    const w = shieldWidth(y) * 0.88;
+    put(i++, (rand() * 2 - 1) * w, y, (rand() - 0.5) * 0.12 - 0.1);
+  }
+  const points: [number, number][] = [[-0.6, 0.0], [-0.15, -0.48], [0.68, 0.5]];
+  for (let k = 0; k < check; k += 1) {
+    const first = rand() < 0.4;
+    const [a, b] = first ? [points[0], points[1]] : [points[1], points[2]];
+    const t = rand();
+    const a2 = rand() * Math.PI * 2;
+    const rho = 0.13 * Math.sqrt(rand());
+    put(i++, a[0] + (b[0] - a[0]) * t + Math.cos(a2) * rho, a[1] + (b[1] - a[1]) * t + Math.sin(a2) * rho,
+      0.15 + (rand() - 0.5) * 0.18);
+  }
+}
+
+/** Builds every cloud for `count` points. The same seed always gives the same clouds. */
 export function buildClouds(count: number, seed = 2027): Clouds {
   const rand = random(seed);
   const ambient = Math.round(count * AMBIENT_SHARE);
   const formed = count - ambient;
   const make = () => new Float32Array(count * 3);
   const clouds: Clouds = {
-    count, ambient, wifi: make(), scatter: make(), router: make(), planet: make(),
+    count, ambient, wifi: make(), devices: make(), scatter: make(), router: make(), brain: make(), shield: make(),
+    planet: make(),
     colors: new Float32Array(count), seeds: new Float32Array(count), sizes: new Float32Array(count),
     sea: new Float32Array(count),
   };
@@ -230,8 +338,11 @@ export function buildClouds(count: number, seed = 2027): Clouds {
   wifiShape(clouds.wifi, formed, rand);
   routerShape(clouds.router, formed, rand);
   planetShape(clouds.planet, formed, rand, clouds.sea);
+  devicesShape(clouds.devices, formed, rand);
+  brainShape(clouds.brain, formed, rand);
+  shieldShape(clouds.shield, formed, rand);
   // the ambient points keep their scattered place in every shape
-  for (const shape of [clouds.wifi, clouds.router, clouds.planet]) {
+  for (const shape of [clouds.wifi, clouds.devices, clouds.router, clouds.brain, clouds.shield, clouds.planet]) {
     shape.set(clouds.scatter.subarray(formed * 3), formed * 3);
   }
   const big = Math.round(count * BIG_SHARE);

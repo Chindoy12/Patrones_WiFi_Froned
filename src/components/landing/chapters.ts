@@ -1,9 +1,10 @@
 import { SHAPE, type Shape } from './stageProgress';
 
 /**
- * The welcome (Avance 29) tells the story of the network in five short chapters, one screen each, while the scene
- * changes shape: today the network is invisible and scattered, WiFiSense puts it in order with the agent and the AI,
- * and in the end everything is connected. Everything it says is what the project really does.
+ * The welcome tells the story of the network in short chapters, one screen each, and each chapter has its own shape
+ * in the scene (Avance 31): the Wi-Fi symbol, the devices that come and go, the points scattered when nobody sees what
+ * happens, the router of the agent, the brain of the AI, the shield of the security and the notices, and the planet
+ * where everything is connected. Everything it says is what the project really does.
  */
 export interface Chapter {
   label: string;
@@ -13,8 +14,8 @@ export interface Chapter {
 }
 
 /**
- * How long each chapter stays before the next one (Avance 30: 6 seconds, the story felt long at 10). Whoever wants to
- * read slowly pauses it with the round button.
+ * How long each chapter stays before the next one (Avance 30: 6 seconds, the story felt long at 10). Hovering the
+ * words pauses it, for whoever wants to read slowly.
  */
 export const CHAPTER_MS = 6_000;
 
@@ -28,29 +29,37 @@ export const CHAPTERS: Chapter[] = [
   {
     label: 'Hoy',
     title: 'Tu red es invisible.',
-    text: 'Celulares, computadores, televisores y parlantes entran y salen de tu Wi-Fi todo el día, y las redes de los '
-      + 'vecinos comparten el mismo aire.',
-    shape: SHAPE.scatter,
+    text: 'Celulares, computadores y televisores entran y salen de tu Wi-Fi todo el día.',
+    shape: SHAPE.devices,
   },
   {
     label: 'Sin que lo veas',
     title: 'Todo pasa en silencio.',
-    text: 'Un equipo que no reconoces, una señal que se cae en la tarde, un canal lleno de redes vecinas: nadie te dice '
-      + 'por qué.',
+    text: 'Un equipo que no reconoces, una señal que se cae, un canal lleno de redes vecinas.',
     shape: SHAPE.scatter,
   },
   {
-    label: 'Cómo lo ordena WiFiSense',
+    label: 'El agente',
     title: 'Un agente que cuida tu red.',
-    text: 'Cada minuto envía la señal, la latencia, los equipos y la seguridad del router. Una IA (Isolation Forest) '
-      + 'aprende lo normal en tu red y te avisa cuando algo se sale de lo normal.',
+    text: 'Desde tu computador revisa cada minuto la señal, la latencia y los equipos conectados.',
     shape: SHAPE.router,
   },
   {
+    label: 'La inteligencia artificial',
+    title: 'Aprende lo normal en tu red.',
+    text: 'Un modelo Isolation Forest detecta cuando algo se sale de lo normal.',
+    shape: SHAPE.brain,
+  },
+  {
+    label: 'Seguridad y avisos',
+    title: 'Te avisa a tiempo.',
+    text: 'Revisa la seguridad de tu router y te avisa de equipos nuevos, en la página o por correo.',
+    shape: SHAPE.shield,
+  },
+  {
     label: 'Todo se conecta',
-    title: 'Tus equipos, tu router e Internet, en un solo lugar.',
-    text: 'Tu conexión en vivo, tus equipos por tipo, la seguridad, los avisos y las redes cercanas, en pantallas '
-      + 'claras.',
+    title: 'Tu red, en un solo lugar.',
+    text: 'Tu conexión en vivo, tus equipos, la seguridad y los avisos, en pantallas claras.',
     shape: SHAPE.planet,
   },
 ];

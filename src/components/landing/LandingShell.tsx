@@ -3,7 +3,7 @@ import { ThemeToggle } from '../ThemeToggle';
 import { WifiLogo } from '../WifiLogo';
 import { CHAPTER_MS, rememberWelcome, welcomeSeen } from './chapters';
 import { ParticleStage } from './ParticleStage';
-import { nextStep } from './stageProgress';
+import { nextShape, SHAPE, type Shape } from './stageProgress';
 import { Welcome } from './Welcome';
 
 interface Props {
@@ -19,13 +19,13 @@ type Mode = 'welcome' | 'login';
 /**
  * The start page (Avance 29), on one screen with no scrolling. The first visit opens the welcome: the story plays
  * by itself over the 3D scene and «Comenzar» leads to the login. The login is compact, so everything fits, and behind
- * it the scene keeps forming and unforming its shapes on its own (one every 6 seconds). Whoever already saw the
+ * it the scene keeps going through its seven shapes on its own (one every 6 seconds). Whoever already saw the
  * welcome goes straight to the login, with «Ver la presentación» to see it again. Signing up is offered only inside
  * the card («¿No tienes cuenta? Crea una aquí»).
  */
 export function LandingShell({ title, subtitle, busy = false, footer, children }: Props) {
   const [mode, setMode] = useState<Mode>(() => (welcomeSeen() ? 'login' : 'welcome'));
-  const [stage, setStage] = useState(0);
+  const [shape, setShape] = useState<Shape>(SHAPE.wifi);
   const fromWelcome = useRef(false);
 
   function start() {
@@ -34,11 +34,11 @@ export function LandingShell({ title, subtitle, busy = false, footer, children }
     setMode('login');
   }
 
-  // behind the login the shapes keep changing on their own, one every 6 seconds
+  // behind the login the seven shapes keep following each other, one every 6 seconds
   useEffect(() => {
     if (mode !== 'login') return undefined;
     const timer = window.setInterval(() => {
-      if (!document.hidden) setStage(nextStep);
+      if (!document.hidden) setShape(nextShape);
     }, CHAPTER_MS);
     return () => window.clearInterval(timer);
   }, [mode]);
@@ -50,7 +50,7 @@ export function LandingShell({ title, subtitle, busy = false, footer, children }
 
   return (
     <div className={`landing landing--${mode}`}>
-      <ParticleStage stage={stage} />
+      <ParticleStage shape={shape} />
       <header className="landing__bar">
         <span className="landing__brand"><WifiLogo size={22} /> WiFiSense</span>
         <nav className="landing__nav" aria-label="Inicio">
@@ -61,7 +61,7 @@ export function LandingShell({ title, subtitle, busy = false, footer, children }
         </nav>
       </header>
 
-      {mode === 'welcome' ? <Welcome stage={stage} onStage={setStage} onStart={start} /> : (
+      {mode === 'welcome' ? <Welcome onShape={setShape} onStart={start} /> : (
         <section className="landing__login">
           <div className="landing__intro">
             <p className="landing__eyebrow">Monitoreo de redes Wi-Fi</p>

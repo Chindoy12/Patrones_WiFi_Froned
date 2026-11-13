@@ -1,4 +1,4 @@
-import { act, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -27,7 +27,7 @@ describe('Bienvenida', () => {
     expect(screen.queryByRole('link', { name: /Crear cuenta/i })).not.toBeInTheDocument();  // only inside the card
   });
 
-  it('plays by itself, one chapter every 6 seconds, and pause stops it', () => {
+  it('plays by itself, one chapter every 6 seconds, and the pause (for the keyboard) stops it', () => {
     expect(CHAPTER_MS).toBe(6_000);
     vi.useFakeTimers();
     renderStart();
@@ -40,22 +40,34 @@ describe('Bienvenida', () => {
     expect(screen.getByRole('button', { name: 'Seguir la presentación' })).toBeInTheDocument();
   });
 
-  it('the dots jump to any chapter and say which one is showing', async () => {
+  it('hovering the words pauses the story, so it can be read slowly', () => {
+    vi.useFakeTimers();
     renderStart();
 
-    await userEvent.click(screen.getByRole('button', { name: /Parte 4 de 5/ }));
-
-    expect(screen.getByRole('heading', { level: 1, name: CHAPTERS[3].title })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Parte 4 de 5/ })).toHaveAttribute('aria-current', 'step');
+    fireEvent.pointerEnter(screen.getByRole('heading', { level: 1 }).parentElement!);
+    act(() => vi.advanceTimersByTime(CHAPTER_MS * 2));
+    expect(screen.getByRole('heading', { level: 1, name: CHAPTERS[0].title })).toBeInTheDocument();
+    fireEvent.pointerLeave(screen.getByRole('heading', { level: 1 }).parentElement!);
+    act(() => vi.advanceTimersByTime(CHAPTER_MS));
+    expect(screen.getByRole('heading', { level: 1, name: CHAPTERS[1].title })).toBeInTheDocument();
   });
 
-  it('with reduced motion the story waits for the visitor', () => {
+  it('shows only the words and «Comenzar»: no dots over the scene, and each chapter has its own shape', () => {
+    renderStart();
+
+    expect(screen.queryByRole('group', { name: 'Partes de la presentación' })).not.toBeInTheDocument();
+    expect(new Set(CHAPTERS.map((c) => c.shape)).size).toBe(CHAPTERS.length);
+  });
+
+  it('with reduced motion the story waits for the visitor, who moves it with «Siguiente»', async () => {
     Object.defineProperty(window, 'matchMedia', { value: () => ({ matches: true }), configurable: true });
     vi.useFakeTimers();
     renderStart();
 
     act(() => vi.advanceTimersByTime(CHAPTER_MS * 2));
     expect(screen.getByRole('heading', { level: 1, name: CHAPTERS[0].title })).toBeInTheDocument();
+    act(() => screen.getByRole('button', { name: /Siguiente/ }).click());
+    expect(screen.getByRole('heading', { level: 1, name: CHAPTERS[1].title })).toBeInTheDocument();
   });
 
   it('«Comenzar» opens the compact login with the cursor ready, and the next visit goes straight there', async () => {
@@ -92,7 +104,7 @@ describe('Bienvenida', () => {
   });
 
   it('the chapters go around, and the colors of the triangles come from the tokens', () => {
-    expect(CHAPTERS).toHaveLength(5);
+    expect(CHAPTERS).toHaveLength(7);
     expect(nextChapter(CHAPTERS.length - 1)).toBe(0);
     expect(previousChapter(0)).toBe(CHAPTERS.length - 1);
     expect(rgb('#ff0000')).toEqual([1, 0, 0]);

@@ -1,35 +1,32 @@
-import { useEffect, useRef, useState } from 'react';
-import { Icon } from '../Icon';
+import { useEffect, useState } from 'react';
 import { CHAPTER_MS, CHAPTERS, nextChapter } from './chapters';
-import { stepFor } from './stageProgress';
+import type { Shape } from './stageProgress';
 
 function prefersStill(): boolean {
   return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
 }
 
 /**
- * The welcome (Avance 29): one full screen, no scrolling. The story plays by itself, one chapter every 6 seconds,
- * while the scene changes shape behind it; the dots jump to any chapter (the bar inside the current one shows how much
- * time is left), the round button pauses and resumes, and «Comenzar» goes to the login at any moment.
+ * The welcome: one full screen, no scrolling. The story plays by itself, one chapter every 6 seconds, and the scene
+ * shows the shape of each chapter. Only the words and «Comenzar» are on screen (Avance 31: no dots or buttons that
+ * flatten the picture). Hovering the words pauses the story, so it can be read slowly; for the keyboard, the pause
+ * button appears when it gets the focus.
  *
- * With reduced motion the story does not advance by itself: the visitor moves it with the dots. While it plays, the
- * changes are not announced to screen readers (that would interrupt them every few seconds); paused, they are.
+ * With reduced motion the story does not advance by itself: a «Siguiente» link moves it. While it plays, the changes
+ * are not announced to screen readers (that would interrupt them every few seconds); paused, they are.
  */
-export function Welcome({ stage, onStage, onStart }: {
-  stage: number;
-  onStage: (step: number) => void;
-  onStart: () => void;
-}) {
+export function Welcome({ onShape, onStart }: { onShape: (shape: Shape) => void; onStart: () => void }) {
   const [index, setIndex] = useState(0);
-  const [playing, setPlaying] = useState(() => !prefersStill());
-  const stageRef = useRef(stage);
-  stageRef.current = stage;
+  const still = prefersStill();
+  const [paused, setPaused] = useState(still);
+  const [hovered, setHovered] = useState(false);
+  const playing = !paused && !hovered;
   const chapter = CHAPTERS[index];
 
-  // the scene travels to the shape of the chapter
+  // the scene shows the shape of the chapter
   useEffect(() => {
-    onStage(stepFor(chapter.shape, stageRef.current));
-  }, [chapter.shape, onStage]);
+    onShape(chapter.shape);
+  }, [chapter.shape, onShape]);
 
   useEffect(() => {
     if (!playing) return undefined;
@@ -39,7 +36,8 @@ export function Welcome({ stage, onStage, onStart }: {
 
   return (
     <section className="welcome" aria-label="Presentación de WiFiSense">
-      <div className="welcome__chapter" key={index} aria-live={playing ? 'off' : 'polite'}>
+      <div className="welcome__chapter" key={index} aria-live={playing ? 'off' : 'polite'}
+           onPointerEnter={() => setHovered(true)} onPointerLeave={() => setHovered(false)}>
         <p className="welcome__label">{chapter.label}</p>
         <h1 className="welcome__title">{chapter.title}</h1>
         <p className="welcome__text">{chapter.text}</p>
@@ -49,26 +47,18 @@ export function Welcome({ stage, onStage, onStart }: {
         <button type="button" className="welcome__start" onClick={onStart}>
           Comenzar <span aria-hidden="true">→</span>
         </button>
-        <div className="welcome__dots" role="group" aria-label="Partes de la presentación">
-          {CHAPTERS.map((c, i) => (
-            <button key={c.title} type="button" className="welcome__dot" aria-current={i === index ? 'step' : undefined}
-                    aria-label={`Parte ${i + 1} de ${CHAPTERS.length}: ${c.title}`} onClick={() => setIndex(i)}>
-              {i === index && (
-                <span key={index} className="welcome__fill"
-                      style={{ animationDuration: `${CHAPTER_MS}ms`, animationPlayState: playing ? 'running' : 'paused' }} />
-              )}
-            </button>
-          ))}
-        </div>
-        <button type="button" className="welcome__pause" onClick={() => setPlaying((p) => !p)}
-                aria-label={playing ? 'Pausar la presentación' : 'Seguir la presentación'}>
-          {playing ? <span className="welcome__bars" aria-hidden="true" /> : <Icon name="play" size={14} />}
-        </button>
+        {still ? (
+          <button type="button" className="welcome__next" onClick={() => setIndex(nextChapter)}>
+            Siguiente <span className="sr-only">({index + 1} de {CHAPTERS.length})</span>
+          </button>
+        ) : (
+          <button type="button" className="welcome__pause" onClick={() => setPaused((p) => !p)}>
+            {paused ? 'Seguir la presentación' : 'Pausar la presentación'}
+          </button>
+        )}
       </div>
 
-      {!prefersStill() && (
-        <p className="welcome__hint">Mueve el mouse o toca la pantalla: los triángulos te responden.</p>
-      )}
+      {!still && <p className="welcome__hint">Mueve el mouse o toca la pantalla: los triángulos te responden.</p>}
     </section>
   );
 }

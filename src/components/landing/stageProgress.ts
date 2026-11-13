@@ -1,40 +1,22 @@
 /**
- * Which shape the scene shows and where on the screen it goes. Plain functions so they can be tested without a
- * browser.
+ * Which shapes the scene has, in which order they follow each other and where on the screen each one goes. Plain
+ * functions so they can be tested without a browser.
  *
- * The stage is a number on a loop of six steps: 0 is the Wi-Fi symbol, 1 the points scattered, 2 the router, 3 the
- * planet, 4 scattered again and 5 the Wi-Fi symbol again. 0.5 is halfway between the Wi-Fi symbol and the scattered
- * points. Because 5 and 0 are the same shape, the scene can keep forming and unforming forever: when it reaches 5 it
- * jumps to 0 and nobody sees the jump (Avance 29).
+ * Avance 31: one shape for each message of the welcome, seven in all. Behind the login they keep following each other
+ * in the same order, forever.
  */
 
-export const SHAPE = { wifi: 0, scatter: 1, router: 2, planet: 3 } as const;
+export const SHAPE = { wifi: 0, devices: 1, scatter: 2, router: 3, brain: 4, shield: 5, planet: 6 } as const;
 export type Shape = (typeof SHAPE)[keyof typeof SHAPE];
+export const SHAPE_COUNT = 7;
 
-/** The shape of each step of the loop. */
-export const LOOP: Shape[] = [SHAPE.wifi, SHAPE.scatter, SHAPE.router, SHAPE.planet, SHAPE.scatter, SHAPE.wifi];
-export const LAST_STAGE = LOOP.length - 1;
+/** The order in which the shapes follow each other behind the login. */
+export const LOOP: Shape[] = [SHAPE.wifi, SHAPE.devices, SHAPE.scatter, SHAPE.router, SHAPE.brain, SHAPE.shield,
+  SHAPE.planet];
 
-/** The shape at a whole step of the loop. */
-export function shapeAt(step: number): Shape {
-  return LOOP[Math.min(Math.max(Math.round(step), 0), LAST_STAGE)];
-}
-
-/** The next step of the loop: after the last one it starts again on the same shape. */
-export function nextStep(step: number): number {
-  return step >= LAST_STAGE ? 1 : step + 1;
-}
-
-/**
- * The step the scene should travel to so that it shows `shape`, starting from `from`: forward along the loop when it
- * can (the Wi-Fi symbol after the planet goes through the scattered points, not back through the router), and
- * straight back when the shape is behind on the same lap.
- */
-export function stepFor(shape: Shape, from: number): number {
-  const at = Math.round(from);
-  if (shapeAt(at) === shape) return at;
-  for (let step = at + 1; step <= LAST_STAGE; step += 1) if (LOOP[step] === shape) return step;
-  return LOOP.indexOf(shape);
+/** The shape after `shape` in the loop; after the planet comes the Wi-Fi symbol again. */
+export function nextShape(shape: Shape): Shape {
+  return LOOP[(LOOP.indexOf(shape) + 1) % LOOP.length];
 }
 
 /** Where each shape sits (x, y in world units at the center of the scene) and how big it is. */
@@ -47,29 +29,36 @@ export const CAMERA_Z = 7;
 export const HALF_HEIGHT = Math.tan(FOV / 2) * CAMERA_Z;
 export const FIELD_OF_VIEW = FOV;
 
+/** How big each shape is drawn next to the others (its own size in world units differs). */
+const SIZE: Record<Shape, number> = {
+  [SHAPE.wifi]: 1, [SHAPE.devices]: 0.88, [SHAPE.scatter]: 1, [SHAPE.router]: 0.88, [SHAPE.brain]: 1.05,
+  [SHAPE.shield]: 1, [SHAPE.planet]: 0.8,
+};
+
 /**
- * On a wide screen the words and the login go on the left and every shape on the right. On a phone the words take
- * the whole width, so every shape stays centered, smaller and fainter behind them. Indexed by Shape.
+ * On a wide screen the words and the login go on the left and every shape on the right (the scattered points fill the
+ * whole screen). On a phone the words take the whole width, so every shape stays centered, smaller and fainter behind
+ * them. Indexed by Shape.
  */
 export function stageLayout(width: number, height: number): StageLayout {
   const aspect = width / Math.max(1, height);
   const halfWidth = HALF_HEIGHT * aspect;
+  const places: Placement[] = [];
   if (width < 760 || aspect < 1.05) {
     const scale = Math.min(0.72, (halfWidth * 0.95) / 2.4);
-    const place = { x: 0, y: 0.55, scale };
-    return { places: [{ ...place, y: 0.9 }, { x: 0, y: 0, scale: 1 }, place, place], alpha: 0.38 };
+    for (let shape = 0; shape < SHAPE_COUNT; shape += 1) {
+      places.push(shape === SHAPE.scatter ? { x: 0, y: 0, scale: 1 }
+        : { x: 0, y: shape === SHAPE.wifi ? 0.9 : 0.55, scale: scale * SIZE[shape as Shape] });
+    }
+    return { places, alpha: 0.38 };
   }
   const side = Math.min(halfWidth * 0.48, 3.3);
   const scale = Math.min(1, (halfWidth - side) / 2.5 + 0.15);
-  return {
-    places: [
-      { x: side, y: 0.1, scale },
-      { x: 0, y: 0, scale: 1 },
-      { x: side, y: 0, scale: scale * 0.88 },
-      { x: side * 0.94, y: 0, scale: scale * 0.8 },
-    ],
-    alpha: 1,
-  };
+  for (let shape = 0; shape < SHAPE_COUNT; shape += 1) {
+    places.push(shape === SHAPE.scatter ? { x: 0, y: 0, scale: 1 }
+      : { x: shape === SHAPE.planet ? side * 0.94 : side, y: shape === SHAPE.wifi ? 0.1 : 0, scale: scale * SIZE[shape as Shape] });
+  }
+  return { places, alpha: 1 };
 }
 
 /** A point of the screen (pixels) on the plane z = 0 of the scene, in world units. */
