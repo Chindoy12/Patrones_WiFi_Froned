@@ -353,6 +353,34 @@ const ALERT_ICON: Record<AgentAlertType, IconName> = {
   NEW_DEVICE: 'devices', UNAUTHORIZED_DEVICE: 'ban', SECURITY: 'shield', ANOMALY: 'anomaly',
 };
 
+/** One notice and how many times it repeated. */
+export interface AlertGroup {
+  type: AgentAlertType;
+  detail: string;
+  /** The newest time it happened. */
+  at: string;
+  /** How many times the same notice happened. */
+  count: number;
+}
+
+/**
+ * The same notice repeated (the AI suggests the same thing every report while the problem lasts) is shown once, with
+ * how many times it happened and when it last did. Newest first.
+ */
+export function groupAlerts(alerts: AgentAlert[]): AlertGroup[] {
+  const groups = new Map<string, AlertGroup>();
+  for (const alert of alerts) {
+    const key = `${alert.type}|${alert.detail.trim()}`;
+    const group = groups.get(key);
+    if (!group) groups.set(key, { type: alert.type, detail: alert.detail.trim(), at: alert.at, count: 1 });
+    else {
+      group.count += 1;
+      if (alert.at > group.at) group.at = alert.at;
+    }
+  }
+  return [...groups.values()].sort((a, b) => b.at.localeCompare(a.at));
+}
+
 /** Short history of what WiFiSense noticed and (when the user wants it) emailed. */
 function AlertsCard({ alerts }: { alerts: AgentAlert[] }) {
   return (
