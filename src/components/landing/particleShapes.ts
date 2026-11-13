@@ -101,3 +101,52 @@ export function scatterShape(target: Float32Array, n: number, rand: Rand) {
     put(i, (rand() * 2 - 1) * 6.5 * spread, (rand() * 2 - 1) * 3.6 * spread, z);
   }
 }
+
+/** A point on the surface of a box (sides chosen by their area). */
+function onBox(put: Put, i: number, rand: Rand, w: number, h: number, d: number, cx: number, cy: number, cz: number) {
+  const faces = [w * h, w * h, w * d, w * d, h * d, h * d];
+  let pick = rand() * faces.reduce((a, b) => a + b, 0);
+  let face = 0;
+  while (pick > faces[face] && face < 5) pick -= faces[face++];
+  const u = rand() - 0.5;
+  const v = rand() - 0.5;
+  const [x, y, z] = face < 2 ? [u * w, v * h, (face === 0 ? 0.5 : -0.5) * d]
+    : face < 4 ? [u * w, (face === 2 ? 0.5 : -0.5) * h, v * d]
+      : [(face === 4 ? 0.5 : -0.5) * w, u * h, v * d];
+  put(i, cx + x, cy + y, cz + z);
+}
+
+/** A router seen a little from above: the body, two antennas, a row of lights and its signal between the antennas. */
+export function routerShape(target: Float32Array, n: number, rand: Rand) {
+  const put = writer(target);
+  const tilt = 0.32;  // seen from above
+  const raw = new Float32Array(n * 3);
+  const p = writer(raw);
+  const [body, antennas, lights, signal] = share(n, [0.56, 0.15, 0.05, 0.24]);
+  let i = 0;
+  for (let k = 0; k < body; k += 1) onBox(p, i++, rand, 3.1, 0.62, 1.75, 0, -0.75, 0);
+  for (let k = 0; k < antennas; k += 1) {
+    const side = k % 2 === 0 ? -1 : 1;
+    const t = rand();
+    const a = rand() * Math.PI * 2;
+    p(i++, side * (1.12 + t * 0.12) + Math.cos(a) * 0.07, -0.45 + t * 1.85, -0.62 + Math.sin(a) * 0.07);
+  }
+  for (let k = 0; k < lights; k += 1) {
+    const led = Math.floor(rand() * 5);
+    inBall(p, i++, rand, 0.06, -0.9 + led * 0.45, -0.75, 0.9);
+  }
+  const radii = [0.38, 0.72, 1.06];
+  const arcs = share(signal, [1, 2, 3]);
+  radii.forEach((radius, a) => {
+    for (let k = 0; k < arcs[a]; k += 1) {
+      onArc(p, i++, rand, radius, Math.PI / 4 + rand() * (Math.PI / 2), 0.07, 0, -0.05);
+    }
+  });
+  const c = Math.cos(tilt);
+  const s = Math.sin(tilt);
+  for (let k = 0; k < n; k += 1) {
+    const y = raw[k * 3 + 1];
+    const z = raw[k * 3 + 2];
+    put(k, raw[k * 3], y * c - z * s + 0.15, y * s + z * c);
+  }
+}
