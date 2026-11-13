@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { Icon } from '../Icon';
 import { CHAPTER_MS, CHAPTERS, nextChapter } from './chapters';
 import { stepFor } from './stageProgress';
 
@@ -20,7 +21,7 @@ export function Welcome({ stage, onStage, onStart }: {
   onStart: () => void;
 }) {
   const [index, setIndex] = useState(0);
-  const [playing] = useState(() => !prefersStill());
+  const [playing, setPlaying] = useState(() => !prefersStill());
   const stageRef = useRef(stage);
   stageRef.current = stage;
   const chapter = CHAPTERS[index];
@@ -48,8 +49,26 @@ export function Welcome({ stage, onStage, onStart }: {
         <button type="button" className="welcome__start" onClick={onStart}>
           Comenzar <span aria-hidden="true">→</span>
         </button>
+        <div className="welcome__dots" role="group" aria-label="Partes de la presentación">
+          {CHAPTERS.map((c, i) => (
+            <button key={c.title} type="button" className="welcome__dot" aria-current={i === index ? 'step' : undefined}
+                    aria-label={`Parte ${i + 1} de ${CHAPTERS.length}: ${c.title}`} onClick={() => setIndex(i)}>
+              {i === index && (
+                <span key={index} className="welcome__fill"
+                      style={{ animationDuration: `${CHAPTER_MS}ms`, animationPlayState: playing ? 'running' : 'paused' }} />
+              )}
+            </button>
+          ))}
+        </div>
+        <button type="button" className="welcome__pause" onClick={() => setPlaying((p) => !p)}
+                aria-label={playing ? 'Pausar la presentación' : 'Seguir la presentación'}>
+          {playing ? <span className="welcome__bars" aria-hidden="true" /> : <Icon name="play" size={14} />}
+        </button>
       </div>
 
+      {!prefersStill() && (
+        <p className="welcome__hint">Mueve el mouse o toca la pantalla: los triángulos te responden.</p>
+      )}
     </section>
   );
 }
