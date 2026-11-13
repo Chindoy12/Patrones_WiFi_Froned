@@ -150,3 +150,66 @@ export function routerShape(target: Float32Array, n: number, rand: Rand) {
     put(k, raw[k * 3], y * c - z * s + 0.15, y * s + z * c);
   }
 }
+
+/** Land or sea at a direction of the sphere: a smooth made-up pattern, so the planet has continents (not Earth's). */
+export function isLand(x: number, y: number, z: number): boolean {
+  const f = Math.sin(2.6 * x + 1.3) * Math.sin(2.2 * y + 0.4) * Math.sin(2.9 * z + 2.1)
+    + 0.55 * Math.sin(4.7 * x + 2.1 * y) * Math.cos(3.9 * z - 1.2 * x)
+    + 0.3 * Math.sin(7.3 * y + 0.9 * z);
+  return f > 0.12;
+}
+
+function direction(rand: Rand): [number, number, number] {
+  const u = rand() * 2 - 1;
+  const t = rand() * Math.PI * 2;
+  const s = Math.sqrt(1 - u * u);
+  return [s * Math.cos(t), u, s * Math.sin(t)];
+}
+
+/** The planet: dense continents and a light sea, a tilted orbit and arcs that leave the surface to join two places. */
+export function planetShape(target: Float32Array, n: number, rand: Rand, sea?: Float32Array) {
+  const put = writer(target);
+  const R = 1.55;
+  const [surface, orbit, links] = share(n, [0.72, 0.12, 0.16]);
+  // an even spiral over the sphere (Fibonacci), so the globe looks round and clean; the sea keeps few points
+  let i = 0;
+  const golden = Math.PI * (3 - Math.sqrt(5));
+  const candidates = Math.round(surface * 2.4);
+  for (let pass = 0; i < surface; pass += 1) {
+    for (let k = 0; k < candidates && i < surface; k += 1) {
+      const y = 1 - (2 * (k + 0.5)) / candidates;
+      const ring = Math.sqrt(1 - y * y);
+      const a = k * golden + pass * 0.37;
+      const x = Math.cos(a) * ring;
+      const z = Math.sin(a) * ring;
+      const land = isLand(x, y, z);
+      if (!land && rand() > 0.16) continue;
+      const r = R * (land ? 1.012 : 0.995);
+      if (sea && !land) sea[i] = 1;
+      put(i++, x * r, y * r, z * r);
+    }
+  }
+  const tilt = 0.42;
+  for (let k = 0; k < orbit; k += 1) {
+    const a = rand() * Math.PI * 2;
+    const r = 2.0 + rand() * 0.14;
+    const x = Math.cos(a) * r;
+    const z = Math.sin(a) * r;
+    put(i++, x, z * Math.sin(tilt) + (rand() - 0.5) * 0.04, z * Math.cos(tilt));
+  }
+  // arcs between pairs of places, raised above the surface like a link between two networks
+  const ARCS = 9;
+  const ends = Array.from({ length: ARCS }, () => [direction(rand), direction(rand)] as const);
+  const perArc = share(links, Array(ARCS).fill(1));
+  ends.forEach(([a, b], arc) => {
+    for (let k = 0; k < perArc[arc]; k += 1) {
+      const t = rand();
+      const x = a[0] + (b[0] - a[0]) * t;
+      const y = a[1] + (b[1] - a[1]) * t;
+      const z = a[2] + (b[2] - a[2]) * t;
+      const len = Math.hypot(x, y, z) || 1;
+      const lift = R * (1.02 + 0.28 * Math.sin(Math.PI * t)) + (rand() - 0.5) * 0.03;
+      put(i++, (x / len) * lift, (y / len) * lift, (z / len) * lift);
+    }
+  });
+}
