@@ -9,6 +9,9 @@ import { type DeviceChange, DeviceRow, deviceName, deviceNames, type HistoryLoad
 import { Icon } from './Icon';
 import { IdentifyWizard } from './IdentifyWizard';
 
+/** Rows shown at a time in each group; «Mostrar más» adds as many again. */
+export const PAGE_SIZE = 30;
+
 const GROUPS: { id: Recency; title: string }[] = [
   { id: 'online', title: 'Conectados ahora' },
   { id: 'week', title: 'Vistos en los últimos 7 días' },
@@ -29,7 +32,7 @@ function withCategory(params: URLSearchParams, category: DeviceCategory | null):
  * entertainment, smart home and printers, router and others) with how many there are and how many are connected;
  * pressing a card opens that category on its own screen («?tipo=…» in the address, so the browser's back button
  * returns to the cards). Inside a category the devices are split into connected now, seen in the last 7 days and
- * seen before; the old ones start folded, so they do not crowd the ones in use.
+ * seen before; the old ones start folded and appear 30 at a time, so a list of 700 devices is never shown at once.
  */
 export function DeviceCatalog({ devices, onChange, updateDevice, loadHistory, team = false, canManage = true,
   identify, latestAt = null }: {
@@ -155,6 +158,7 @@ function CategoryScreen({ category, devices, names, params, actions, onChange, u
   const [onlyUnnamed, setOnlyUnnamed] = useState(false);
   const [query, setQuery] = useState('');
   const [showOlder, setShowOlder] = useState(false);
+  const [limits, setLimits] = useState<Record<Recency, number>>({ online: PAGE_SIZE, week: PAGE_SIZE, older: PAGE_SIZE });
   const now = useMemo(() => new Date(), []);
 
   const mine = devices.map((_, i) => i).filter((i) => deviceCategory(devices[i]) === category);
@@ -199,6 +203,7 @@ function CategoryScreen({ category, devices, names, params, actions, onChange, u
         const items = groups[g.id];
         if (items.length === 0) return null;
         const folded = g.id === 'older' && !showOlder && !searching;
+        const limit = limits[g.id];
         return (
           <div key={g.id} className={`catgroup catgroup--${g.id}`}>
             <h5 className="catgroup__title">{g.title} <span className="num muted">{items.length}</span></h5>
@@ -209,12 +214,19 @@ function CategoryScreen({ category, devices, names, params, actions, onChange, u
             ) : (
               <>
                 <ul className="devlist">
-                  {items.map((i) => (
+                  {items.slice(0, limit).map((i) => (
                     <DeviceRow key={devices[i].id} device={devices[i]} shownName={names[i]} onChange={onChange}
                                updateDevice={updateDevice} loadHistory={loadHistory} team={team} canManage={canManage}
                                onBlocked={() => onBlocked(devices[i])} />
                   ))}
                 </ul>
+                {items.length > limit && (
+                  <button className="button button--quiet catgroup__more"
+                          onClick={() => setLimits((l) => ({ ...l, [g.id]: l[g.id] + PAGE_SIZE }))}>
+                    Mostrar {Math.min(PAGE_SIZE, items.length - limit)} más
+                    <span className="muted"> (quedan {items.length - limit})</span>
+                  </button>
+                )}
               </>
             )}
           </div>
