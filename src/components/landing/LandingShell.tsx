@@ -1,10 +1,9 @@
-import type { MouseEvent, ReactNode } from 'react';
-import { Link } from 'react-router-dom';
+import { type ReactNode, useState } from 'react';
 import { ThemeToggle } from '../ThemeToggle';
 import { WifiLogo } from '../WifiLogo';
-import { LandingStory } from './LandingStory';
+import { rememberWelcome, welcomeSeen } from './chapters';
 import { ParticleStage } from './ParticleStage';
-import { STAGE } from './stageProgress';
+import { Welcome } from './Welcome';
 
 interface Props {
   title: string;
@@ -14,55 +13,52 @@ interface Props {
   children: ReactNode;
 }
 
-/** «Cómo funciona» scrolls to the story smoothly (instantly with reduced motion) instead of jumping. */
-function toStory(event: MouseEvent<HTMLAnchorElement>) {
-  const target = document.getElementById('como-funciona');
-  if (!target) return;
-  event.preventDefault();
-  const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
-  target.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' });
-}
+type Mode = 'welcome' | 'login';
 
 /**
- * The start page (Avance 28): the login stays in the first screen, and behind everything a 3D scene of colored
- * triangles shows the Wi-Fi symbol. Scrolling tells the story of the network (LandingStory) while the scene comes
- * apart, becomes a router and ends as a connected planet. The other pages of the account (sign-up, recovery) keep
- * AuthShell.
+ * The start page (Avance 29), on one screen with no scrolling. The first visit opens the welcome: the story plays
+ * by itself over the 3D scene and «Comenzar» leads to the login. The login is compact, so everything fits, and behind
+ * it the scene keeps forming and unforming its shapes on its own (one every 10 seconds). Whoever already saw the
+ * welcome goes straight to the login, with «Ver la presentación» to see it again. Signing up is offered only inside
+ * the card («¿No tienes cuenta? Crea una aquí»).
  */
 export function LandingShell({ title, subtitle, busy = false, footer, children }: Props) {
+  const [mode, setMode] = useState<Mode>(() => (welcomeSeen() ? 'login' : 'welcome'));
+  const [stage, setStage] = useState(0);
+
+  function start() {
+    rememberWelcome();
+    setMode('login');
+  }
+
   return (
-    <div className="landing">
-      <ParticleStage />
+    <div className={`landing landing--${mode}`}>
+      <ParticleStage stage={stage} />
       <header className="landing__bar">
         <span className="landing__brand"><WifiLogo size={22} /> WiFiSense</span>
         <nav className="landing__nav" aria-label="Inicio">
-          <a className="landing__navlink" href="#como-funciona" onClick={toStory}>Cómo funciona</a>
+          {mode === 'welcome'
+            ? <button type="button" className="landing__navlink" onClick={start}>Ya tengo cuenta</button>
+            : <button type="button" className="landing__navlink" onClick={() => setMode('welcome')}>Ver la presentación</button>}
           <ThemeToggle />
-          <Link className="landing__signup" to="/registro">Crear cuenta</Link>
         </nav>
       </header>
 
-      <section className="landing__hero" data-stage={STAGE.wifi}>
-        <div className="landing__intro">
-          <p className="landing__eyebrow">Monitoreo de redes Wi-Fi</p>
-          <p className="landing__headline">Tu Wi-Fi,<br />a la vista.</p>
-          <p className="landing__text">
-            Mide tu conexión, mira qué equipos están conectados y entérate cuando algo no va bien.
-          </p>
-        </div>
-        <main className="auth-card landing__card">
-          <span className="auth-card__mark"><WifiLogo busy={busy} size={30} /></span>
-          <h1>{title}</h1>
-          <p className="auth-card__subtitle">{subtitle}</p>
-          {children}
-          {footer && <div className="auth-card__footer">{footer}</div>}
-        </main>
-        <a className="landing__scroll" href="#como-funciona" onClick={toStory}>
-          Desliza para ver cómo funciona <span aria-hidden="true">↓</span>
-        </a>
-      </section>
-
-      <LandingStory />
+      {mode === 'welcome' ? <Welcome stage={stage} onStage={setStage} onStart={start} /> : (
+        <section className="landing__login">
+          <div className="landing__intro">
+            <p className="landing__eyebrow">Monitoreo de redes Wi-Fi</p>
+            <p className="landing__headline">Tu Wi-Fi,<br />a la vista.</p>
+          </div>
+          <main className="auth-card landing__card">
+            <span className="auth-card__mark"><WifiLogo busy={busy} size={26} /></span>
+            <h1>{title}</h1>
+            <p className="auth-card__subtitle">{subtitle}</p>
+            {children}
+            {footer && <div className="auth-card__footer">{footer}</div>}
+          </main>
+        </section>
+      )}
     </div>
   );
 }
