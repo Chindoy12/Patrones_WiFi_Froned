@@ -1,14 +1,19 @@
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { useAuth } from '../src/auth/AuthContext';
 import { AGENT_INSTALLER, AgentPanel, deviceIcon, deviceName, deviceNames, Sparkline } from '../src/components/AgentPanel';
+import { MiWifiArea } from '../src/pages/miwifi/MiWifiArea';
 import { api } from '../src/services/api';
 import type { AgentChannel, AgentDevice, AgentOverview, HomeNetwork } from '../src/types';
 
+vi.mock('../src/auth/AuthContext', () => ({ useAuth: vi.fn() }));
 vi.mock('../src/services/api', () => ({
   api: { myAgent: vi.fn(), revokeAgentKey: vi.fn(), createAgentPairingCode: vi.fn(),
-         updateAgentDevice: vi.fn(), alertPreferences: vi.fn(), updateAlertPreferences: vi.fn() },
+         updateAgentDevice: vi.fn(), alertPreferences: vi.fn(), updateAlertPreferences: vi.fn(), myNetworks: vi.fn(),
+         myTests: vi.fn(), saveMyTest: vi.fn(), myLive: vi.fn(), myRouter: vi.fn(), myAccount: vi.fn(),
+         agentDeviceSessions: vi.fn(), identifyAgentDevice: vi.fn() },
 }));
 
 const casa: HomeNetwork = { id: 1, name: 'Casa', provider: 'Claro', contractedMbps: 300, createdAt: '2026-10-11T12:00:00Z' };
@@ -50,12 +55,25 @@ const reporting: AgentOverview = {
   ],
 };
 
-/** The cards of the agent open each category of devices with a link (Avance 27): they need a router. */
-const renderAgent = (search = '') => render(
-  <MemoryRouter initialEntries={[`/mi-wifi${search}`]}><AgentPanel network={casa} /></MemoryRouter>,
+/** The agent panel lives in Ajustes and links to the other screens: it needs the router of the app. */
+const renderAgent = () => render(<MemoryRouter><AgentPanel network={casa} /></MemoryRouter>);
+
+/** A screen of Mi Wi-Fi (Avance 27), as the app shows it: frame, menu and the screen of `path`. */
+const renderScreen = (path: string) => render(
+  <MemoryRouter initialEntries={[path]}>
+    <Routes><Route path="/mi-wifi/*" element={<MiWifiArea />} /></Routes>
+  </MemoryRouter>,
 );
 
 beforeEach(() => {
+  vi.mocked(useAuth).mockReturnValue({
+    user: { id: 9, username: 'ana', role: 'USER' }, ready: true,
+    login: vi.fn(), register: vi.fn(), renew: vi.fn(), logout: vi.fn(), can: () => false,
+  });
+  vi.mocked(api.myNetworks).mockReset().mockResolvedValue([casa]);
+  vi.mocked(api.myTests).mockReset().mockResolvedValue([]);
+  vi.mocked(api.myRouter).mockReset().mockResolvedValue({ identified: false, vendor: null, model: null, name: null,
+    lastSeenAt: null, namesFromRouter: 0, confirmedNames: 0, capabilities: [], steps: [] });
   vi.mocked(api.myAgent).mockReset();
   vi.mocked(api.createAgentPairingCode).mockReset();
   vi.mocked(api.revokeAgentKey).mockReset();
@@ -118,21 +136,43 @@ describe('Agent panel', () => {
     expect(api.createAgentPairingCode).toHaveBeenCalledWith(1);
   });
 
-  it('shows connected devices, the new-device alert and the vulnerabilities the AI found', async () => {
+  it('once it reports, the agent card says so and links to the screens with what it found', async () => {
     vi.mocked(api.myAgent).mockResolvedValue(reporting);
     renderAgent();
 
+    expect(await screen.findByRole('status')).toHaveTextContent('Agente conectado');
+    expect(screen.getByText(/El agente está enviando reportes cada 5 minutos/)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Ver mis equipos' })).toHaveAttribute('href', '/mi-wifi/equipos');
+    expect(screen.getByRole('link', { name: 'Ver la seguridad' })).toHaveAttribute('href', '/mi-wifi/seguridad');
+    expect(screen.queryByText('Celular de Ana')).not.toBeInTheDocument();  // the devices have their own screen
+  });
+
+  it('shows the new-device alert on every screen, and the devices on theirs', async () => {
+    vi.mocked(api.myAgent).mockResolvedValue(reporting);
+    renderScreen('/mi-wifi/equipos');
+
     expect(await screen.findByRole('alert')).toHaveTextContent('Apareció 1 equipo nuevo en tu red');
-    await userEvent.click(screen.getByRole('link', { name: /Celulares y tabletas: 1/ }));
+    await userEvent.click(await screen.findByRole('link', { name: /Celulares y tabletas: 1/ }));
     expect(await screen.findByText('Celular de Ana')).toBeInTheDocument();
-    expect(screen.getByRole('img', { name: /de 100: 50, En riesgo/ })).toBeInTheDocument();
+  });
+
+  it('shows the security score, the vulnerabilities and the ports on the security screen', async () => {
+    vi.mocked(api.myAgent).mockResolvedValue(reporting);
+    renderScreen('/mi-wifi/seguridad');
+
+    expect(await screen.findByRole('img', { name: /de 100: 50, En riesgo/ })).toBeInTheDocument();
     const findings = screen.getByRole('heading', { name: /Vulnerabilidades y consejos/ }).closest('section')!;
     expect(within(findings).getByText('El router tiene Telnet abierto (puerto 23)')).toBeInTheDocument();
     expect(within(findings).getByText('Alto')).toBeInTheDocument();
     expect(within(findings).getByText('Desactiva Telnet en el router.')).toBeInTheDocument();
-    expect(screen.getByText('Sin anomalías')).toBeInTheDocument();
     expect(screen.getByText('23, 53, 80')).toBeInTheDocument();
-    expect(screen.getByRole('status')).toHaveTextContent('Agente conectado');
+  });
+
+  it('shows what the anomaly detection said on the connection screen', async () => {
+    vi.mocked(api.myAgent).mockResolvedValue(reporting);
+    renderScreen('/mi-wifi/conexion');
+
+    expect(await screen.findByText('Sin anomalías')).toBeInTheDocument();
   });
 
   it('disconnects the agent after confirming, and has no "new key" option', async () => {
@@ -163,7 +203,7 @@ describe('Devices like a Bluetooth list', () => {
   it('shows name, maker and lets the user rename a device', async () => {
     vi.mocked(api.myAgent).mockResolvedValue(reporting);
     vi.mocked(api.updateAgentDevice).mockResolvedValue({ ...reporting.devices[1], label: 'iPad de Ana' });
-    renderAgent('?tipo=celulares');
+    renderScreen('/mi-wifi/equipos?tipo=celulares');
 
     const row = (await screen.findByText('Celular de Ana')).closest('.devrow') as HTMLElement;
     expect(within(row).getByText(/Apple/)).toBeInTheDocument();
@@ -178,7 +218,7 @@ describe('Devices like a Bluetooth list', () => {
   it('marks a device as not mine and shows how to remove it in the router', async () => {
     vi.mocked(api.myAgent).mockResolvedValue(reporting);
     vi.mocked(api.updateAgentDevice).mockResolvedValue({ ...reporting.devices[1], authorized: false });
-    renderAgent('?tipo=celulares');
+    renderScreen('/mi-wifi/equipos?tipo=celulares');
 
     const row = (await screen.findByText('Celular de Ana')).closest('.devrow') as HTMLElement;
     await userEvent.click(within(row).getByRole('button', { name: 'Marcar como no autorizado' }));
@@ -195,7 +235,7 @@ describe('Devices like a Bluetooth list', () => {
       devices: [{ ...reporting.devices[1], authorized: false, recent: false }],
     };
     vi.mocked(api.myAgent).mockResolvedValue(blocked);
-    renderAgent('?tipo=celulares');
+    renderScreen('/mi-wifi/equipos?tipo=celulares');
 
     expect(await screen.findByRole('alert'))
       .toHaveTextContent('Un equipo que marcaste como no autorizado está conectado');
@@ -207,7 +247,7 @@ describe('Devices like a Bluetooth list', () => {
     vi.mocked(api.myAgent).mockResolvedValue(reporting);
     vi.mocked(api.alertPreferences).mockResolvedValue({ newDevice: true, security: true, anomaly: true });
     vi.mocked(api.updateAlertPreferences).mockResolvedValue({ newDevice: false, security: true, anomaly: true });
-    renderAgent();
+    renderScreen('/mi-wifi/avisos');
 
     const toggle = await screen.findByRole('checkbox', { name: /Equipo nuevo o no autorizado/ });
     await userEvent.click(toggle);
@@ -224,7 +264,7 @@ const phone: AgentDevice = {
 describe('Devices with a private MAC', () => {
   it('calls them a phone or tablet instead of an unknown device, and suggests naming them', async () => {
     vi.mocked(api.myAgent).mockResolvedValue({ ...reporting, devices: [...reporting.devices, phone] });
-    renderAgent();
+    renderScreen('/mi-wifi/equipos');
 
     expect(await screen.findByText(/1 equipo no dice su nombre/)).toHaveTextContent('con el lápiz');
     await userEvent.click(screen.getByRole('link', { name: /Celulares y tabletas: 2/ }));
@@ -257,7 +297,7 @@ describe('Best Wi-Fi channel', () => {
   it('recommends a calmer channel, shows how crowded each one is and how to change it', async () => {
     const withChannel = { ...reporting, latest: { ...reporting.latest!, details: { ...reporting.latest!.details, channel } } };
     vi.mocked(api.myAgent).mockResolvedValue(withChannel);
-    renderAgent();
+    renderScreen('/mi-wifi/seguridad');
 
     const card = (await screen.findByRole('heading', { name: /Mejor canal Wi-Fi/ })).closest('section')!;
     expect(within(card).getByText('Cambia al canal 11')).toBeInTheDocument();
@@ -273,7 +313,7 @@ describe('Best Wi-Fi channel', () => {
   it('says the channel is fine when there is no reason to move', async () => {
     const fine = { ...channel, shouldChange: false, recommendedChannel: 6, action: null, summary: 'Tu router ya está en un buen canal (6).' };
     vi.mocked(api.myAgent).mockResolvedValue({ ...reporting, latest: { ...reporting.latest!, details: { ...reporting.latest!.details, channel: fine } } });
-    renderAgent();
+    renderScreen('/mi-wifi/seguridad');
 
     expect(await screen.findByText('Canal 6: bien')).toBeInTheDocument();
     expect(screen.queryByText(/Cambia al canal/)).not.toBeInTheDocument();
@@ -281,7 +321,7 @@ describe('Best Wi-Fi channel', () => {
 
   it('is not shown for older agents that do not send the neighbours', async () => {
     vi.mocked(api.myAgent).mockResolvedValue(reporting);
-    renderAgent();
+    renderScreen('/mi-wifi/seguridad');
 
     expect(await screen.findByText('El router tiene Telnet abierto (puerto 23)')).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: /Mejor canal Wi-Fi/ })).not.toBeInTheDocument();
