@@ -1,12 +1,22 @@
-import { act, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ThemeToggle } from '../src/components/ThemeToggle';
-import { applyTheme, currentTheme, storedTheme } from '../src/theme';
+import { applyTheme, currentTheme, storedTheme, switchTheme, WAVE_MS } from '../src/theme';
+
+/** Gives the document (or takes away) view transitions, which jsdom does not have. */
+function viewTransitions(fn?: unknown) {
+  if (fn) Object.defineProperty(document, 'startViewTransition', { value: fn, configurable: true });
+  else Reflect.deleteProperty(document, 'startViewTransition');
+}
 
 afterEach(() => {
   localStorage.clear();
   delete document.documentElement.dataset.theme;
+  viewTransitions();
+  Reflect.deleteProperty(window, 'matchMedia');
+  document.documentElement.classList.remove('theme-fade');
   vi.restoreAllMocks();
+  vi.useRealTimers();
 });
 
 describe('theme', () => {
@@ -46,5 +56,48 @@ describe('theme', () => {
     render(<ThemeToggle />);
 
     expect(screen.getByRole('button', { name: /Modo claro/ })).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('the new theme spreads from the switch like a wave when the browser can animate it', async () => {
+    let finish = () => undefined as void;
+    const startViewTransition = vi.fn((update: () => void) => {
+      update();
+      return { finished: new Promise<void>((resolve) => { finish = resolve; }) };
+    });
+    viewTransitions(startViewTransition);
+    act(() => applyTheme('dark', false));
+    render(<ThemeToggle />);
+
+    fireEvent.click(screen.getByRole('button', { name: /Modo claro/ }));
+
+    const root = document.documentElement;
+    expect(startViewTransition).toHaveBeenCalledTimes(1);
+    expect(root.dataset.theme).toBe('light');
+    expect(root.dataset.themeWave).toBe('');
+    expect(root.style.getPropertyValue('--wave-x')).toMatch(/px$/);
+    await act(async () => finish());
+    expect(root.dataset.themeWave).toBeUndefined();
+  });
+
+  it('without view transitions the colors fade instead of jumping', () => {
+    vi.useFakeTimers();
+    switchTheme('light');
+
+    expect(document.documentElement.dataset.theme).toBe('light');
+    expect(document.documentElement).toHaveClass('theme-fade');
+    vi.advanceTimersByTime(WAVE_MS);
+    expect(document.documentElement).not.toHaveClass('theme-fade');
+  });
+
+  it('with reduced motion the theme changes at once, with no wave', () => {
+    const startViewTransition = vi.fn();
+    viewTransitions(startViewTransition);
+    Object.defineProperty(window, 'matchMedia', { value: () => ({ matches: true }), configurable: true });
+
+    switchTheme('light');
+
+    expect(startViewTransition).not.toHaveBeenCalled();
+    expect(document.documentElement.dataset.theme).toBe('light');
+    expect(document.documentElement).not.toHaveClass('theme-fade');
   });
 });
