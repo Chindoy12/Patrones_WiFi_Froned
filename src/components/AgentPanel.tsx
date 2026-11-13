@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { anomalyTypeLabel, formatDateTime, formatNumber } from '../format';
 import { errorMessage, useApi } from '../hooks/useApi';
 import { useNow } from '../hooks/useNow';
@@ -41,10 +42,11 @@ const SEVERITY: Record<FindingSeverity, { label: string; icon: IconName }> = {
 };
 
 /**
- * Agent of one network: how to install it and, once it reports, devices, security audit, channel and anomalies.
+ * Agent of one network (in Ajustes): how to install it, its state and how to disconnect it. Since Avance 27 what it
+ * reports lives on its own screens of Mi Wi-Fi (Equipos, Seguridad, Avisos); here there are links to them.
  * The only way offered to install it is the Windows installer with a short code: nobody has to open a console.
  */
-export function AgentPanel({ network }: { network: HomeNetwork }) {
+export function AgentPanel({ network, onChange }: { network: HomeNetwork; onChange?: () => void }) {
   const overview = useApi(() => api.myAgent(network.id), [network.id]);
   const [pairing, setPairing] = useState<AgentPairingCode | null>(null);
   const [busy, setBusy] = useState(false);
@@ -64,6 +66,7 @@ export function AgentPanel({ network }: { network: HomeNetwork }) {
   useEffect(() => {
     if (pairing && lastSeen && new Date(lastSeen) > new Date(new Date(pairing.expiresAt).getTime() - 15 * 60_000)) {
       setPairing(null);
+      onChange?.();  // the other screens of Mi Wi-Fi show the first report right away
     }
   }, [pairing, lastSeen]);
 
@@ -87,6 +90,7 @@ export function AgentPanel({ network }: { network: HomeNetwork }) {
       await api.revokeAgentKey(network.id);
       setPairing(null);
       reload();
+      onChange?.();
     } catch (e) {
       setError(errorMessage(e));
     } finally {
@@ -106,11 +110,18 @@ export function AgentPanel({ network }: { network: HomeNetwork }) {
       {pairing && <Pairing pairing={pairing} onRenew={startPairing} onClose={() => setPairing(null)} busy={busy} />}
       {data && !data.key && !pairing && <Intro onInstall={startPairing} busy={busy} />}
       {data?.key && !data.latest && !pairing && <Waiting onInstall={startPairing} busy={busy} />}
-      {data?.latest && (
-        <AgentReports overview={data} latest={data.latest} onChange={reload}
-                      updateDevice={(id, change) => api.updateAgentDevice(network.id, id, change)}
-                      loadHistory={(id) => api.agentDeviceSessions(network.id, id)}
-                      identify={() => api.identifyAgentDevice(network.id)} />
+      {data?.latest && !pairing && (
+        <div className="dash__card agent__reporting">
+          <p>
+            <Icon name="check" size={18} /> El agente está enviando reportes cada 5 minutos. El último llegó el{' '}
+            {formatDateTime(data.latest.receivedAt)}.
+          </p>
+          <p className="agent__links">
+            <Link to="/mi-wifi/equipos">Ver mis equipos</Link>
+            <Link to="/mi-wifi/seguridad">Ver la seguridad</Link>
+            <Link to="/mi-wifi/avisos">Ver los avisos</Link>
+          </p>
+        </div>
       )}
       {data?.key && (
         <p className="agent__keybar">
