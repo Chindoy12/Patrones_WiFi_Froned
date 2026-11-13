@@ -26,6 +26,7 @@ attribute float aColor;
 attribute float aSeed;
 attribute float aSize;
 attribute float aAmbient;
+attribute float aSea;
 uniform mat4 uProjection;
 uniform float uStage;
 uniform float uTime;
@@ -65,6 +66,11 @@ void main() {
   float flight = t * (1.0 - t) * 4.0;
   p += vec3(sin(aSeed * 41.0) * 1.1, cos(aSeed * 29.0) * 0.8, sin(aSeed * 17.0) * 1.6) * flight;
   if (aAmbient > 0.5) p = turnY(aScatter, uTime * 0.02);
+  // the back of a shape is fainter than its front, so it reads as a solid in 3D
+  float front = aAmbient > 0.5 ? 1.0 : 0.35 + 0.65 * smoothstep(-1.4, 1.1, p.z);
+  // on the planet the sea is fainter than the land
+  float planet = (from > 2.5 ? 1.0 - t : 0.0) + (to > 2.5 ? t : 0.0);
+  front *= 1.0 - 0.6 * aSea * planet;
   p += vec3(sin(uTime * 0.7 + aSeed * 60.0), cos(uTime * 0.6 + aSeed * 50.0), sin(uTime * 0.5 + aSeed * 70.0)) * 0.03;
   p = turnX(turnY(p, uTilt.x), uTilt.y);
 
@@ -75,7 +81,7 @@ void main() {
   vColor = uPalette[int(aColor)];
   float near = smoothstep(0.6, 2.2, depth);
   float far = 1.0 - smoothstep(9.0, 14.0, depth);
-  vAlpha = uAlpha * near * far * (aAmbient > 0.5 ? 0.6 : 1.0) * (0.75 + 0.25 * sin(uTime * 1.3 + aSeed * 90.0));
+  vAlpha = uAlpha * front * near * far * (aAmbient > 0.5 ? 0.6 : 1.0) * (0.75 + 0.25 * sin(uTime * 1.3 + aSeed * 90.0));
   vAngle = aSeed * 6.2832 + uTime * (aSeed - 0.5) * 0.9;
   vLine = clamp(1.4 / size, 0.05, 0.3);
   vSolid = size < 3.2 ? 1.0 : 0.0;
@@ -174,7 +180,7 @@ function createScene(canvas: HTMLCanvasElement): Scene | null {
   const attributes: [string, Float32Array, number][] = [
     ['aWifi', clouds.wifi, 3], ['aScatter', clouds.scatter, 3], ['aRouter', clouds.router, 3],
     ['aPlanet', clouds.planet, 3], ['aColor', clouds.colors, 1], ['aSeed', clouds.seeds, 1],
-    ['aSize', clouds.sizes, 1], ['aAmbient', ambient, 1],
+    ['aSize', clouds.sizes, 1], ['aAmbient', ambient, 1], ['aSea', clouds.sea, 1],
   ];
   for (const [name, data, size] of attributes) {
     const location = gl.getAttribLocation(program, name);
