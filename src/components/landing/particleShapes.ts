@@ -28,6 +28,7 @@ export interface Clouds {
 
 export const PALETTE_SIZE = 6;
 export const AMBIENT_SHARE = 0.12;
+const BIG_SHARE = 0.012;
 
 /** Small, fast, seeded generator (mulberry32): the same seed gives the same cloud. */
 export function random(seed: number): () => number {
@@ -212,4 +213,37 @@ export function planetShape(target: Float32Array, n: number, rand: Rand, sea?: F
       put(i++, (x / len) * lift, (y / len) * lift, (z / len) * lift);
     }
   });
+}
+
+/** Builds the four clouds for `count` points. The same seed always gives the same clouds. */
+export function buildClouds(count: number, seed = 2027): Clouds {
+  const rand = random(seed);
+  const ambient = Math.round(count * AMBIENT_SHARE);
+  const formed = count - ambient;
+  const make = () => new Float32Array(count * 3);
+  const clouds: Clouds = {
+    count, ambient, wifi: make(), scatter: make(), router: make(), planet: make(),
+    colors: new Float32Array(count), seeds: new Float32Array(count), sizes: new Float32Array(count),
+    sea: new Float32Array(count),
+  };
+  scatterShape(clouds.scatter, count, rand);
+  wifiShape(clouds.wifi, formed, rand);
+  routerShape(clouds.router, formed, rand);
+  planetShape(clouds.planet, formed, rand, clouds.sea);
+  // the ambient points keep their scattered place in every shape
+  for (const shape of [clouds.wifi, clouds.router, clouds.planet]) {
+    shape.set(clouds.scatter.subarray(formed * 3), formed * 3);
+  }
+  const big = Math.round(count * BIG_SHARE);
+  for (let i = 0; i < count; i += 1) {
+    clouds.colors[i] = Math.min(PALETTE_SIZE - 1, Math.floor(rand() * PALETTE_SIZE));
+    clouds.seeds[i] = rand();
+    clouds.sizes[i] = i >= count - big ? 3.5 + rand() * 3 : 0.55 + rand() * 0.85;
+  }
+  return clouds;
+}
+
+/** How many points the device can draw comfortably: fewer on a phone. */
+export function pointCount(width: number): number {
+  return width < 760 ? 3200 : 6400;
 }
