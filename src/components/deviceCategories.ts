@@ -1,5 +1,6 @@
 import type { AgentDevice } from '../types';
 import { deviceIcon } from './DeviceRow';
+import { hasOwnName } from './DeviceFilters';
 import type { IconName } from './Icon';
 
 /**
@@ -57,4 +58,29 @@ export function recency(device: AgentDevice, now: Date): Recency {
   if (device.online) return 'online';
   const since = now.getTime() - RECENT_DAYS * 24 * 60 * 60 * 1000;
   return new Date(device.lastSeenAt).getTime() >= since ? 'week' : 'older';
+}
+
+export interface CategorySummary {
+  total: number;
+  online: number;
+  unnamed: number;
+  /** New devices (first seen in the last report), worth a look. */
+  fresh: number;
+  /** Marked as not authorized by the user or an administrator. */
+  blocked: number;
+}
+
+/** How many devices each category has, how many are connected, without a name, new or not authorized. */
+export function summarize(devices: AgentDevice[]): Record<DeviceCategory, CategorySummary> {
+  const empty = (): CategorySummary => ({ total: 0, online: 0, unnamed: 0, fresh: 0, blocked: 0 });
+  const result = Object.fromEntries(CATEGORIES.map((c) => [c.id, empty()])) as Record<DeviceCategory, CategorySummary>;
+  for (const device of devices) {
+    const s = result[deviceCategory(device)];
+    s.total += 1;
+    if (device.online) s.online += 1;
+    if (!hasOwnName(device)) s.unnamed += 1;
+    if (device.recent) s.fresh += 1;
+    if (!device.authorized) s.blocked += 1;
+  }
+  return result;
 }
