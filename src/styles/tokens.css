@@ -78,6 +78,14 @@
   --flow-up: #af50ff;
   --flow-down: #98c0ef;
   --flow-node: #d1e4fa;
+  /* Start page: the triangles of the 3D scene (light that adds up on the dark canvas) and the small amber labels */
+  --particle-1: #8a5cff;
+  --particle-2: #ffb829;
+  --particle-3: #2ec4a6;
+  --particle-4: #ff5fa8;
+  --particle-5: #4d8dff;
+  --particle-6: #dfe7fb;
+  --landing-label: #ffb829;
   color-scheme: dark;
 }
 
@@ -148,6 +156,13 @@
   --flow-up: #7a2bd6;
   --flow-down: #2f6fd0;
   --flow-node: #3a3b3d;
+  --particle-1: #6a2bd6;
+  --particle-2: #c47a00;
+  --particle-3: #0e8a74;
+  --particle-4: #c2185b;
+  --particle-5: #1f5fd0;
+  --particle-6: #3a3b5c;
+  --landing-label: #8a4b00;
   color-scheme: light;
 }
 
