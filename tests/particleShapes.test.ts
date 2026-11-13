@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
-  AMBIENT_SHARE, buildClouds, isLand, PALETTE_SIZE, pointCount, random, share,
+  AMBIENT_SHARE, buildClouds, isLand, PALETTE_SIZE, pointCount, random, share, shieldWidth,
 } from '../src/components/landing/particleShapes';
+import { shapePoints } from '../src/components/landing/ParticleStage';
+import { SHAPE_COUNT } from '../src/components/landing/stageProgress';
 
 const clouds = buildClouds(2000, 7);
 const formed = clouds.count - clouds.ambient;
@@ -15,7 +17,8 @@ describe('Formas de la escena del inicio', () => {
   });
 
   it('every shape has one place for each point, so every point can travel to the next shape', () => {
-    for (const shape of [clouds.wifi, clouds.scatter, clouds.router, clouds.planet]) {
+    expect(shapePoints(clouds)).toHaveLength(SHAPE_COUNT);
+    for (const shape of shapePoints(clouds)) {
       expect(shape).toHaveLength(clouds.count * 3);
       expect(shape.every(Number.isFinite)).toBe(true);
     }
@@ -25,7 +28,7 @@ describe('Formas de la escena del inicio', () => {
   it('the dust in the air keeps its place in every shape', () => {
     for (let i = formed; i < clouds.count; i += 1) {
       expect(point(clouds.wifi, i)).toEqual(point(clouds.scatter, i));
-      expect(point(clouds.planet, i)).toEqual(point(clouds.scatter, i));
+      for (const shape of shapePoints(clouds)) expect(point(shape, i)).toEqual(point(clouds.scatter, i));
     }
   });
 
@@ -69,5 +72,38 @@ describe('Formas de la escena del inicio', () => {
     expect(share(10, [1, 1, 1])).toEqual([3, 3, 4]);
     expect(share(1000, [0.5, 0.25, 0.25]).reduce((a, b) => a + b, 0)).toBe(1000);
     expect(pointCount(390)).toBeLessThan(pointCount(1440));
+  });
+
+  it('the devices are a laptop on the left and a phone on the right', () => {
+    let left = 0;
+    let right = 0;
+    for (let i = 0; i < formed; i += 1) {
+      const [x] = point(clouds.devices, i);
+      if (x < 0.35) left += 1;
+      else if (x > 0.65) right += 1;
+    }
+    expect(left).toBeGreaterThan(right);  // the laptop is bigger
+    expect(right).toBeGreaterThan(formed * 0.25);
+  });
+
+  it('the brain has two hemispheres with a groove between them', () => {
+    let groove = 0;
+    let sides = 0;
+    for (let i = 0; i < formed; i += 1) {
+      const [x, y] = point(clouds.brain, i);
+      if (y < -0.6) continue;  // the stem
+      if (Math.abs(x) < 0.08) groove += 1;
+      else sides += 1;
+    }
+    expect(groove).toBeLessThan(sides * 0.01);
+  });
+
+  it('the shield stays inside its outline and narrows into a point at the bottom', () => {
+    expect(shieldWidth(0.5)).toBeGreaterThan(shieldWidth(-1.2));
+    expect(shieldWidth(-1.6)).toBe(0);
+    for (let i = 0; i < formed; i += 1) {
+      const [x, y] = point(clouds.shield, i);
+      expect(Math.abs(x)).toBeLessThanOrEqual(shieldWidth(Math.min(Math.max(y, -1.6), 1.25)) + 0.2);
+    }
   });
 });
