@@ -16,7 +16,7 @@ const page = <K extends string>(load: () => Promise<Record<K, ComponentType>>, n
 const Layout = page(() => import('./components/Layout'), 'Layout');
 const ForgotPasswordPage = page(() => import('./pages/ForgotPasswordPage'), 'ForgotPasswordPage');
 const ResetPasswordPage = page(() => import('./pages/ResetPasswordPage'), 'ResetPasswordPage');
-const EndUserHomePage = page(() => import('./pages/EndUserHomePage'), 'EndUserHomePage');
+const MiWifiArea = page(() => import('./pages/miwifi/MiWifiArea'), 'MiWifiArea');
 const DashboardPage = page(() => import('./pages/DashboardPage'), 'DashboardPage');
 const NetworksPage = page(() => import('./pages/NetworksPage'), 'NetworksPage');
 const DevicesPage = page(() => import('./pages/DevicesPage'), 'DevicesPage');
@@ -53,7 +53,7 @@ export function App() {
               <Route path="/registro" element={<RegisterPage />} />
               <Route path="/recuperar" element={<ForgotPasswordPage />} />
               <Route path="/restablecer" element={<ResetPasswordPage />} />
-              <Route path="/mi-wifi" element={<RequireAuth><RequireEndUser><EndUserHomePage /></RequireEndUser></RequireAuth>} />
+              <Route path="/mi-wifi/*" element={<RequireAuth><RequireEndUser><MiWifiArea /></RequireEndUser></RequireAuth>} />
               <Route element={<RequireAuth><RequireStaff><Layout /></RequireStaff></RequireAuth>}>
                 <Route index element={<DashboardPage />} />
                 <Route path="networks" element={<NetworksPage />} />
