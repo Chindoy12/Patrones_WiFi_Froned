@@ -82,6 +82,40 @@
   color: var(--auth-muted);
 }
 
+/* ---------------------------------------------------------------- the compact login */
+.landing__login {
+  flex: 1; display: grid; align-content: center; gap: 22px; width: 100%; max-width: 1280px; margin: 0 auto;
+  padding: 0 32px 28px; grid-template-columns: minmax(0, 400px);
+}
+.landing__headline { font-size: clamp(2.4rem, 4.4vw, 3.8rem); line-height: .95; }
+.landing .landing__card { width: 100%; max-width: 400px; padding: 22px 26px 18px; animation: auth-card-in .7s var(--ease) both; }
+.landing .auth-card__mark { width: 44px; height: 44px; margin-bottom: 10px; }
+.landing .auth-card h1 { font-size: 1.2rem; }
+.landing .auth-card__subtitle { margin-bottom: 16px; font-size: .88rem; }
+.landing .auth-card .field { margin-bottom: 12px; }
+.landing .auth-card__footer { margin-top: 14px; padding-top: 12px; }
+
+/* A laptop screen: the login without the round mark, so everything fits */
+@media (max-height: 760px) and (min-width: 761px) {
+  .landing__login { gap: 16px; }
+  .landing__headline { font-size: clamp(2.2rem, 3.8vw, 3.2rem); }
+  .landing .auth-card__mark { display: none; }
+  .welcome__title { font-size: clamp(2.4rem, 4.8vw, 4.4rem); }
+}
+/* Phone: the words at the bottom, the scene centered and faint above them */
+@media (max-width: 760px) {
+  .landing__bar { padding: 14px 16px; }
+  .landing__nav { gap: 10px; }
+  .landing__nav .theme-toggle span { display: none; }
+  .welcome { padding: 0 16px 20px; grid-template-rows: 1fr auto auto; }
+  .welcome__chapter { align-self: end; }
+  .welcome__text { font-size: 1rem; }
+  .welcome__controls { gap: 14px; }
+  .welcome__start { padding: 12px 20px; }
+  .landing__login { padding: 8px 16px 20px; align-content: start; grid-template-columns: 1fr; }
+  .landing__headline { font-size: 2.2rem; }
+  .landing .auth-card__mark { display: none; }
+}
 @media (prefers-reduced-motion: reduce) {
-  .welcome__chapter, .welcome__start { animation: none; }
+  .welcome__chapter, .welcome__start, .landing .landing__card { animation: none; }
 }
