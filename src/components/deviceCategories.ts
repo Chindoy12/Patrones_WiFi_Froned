@@ -47,3 +47,14 @@ export function isCategory(value: string | null | undefined): value is DeviceCat
 export function categoryInfo(id: DeviceCategory): CategoryInfo {
   return CATEGORIES.find((c) => c.id === id)!;
 }
+
+/** A device seen in the last week counts as recent; older ones are kept apart so they do not crowd the list. */
+export const RECENT_DAYS = 7;
+
+export type Recency = 'online' | 'week' | 'older';
+
+export function recency(device: AgentDevice, now: Date): Recency {
+  if (device.online) return 'online';
+  const since = now.getTime() - RECENT_DAYS * 24 * 60 * 60 * 1000;
+  return new Date(device.lastSeenAt).getTime() >= since ? 'week' : 'older';
+}
