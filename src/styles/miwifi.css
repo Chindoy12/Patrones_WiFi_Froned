@@ -1,0 +1,48 @@
+/*
+ * Mi Wi-Fi in screens (Avance 27): the menu of sections, the title of each screen and the summary cards that open
+ * each one.
+ */
+.miwifi__nav {
+  display: flex; gap: 6px; margin: 4px 0 22px; padding: 6px; border: 1px solid var(--line); border-radius: 999px;
+  background: var(--frost); backdrop-filter: var(--frost-blur); -webkit-backdrop-filter: var(--frost-blur); overflow-x: auto; scrollbar-width: none;
+  position: sticky; top: 68px; z-index: 4;
+}
+.miwifi__nav::-webkit-scrollbar { display: none; }
+.miwifi__nav a {
+  flex: none; display: inline-flex; align-items: center; gap: 7px; padding: 8px 14px; border-radius: 999px;
+  color: var(--muted); text-decoration: none; font-size: .92rem; white-space: nowrap;
+}
+.miwifi__nav a:hover { color: var(--ink); background: var(--chip); }
+.miwifi__nav a.active { background: var(--accent-fill); color: var(--on-accent); font-weight: 500; }
+.miwifi__navcount {
+  min-width: 20px; padding: 0 6px; border-radius: 999px; font-size: .75rem; line-height: 18px; text-align: center;
+  background: var(--chip); color: var(--ink-soft);
+}
+.miwifi__nav a.active .miwifi__navcount { background: var(--on-accent); color: var(--accent-fill); }
+
+.miwifi__head { margin: 6px 0 16px; }
+.miwifi__head h2 { margin: 0 0 4px; font-size: 1.5rem; font-weight: 300; letter-spacing: -.02em; overflow-wrap: anywhere; }
+.miwifi__head p { margin: 0; max-width: 75ch; }
+.miwifi__single { grid-template-columns: minmax(0, 1fr); margin-top: 18px; }
+.miwifi__pair { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); }
+.miwifi__empty { flex-direction: row; align-items: flex-start; }
+.miwifi__empty > .icon { color: var(--accent); flex: none; margin-top: 2px; }
+.miwifi__empty p { margin: 6px 0 12px; }
+
+.agent__reporting p { margin: 0; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.agent__reporting .icon { color: var(--good); }
+.agent__links { gap: 16px !important; }
+.agent__links a { color: var(--accent-ink); }
+
+@media (max-width: 760px) {
+  .miwifi__nav {
+    position: static; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; padding: 6px;
+    border-radius: 16px; overflow: visible;
+  }
+  .miwifi__nav a {
+    position: relative; flex-direction: column; gap: 4px; padding: 8px 2px; border-radius: 12px; font-size: .74rem;
+    white-space: normal; text-align: center; line-height: 1.15;
+  }
+  .miwifi__navcount { position: absolute; top: 3px; right: 6px; min-width: 18px; font-size: .66rem; line-height: 16px; }
+  .miwifi__pair { grid-template-columns: minmax(0, 1fr); }
+}
