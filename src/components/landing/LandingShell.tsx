@@ -1,8 +1,9 @@
-import { type ReactNode, useState } from 'react';
+import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { ThemeToggle } from '../ThemeToggle';
 import { WifiLogo } from '../WifiLogo';
-import { rememberWelcome, welcomeSeen } from './chapters';
+import { CHAPTER_MS, rememberWelcome, welcomeSeen } from './chapters';
 import { ParticleStage } from './ParticleStage';
+import { nextStep } from './stageProgress';
 import { Welcome } from './Welcome';
 
 interface Props {
@@ -25,11 +26,27 @@ type Mode = 'welcome' | 'login';
 export function LandingShell({ title, subtitle, busy = false, footer, children }: Props) {
   const [mode, setMode] = useState<Mode>(() => (welcomeSeen() ? 'login' : 'welcome'));
   const [stage, setStage] = useState(0);
+  const fromWelcome = useRef(false);
 
   function start() {
     rememberWelcome();
+    fromWelcome.current = true;
     setMode('login');
   }
+
+  // behind the login the shapes keep changing on their own, one every 10 seconds
+  useEffect(() => {
+    if (mode !== 'login') return undefined;
+    const timer = window.setInterval(() => {
+      if (!document.hidden) setStage(nextStep);
+    }, CHAPTER_MS);
+    return () => window.clearInterval(timer);
+  }, [mode]);
+
+  // coming from «Comenzar», the cursor waits in the first field
+  useEffect(() => {
+    if (mode === 'login' && fromWelcome.current) document.getElementById('username')?.focus();
+  }, [mode]);
 
   return (
     <div className={`landing landing--${mode}`}>
