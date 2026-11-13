@@ -51,11 +51,37 @@
 .welcome__text { margin: 22px 0 0; max-width: 480px; font-size: 1.12rem; font-weight: 300; line-height: 1.6; color: var(--auth-ink); }
 .welcome__text { text-shadow: 0 0 8px var(--auth-canvas); }
 
-.welcome__controls { margin-top: 24px; }
+/* «Comenzar», the five dots (the current one fills up in 10 seconds) and pause */
+.welcome__controls { display: flex; flex-wrap: wrap; align-items: center; gap: 22px; margin-top: 24px; }
 .welcome__start {
-  padding: 14px 26px; border: 0; border-radius: var(--radius-pill); background: var(--auth-cta); color: var(--on-accent);
-  font: inherit; font-size: .84rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 10px; padding: 14px 26px; border: 0; border-radius: var(--radius-pill);
+  background: var(--auth-cta); color: var(--on-accent); font: inherit; font-size: .84rem; font-weight: 600;
+  letter-spacing: .08em; text-transform: uppercase; cursor: pointer; box-shadow: 0 0 0 0 var(--accent-glow);
+  animation: welcome-call 2.6s var(--ease) infinite;
 }
+.welcome__start:hover { background: var(--auth-cta-hover); }
+@keyframes welcome-call { 0%, 100% { box-shadow: 0 0 0 0 var(--accent-glow); } 50% { box-shadow: 0 0 0 10px transparent; } }
+.welcome__dots { display: flex; align-items: center; gap: 8px; }
+.welcome__dot {
+  position: relative; width: 10px; height: 10px; padding: 0; border: 0; border-radius: var(--radius-pill); overflow: hidden;
+  background: var(--auth-edge-strong); cursor: pointer; transition: width .4s var(--ease);
+}
+.welcome__dot[aria-current] { width: 44px; }
+.welcome__fill {
+  position: absolute; inset: 0; transform-origin: left; background: var(--auth-cta); animation: welcome-fill linear both;
+}
+@keyframes welcome-fill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.welcome__pause {
+  display: grid; place-items: center; width: 34px; height: 34px; padding: 0; border: 1px solid var(--auth-edge);
+  border-radius: 50%; background: transparent; color: var(--auth-muted); cursor: pointer;
+}
+.welcome__pause:hover { color: var(--auth-ink); border-color: var(--auth-edge-strong); }
+.welcome__bars { width: 10px; height: 12px; border-left: 3px solid currentColor; border-right: 3px solid currentColor; }
+.welcome__hint {
+  margin: 18px 0 0; font-family: var(--font-mono); font-size: .7rem; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--auth-muted);
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .welcome__chapter { animation: none; }
+  .welcome__chapter, .welcome__start { animation: none; }
 }
