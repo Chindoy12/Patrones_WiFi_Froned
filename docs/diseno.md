@@ -45,8 +45,10 @@ navegador (clave `wifisense.theme.v2`; la clave vieja guardaba "claro" para todo
   uno, como los saltos de un paquete. El nodo repite el estado en color; el texto lo dice.
 - **Encabezado de los dashboards** (`TopBar`): etiqueta sello del área ("Equipo · Monitoreo en vivo", "Mi Wi-Fi"),
   título en Lora itálica, reloj y acciones en una franja de vidrio esmerilado.
-- **El inicio** (`LandingShell` + `ParticleStage`, Avance 28): lienzo `--auth-canvas` sin cajas, barra con la marca,
-  «Cómo funciona», el tema y «Crear cuenta» en píldora; titular grande en Space Grotesk 400 con el degradado
+- **El inicio** (`LandingShell` + `ParticleStage`, Avances 28 y 29): una sola pantalla, lienzo `--auth-canvas` sin
+  cajas, barra con la marca, «Ya tengo cuenta» o «Ver la presentación» y el tema. La bienvenida (`Welcome`) muestra un
+  capítulo a la vez con el botón «Comenzar» en píldora `--auth-cta` (late suave para invitar), cinco puntos que se
+  alargan en el capítulo actual y se llenan en 10 segundos, y la pausa redonda; el login es compacto. Titular grande en Space Grotesk 400 con el degradado
   `--auth-wordmark` y espaciado negativo, texto en Inter 300 y etiquetas en mono ámbar (`--landing-label`). Detrás, una
   escena 3D de triángulos de contorno en seis colores (`--particle-1` a `--particle-6`, más oscuros en el tema claro)
   que pasa del símbolo Wi-Fi a una nube por toda la pantalla, a un router y a un planeta según la sección. La parte de
