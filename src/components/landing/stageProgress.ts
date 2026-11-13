@@ -1,14 +1,44 @@
 /**
- * Which shape the start page shows for a scroll position, and where on the screen it goes. Plain functions so they can
- * be tested without a browser.
+ * Which shape the scene shows and where on the screen it goes. Plain functions so they can be tested without a
+ * browser.
  *
- * The stage is a number: 0 is the Wi-Fi symbol, 1 the points scattered, 2 the router and 3 the planet; 0.5 is halfway
- * between the Wi-Fi symbol and the scattered points. Each section of the page says which stage it shows; between two
- * sections the stage moves in proportion to the scroll, so the shape follows the reader's finger.
+ * The stage is a number on a loop of six steps: 0 is the Wi-Fi symbol, 1 the points scattered, 2 the router, 3 the
+ * planet, 4 scattered again and 5 the Wi-Fi symbol again. 0.5 is halfway between the Wi-Fi symbol and the scattered
+ * points. Because 5 and 0 are the same shape, the scene can keep forming and unforming forever: when it reaches 5 it
+ * jumps to 0 and nobody sees the jump (Avance 29).
  */
 
+export const SHAPE = { wifi: 0, scatter: 1, router: 2, planet: 3 } as const;
+export type Shape = (typeof SHAPE)[keyof typeof SHAPE];
+
+/** The shape of each step of the loop. */
+export const LOOP: Shape[] = [SHAPE.wifi, SHAPE.scatter, SHAPE.router, SHAPE.planet, SHAPE.scatter, SHAPE.wifi];
+export const LAST_STAGE = LOOP.length - 1;
+
+/** The shape at a whole step of the loop. */
+export function shapeAt(step: number): Shape {
+  return LOOP[Math.min(Math.max(Math.round(step), 0), LAST_STAGE)];
+}
+
+/** The next step of the loop: after the last one it starts again on the same shape. */
+export function nextStep(step: number): number {
+  return step >= LAST_STAGE ? 1 : step + 1;
+}
+
+/**
+ * The step the scene should travel to so that it shows `shape`, starting from `from`: forward along the loop when it
+ * can (the Wi-Fi symbol after the planet goes through the scattered points, not back through the router), and
+ * straight back when the shape is behind on the same lap.
+ */
+export function stepFor(shape: Shape, from: number): number {
+  const at = Math.round(from);
+  if (shapeAt(at) === shape) return at;
+  for (let step = at + 1; step <= LAST_STAGE; step += 1) if (LOOP[step] === shape) return step;
+  return LOOP.indexOf(shape);
+}
+
+/** Stages of the scrolling start page (Avance 28), until the welcome replaces it. */
 export const STAGE = { wifi: 0, scatter: 1, router: 2, planet: 3 } as const;
-export const LAST_STAGE = STAGE.planet;
 
 export interface Anchor {
   /** Where the middle of the section is, in page pixels. */
