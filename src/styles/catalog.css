@@ -31,3 +31,18 @@ a.catcard:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px;
 .catcard__tags .tag--accent { margin-left: 0; }
 .catcard__go { position: absolute; top: 14px; right: 14px; font-size: .8rem; color: var(--accent-ink); opacity: 0; transition: opacity .15s ease; }
 a.catcard:hover .catcard__go, a.catcard:focus-visible .catcard__go { opacity: 1; }
+
+.catscreen { display: grid; gap: 10px; }
+.catscreen__back { justify-self: start; }
+.catscreen__title { display: flex; align-items: center; gap: 10px; margin: 2px 0 0; font-size: 1.25rem; font-weight: 400; }
+.catscreen__title .icon { color: var(--accent); }
+.catscreen__help { margin: 0; max-width: 75ch; }
+.catscreen__tools { margin: 4px 0; }
+.catgroup { margin-top: 10px; }
+.catgroup__title {
+  display: flex; align-items: baseline; gap: 8px; margin: 0; padding-bottom: 6px; border-bottom: 1px solid var(--line-soft);
+  font-family: var(--font-mono); font-size: .72rem; font-weight: 400; letter-spacing: var(--tracking-stamp);
+  text-transform: uppercase; color: var(--ink-soft);
+}
+.catgroup--online .catgroup__title { color: var(--good-ink); }
+.catgroup__unfold, .catgroup__more { margin-top: 10px; }
