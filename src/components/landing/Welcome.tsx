@@ -8,12 +8,12 @@ function prefersStill(): boolean {
 }
 
 /**
- * The welcome (Avance 29): one full screen, no scrolling. The story plays by itself, one chapter every 10 seconds,
+ * The welcome (Avance 29): one full screen, no scrolling. The story plays by itself, one chapter every 6 seconds,
  * while the scene changes shape behind it; the dots jump to any chapter (the bar inside the current one shows how much
  * time is left), the round button pauses and resumes, and «Comenzar» goes to the login at any moment.
  *
  * With reduced motion the story does not advance by itself: the visitor moves it with the dots. While it plays, the
- * changes are not announced to screen readers (that would interrupt them every 10 seconds); paused, they are.
+ * changes are not announced to screen readers (that would interrupt them every few seconds); paused, they are.
  */
 export function Welcome({ stage, onStage, onStart }: {
   stage: number;

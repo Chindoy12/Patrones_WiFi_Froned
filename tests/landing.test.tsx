@@ -27,7 +27,8 @@ describe('Bienvenida', () => {
     expect(screen.queryByRole('link', { name: /Crear cuenta/i })).not.toBeInTheDocument();  // only inside the card
   });
 
-  it('plays by itself, one chapter every 10 seconds, and pause stops it', () => {
+  it('plays by itself, one chapter every 6 seconds, and pause stops it', () => {
+    expect(CHAPTER_MS).toBe(6_000);
     vi.useFakeTimers();
     renderStart();
 

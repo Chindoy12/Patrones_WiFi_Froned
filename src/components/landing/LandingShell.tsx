@@ -19,7 +19,7 @@ type Mode = 'welcome' | 'login';
 /**
  * The start page (Avance 29), on one screen with no scrolling. The first visit opens the welcome: the story plays
  * by itself over the 3D scene and «Comenzar» leads to the login. The login is compact, so everything fits, and behind
- * it the scene keeps forming and unforming its shapes on its own (one every 10 seconds). Whoever already saw the
+ * it the scene keeps forming and unforming its shapes on its own (one every 6 seconds). Whoever already saw the
  * welcome goes straight to the login, with «Ver la presentación» to see it again. Signing up is offered only inside
  * the card («¿No tienes cuenta? Crea una aquí»).
  */
@@ -34,7 +34,7 @@ export function LandingShell({ title, subtitle, busy = false, footer, children }
     setMode('login');
   }
 
-  // behind the login the shapes keep changing on their own, one every 10 seconds
+  // behind the login the shapes keep changing on their own, one every 6 seconds
   useEffect(() => {
     if (mode !== 'login') return undefined;
     const timer = window.setInterval(() => {
