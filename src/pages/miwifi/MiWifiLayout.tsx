@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import { useAuth } from '../../auth/AuthContext';
+import { DeviceNotices, groupAlerts } from '../../components/AgentPanel';
 import { EndUserShell } from '../../components/EndUserShell';
 import { Icon, type IconName } from '../../components/Icon';
 import { TopBar } from '../../components/TopBar';
@@ -28,8 +29,8 @@ const NO_AGENT: Promise<AgentOverview> = new Promise(() => undefined);
 
 /**
  * Frame of Mi Wi-Fi (Avance 27): the greeting, the network chosen, a menu with one screen for each thing (summary,
- * connection, devices, security, notices, nearby networks and settings). Before, everything was one long page; now
- * each thing has its place.
+ * connection, devices, security, notices, nearby networks and settings) and, above every screen, the warning of a
+ * new or not authorized device. Before, everything was one long page; now each thing has its place.
  */
 export function MiWifiLayout() {
   const { user } = useAuth();
@@ -50,6 +51,11 @@ export function MiWifiLayout() {
   }, [reload]);
 
   const context: MiWifi = { networks, selected, choose: setChosen, agent, lastTest, setLastTest };
+  const overview = agent?.data ?? null;
+  const counts: Record<string, number | undefined> = {
+    '/mi-wifi/equipos': overview?.latest ? overview.devices.filter((d) => d.online).length : undefined,
+    '/mi-wifi/avisos': overview ? groupAlerts(overview.alerts).length || undefined : undefined,
+  };
   const count = networks.data?.length ?? 0;
 
   return (
@@ -69,9 +75,12 @@ export function MiWifiLayout() {
         {SCREENS.map((s) => (
           <NavLink key={s.to} to={s.to} end={s.to === '/mi-wifi'}>
             <Icon name={s.icon} size={17} /> {s.label}
+            {counts[s.to] !== undefined && <>{' '}<span className="miwifi__navcount num">{counts[s.to]}</span></>}
           </NavLink>
         ))}
       </nav>
+
+      {overview?.latest && <DeviceNotices overview={overview} latest={overview.latest} />}
 
       <MiWifiContext.Provider value={context}>
         <Outlet />
