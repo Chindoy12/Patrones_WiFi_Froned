@@ -54,6 +54,12 @@ protocolo (UDP, TCP, ICMP…) se muestra con los mismos medidores circulares, de
   subida una prueba corta más una mayor que dura unos 2 segundos (máximo 8 MB cada una). El resultado se guarda y la
   IA lo califica: calidad, para qué alcanza (videollamadas, video HD/4K, juegos) y consejos. Mide la conexión hasta
   el servidor de WiFiSense, no solo el Wi-Fi; la señal o el canal requieren el agente.
+- **En vivo** (`LivePanel`, Avance 26; en Mi Wi-Fi y en el panel del sensor): con **«Ver en vivo»**, cada 2 segundos lo
+  que el computador del agente baja y sube en ese momento, la latencia hasta el router y hasta internet y la señal, con
+  dos gráficas de los últimos 5 minutos y qué significa el último minuto (por ejemplo, si la demora empieza antes o
+  después del router). Es el uso de ese momento, no la capacidad (eso lo mide «Probar mi conexión»), y no gasta datos
+  de prueba. Mientras está abierto pregunta cada 2 s; con la pestaña oculta no pregunta y a los 10 minutos se pausa
+  sola, así el agente deja de medir cuando nadie mira. Necesita el agente 2.1.0.
 - **Instalar el agente:** «Instalar el agente» pide un código de 8 caracteres (15 min, un uso) y ofrece el instalador
   `WiFiSenseAgente.exe` (versión `agente` del repositorio de IA). Mientras el código está en pantalla la página
   revisa cada 10 s, así que el primer reporte aparece solo. Es la única forma de instalarlo que ofrece la página
@@ -193,7 +199,7 @@ Administrador además registra redes).
 npm install
 cp .env.example .env        # VITE_API_URL=http://localhost:8080
 npm run dev                 # http://localhost:5173
-npm test                    # 239 pruebas
+npm test                    # 251 pruebas
 npm run build               # tipos + build de producción en dist/
 ```
 
