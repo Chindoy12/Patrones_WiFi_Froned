@@ -24,6 +24,7 @@ src/hooks/                  carga de datos y selección de red
 src/components/             layout, AuthShell (login y registro), WifiLogo animado, gráficos, estados de carga y
                             ErrorBoundary (una página que falla muestra un mensaje en vez de dejar la pantalla en blanco)
 src/pages/                  una página por sección
+src/pages/miwifi/           Mi Wi-Fi en pantallas (Avance 27): el marco con el menú y una pantalla por cada cosa
 src/auth/credentials.ts     límites de usuario (40, nombre o correo) y contraseña (10–12) y reglas de contraseña
 tests/                      pruebas de apiClient, reglas de arquitectura y seguridad, y componentes
 .github/workflows/pagina.yml  tipos, pruebas, build y npm audit en cada Pull Request
@@ -36,8 +37,10 @@ docs/diseno.md              sistema de diseño: tokens, tipografía, componentes
 ## Secciones
 
 Equipo: Panel · Redes · Dispositivos · Mediciones · Historial · Análisis · Anomalías · Modelo de IA · Alertas ·
-Reportes · Usuarios, Capturas técnicas y Auditoría (solo administrador). Públicas: inicio de sesión, registro (pide correo de recuperación y celular opcional), `/recuperar` y `/restablecer`. Usuario final: **Mi Wi-Fi** (`/mi-wifi`), con su propio encabezado: prueba su conexión,
-ve la calidad de cada red y registra, edita y elimina sus redes (hasta 3). Nunca ve el menú ni las rutas del equipo.
+Reportes · Usuarios, Capturas técnicas y Auditoría (solo administrador). Públicas: inicio de sesión, registro (pide correo de recuperación y celular opcional), `/recuperar` y `/restablecer`. Usuario final: **Mi Wi-Fi**, con su propio encabezado y un menú con una pantalla por cada cosa
+(Avance 27): **Resumen** (`/mi-wifi`), **Conexión**, **Equipos**, **Seguridad**, **Avisos**, **Redes cercanas** y
+**Ajustes** (`/mi-wifi/conexion`, `/equipos`, `/seguridad`, `/avisos`, `/redes-cercanas`, `/ajustes`). Nunca ve el
+menú ni las rutas del equipo.
 
 ## Dashboards
 
@@ -68,10 +71,17 @@ protocolo (UDP, TCP, ICMP…) se muestra con los mismos medidores circulares, de
   después del cambio la página sigue con la sesión nueva que devuelve el backend.
 - **Recuperar la contraseña:** «¿Olvidaste tu contraseña?» (`/recuperar`) pide el correo; el enlace del correo abre
   `/restablecer#t=…`, que lee el token y lo quita de la barra de direcciones y del historial.
-- **Agente (Mi Wi-Fi):** cuando reporta, muestra los equipos conectados como en la lista de Bluetooth (nombre,
-  fabricante y, si usan dirección privada, «celular o tableta»), aviso de equipos nuevos, la auditoría de seguridad de
-  la IA (puntaje, vulnerabilidades y qué hacer), el **mejor canal Wi-Fi** con la interferencia de cada canal, los
-  datos del Wi-Fi y si hay anomalías. Se actualiza cada minuto.
+- **Mi Wi-Fi en pantallas** (`src/pages/miwifi`, Avance 27): antes todo estaba en una sola página larga (la prueba, En
+  vivo, el agente, los equipos, la seguridad, los avisos, las redes cercanas, el router, las redes y la cuenta). Ahora
+  el marco (`MiWifiLayout`) tiene el saludo, la red elegida y un menú; cada cosa tiene su pantalla y su dirección, así
+  que el botón Atrás y un enlace funcionan. **Resumen** muestra una tarjeta por pantalla con lo más importante (la
+  calidad, cuántos equipos hay de cada tipo, el puntaje de seguridad, los avisos) y al tocarla lleva a esa pantalla.
+  **Conexión**: «Probar mi conexión», En vivo y qué dice la IA. **Seguridad**: puntaje, vulnerabilidades y qué hacer,
+  datos del Wi-Fi, mejor canal y el router. **Avisos**: cada aviso una sola vez con cuántas veces pasó («×6») y los
+  avisos por correo. **Ajustes**: las redes (hasta 3), el agente (instalarlo, su estado y desconectarlo) y la cuenta.
+  El aviso de un equipo nuevo o no autorizado aparece arriba en todas las pantallas. Los datos del agente se cargan
+  una vez para todas las pantallas (`MiWifiContext`) y se actualizan cada minuto. En el celular el menú muestra todas
+  las secciones en una cuadrícula.
 - **Redes del equipo con sensor:** la página Redes empieza vacía. «Registrar red» crea ahí mismo la sede y la zona,
   y la fuente es siempre el **sensor** (el agente WiFiSense en un computador conectado a esa red; las fuentes
   simuladas solo aparecen si el backend corre en modo demostración). «Sensor» → «Conectar sensor» muestra un código
@@ -85,10 +95,15 @@ protocolo (UDP, TCP, ICMP…) se muestra con los mismos medidores circulares, de
 - **Reconocer cada equipo:** desde el agente 1.7.0 cada equipo llega con su tipo (celular, computador, TV, impresora,
   cámara, parlante, consola o dispositivo inteligente), el modelo que anuncia y dos marcas: «Este computador (agente)»
   y «Router». Un equipo sin nombre se llama por su tipo («Celular o tableta 2», «TV o Chromecast 1»).
-- **Lista de equipos con filtros** (`DeviceFilters`): «Todos», «Conectados» y «Sin nombre» con su cantidad, búsqueda por
-  nombre o marca (desde 8 equipos) y el orden: este computador y el router, los conectados con nombre, los demás
-  conectados y al final los que se fueron. Dice cuántos no dicen su nombre y por qué, y cada uno tiene «Ponerle
-  nombre». El número de «Celular o tableta 3» no cambia al filtrar. Desde el agente 1.8.0 también llegan los nombres
+- **Equipos por categoría** (`DeviceCatalog`, Avance 27; en Mi Wi-Fi, el panel del sensor y Dispositivos): primero una
+  tarjeta por tipo (**Computadores**, **Celulares y tabletas**, **TV y entretenimiento**, **Casa inteligente e
+  impresoras**, **Router y otros equipos**) con cuántos hay, cuántos están conectados, cuántos no tienen nombre y los
+  nuevos o no autorizados. Al tocar una tarjeta se abre esa categoría en su propia pantalla (`?tipo=celulares`, así
+  Atrás vuelve a las tarjetas) con «Todos» y «Sin nombre», búsqueda por nombre o marca (desde 8 equipos) y los equipos
+  en tres grupos: **Conectados ahora**, **Vistos en los últimos 7 días** y **Vistos antes**, este último plegado. Se
+  muestran 30 a la vez con «Mostrar más», así una red de 700 equipos nunca se dibuja de una vez. La categoría sigue
+  el ícono de cada equipo (`deviceCategories.ts`). Dice cuántos no dicen su nombre y por qué, y cada uno tiene
+  «Ponerle nombre». El número de «Celular o tableta 3» no cambia al filtrar. Desde el agente 1.8.0 también llegan los nombres
   que los equipos dicen al pedir dirección por DHCP.
 - **¿Cuál es este equipo?** (`IdentifyWizard`, en Mi Wi-Fi, el panel del sensor y Dispositivos; en el equipo solo
   ADMIN): el agente reporta cada minuto durante 10 minutos; el usuario apaga el Wi-Fi del equipo, la página ve cuál
@@ -199,7 +214,7 @@ Administrador además registra redes).
 npm install
 cp .env.example .env        # VITE_API_URL=http://localhost:8080
 npm run dev                 # http://localhost:5173
-npm test                    # 251 pruebas
+npm test                    # 270 pruebas
 npm run build               # tipos + build de producción en dist/
 ```
 

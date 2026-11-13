@@ -1,9 +1,9 @@
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAuth } from '../src/auth/AuthContext';
-import { EndUserHomePage } from '../src/pages/EndUserHomePage';
+import { MiWifiArea } from '../src/pages/miwifi/MiWifiArea';
 import { api } from '../src/services/api';
 import { ApiError } from '../src/services/apiClient';
 import { runSpeedTest } from '../src/services/speedTest';
@@ -20,7 +20,12 @@ vi.mock('../src/services/speedTest', () => ({ runSpeedTest: vi.fn() }));
 
 const casa: HomeNetwork = { id: 1, name: 'Casa', provider: 'Claro', contractedMbps: 300, createdAt: '2026-10-11T12:00:00Z' };
 
-const renderPage = () => render(<MemoryRouter><EndUserHomePage /></MemoryRouter>);
+/** Mi Wi-Fi as the app shows it (Avance 27: one screen per thing), opened at `path`. */
+const renderPage = (path = '/mi-wifi') => render(
+  <MemoryRouter initialEntries={[path]}>
+    <Routes><Route path="/mi-wifi/*" element={<MiWifiArea />} /></Routes>
+  </MemoryRouter>,
+);
 
 beforeEach(() => {
   vi.mocked(useAuth).mockReturnValue({
@@ -60,6 +65,31 @@ const graded: ConnectionTest = {
 };
 
 describe('Mi Wi-Fi', () => {
+  it('has one screen for each thing, and the summary opens them', async () => {
+    vi.mocked(api.myNetworks).mockResolvedValue([casa]);
+    renderPage();
+
+    const menu = await screen.findByRole('navigation', { name: 'Secciones de Mi Wi-Fi' });
+    expect(within(menu).getAllByRole('link').map((a) => a.textContent?.trim()))
+      .toEqual(['Resumen', 'Conexión', 'Equipos', 'Seguridad', 'Avisos', 'Redes cercanas', 'Ajustes']);
+    expect(within(menu).getByRole('link', { name: 'Resumen' })).toHaveAttribute('aria-current', 'page');
+    expect(await screen.findByRole('heading', { name: 'Resumen de «Casa»' })).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('link', { name: /Seguridad.*Instala el agente/ }));
+    expect(await screen.findByRole('heading', { level: 2, name: 'Seguridad' })).toBeInTheDocument();
+    expect(screen.getByText('Para ver la seguridad de tu red necesitas el agente')).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: /Calidad de «Casa»/ })).not.toBeInTheDocument();  // not all at once
+  });
+
+  it('on the first visit, without networks, every screen leads to registering one', async () => {
+    vi.mocked(api.myNetworks).mockResolvedValue([]);
+    renderPage('/mi-wifi/equipos');
+
+    expect(await screen.findByRole('heading', { name: 'Empieza registrando tu red' })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('link', { name: /Registrar mi red/ }));
+    expect(await screen.findByRole('button', { name: /Agregar red/ })).toBeInTheDocument();
+  });
+
   it('greets the user by the name of the email, without the domain', async () => {
     vi.mocked(useAuth).mockReturnValue({
       user: { id: 9, username: 'laura.rios@correo.co', role: 'USER' }, ready: true,
@@ -75,16 +105,16 @@ describe('Mi Wi-Fi', () => {
 
   it('lists only what the backend returns for this user', async () => {
     vi.mocked(api.myNetworks).mockResolvedValue([casa]);
-    renderPage();
+    renderPage('/mi-wifi/ajustes');
 
     expect(await screen.findByRole('heading', { name: 'Casa' })).toBeInTheDocument();
     expect(screen.getByText('300 Mbps')).toBeInTheDocument();
     expect(screen.getAllByText('1 de 3').length).toBeGreaterThan(0);
   });
 
-  it('shows the nearby networks of the chosen network, apart from the measurement and the devices', async () => {
+  it('shows the nearby networks of the chosen network on their own screen', async () => {
     vi.mocked(api.myNetworks).mockResolvedValue([casa]);
-    renderPage();
+    renderPage('/mi-wifi/redes-cercanas');
 
     expect(await screen.findByRole('heading', { name: 'Redes cercanas' })).toBeInTheDocument();
     expect(api.nearbyNetworks).toHaveBeenCalledWith(1);
@@ -94,7 +124,7 @@ describe('Mi Wi-Fi', () => {
   it('adds a network and reloads the list', async () => {
     vi.mocked(api.myNetworks).mockResolvedValueOnce([]).mockResolvedValueOnce([casa]);
     vi.mocked(api.createMyNetwork).mockResolvedValue(casa);
-    renderPage();
+    renderPage('/mi-wifi/ajustes');
 
     await userEvent.click(await screen.findByRole('button', { name: /Agregar red/ }));
     await userEvent.type(screen.getByLabelText('Nombre de la red'), 'Casa');
@@ -109,7 +139,7 @@ describe('Mi Wi-Fi', () => {
     vi.mocked(api.createMyNetwork).mockImplementation(async () => {
       throw new ApiError(400, 'Revisa los datos ingresados.', { name: 'El nombre solo puede tener letras, números, espacios y . _ \' -' });
     });
-    renderPage();
+    renderPage('/mi-wifi/ajustes');
 
     await userEvent.click(await screen.findByRole('button', { name: /Agregar red/ }));
     await userEvent.type(screen.getByLabelText('Nombre de la red'), '<b>hola');
@@ -120,7 +150,7 @@ describe('Mi Wi-Fi', () => {
 
   it('hides the add button once the user has three networks', async () => {
     vi.mocked(api.myNetworks).mockResolvedValue([casa, { ...casa, id: 2, name: 'Oficina' }, { ...casa, id: 3, name: 'Finca' }]);
-    renderPage();
+    renderPage('/mi-wifi/ajustes');
 
     const grid = await screen.findByRole('heading', { name: 'Finca' });
     expect(within(grid.closest('.eu-grid') as HTMLElement).queryByRole('button', { name: /Agregar red/ })).toBeNull();
@@ -131,7 +161,7 @@ describe('Mi Wi-Fi', () => {
     vi.mocked(api.myTests).mockResolvedValueOnce([]).mockResolvedValue([graded]);
     vi.mocked(runSpeedTest).mockResolvedValue({ latencyMs: 24, jitterMs: 3, downloadMbps: 180, uploadMbps: 40 });
     vi.mocked(api.saveMyTest).mockResolvedValue(graded);
-    renderPage();
+    renderPage('/mi-wifi/conexion');
 
     expect(await screen.findByRole('img', { name: 'Calidad de 0 a 100: sin datos' })).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: /Probar mi conexión/ }));
@@ -146,7 +176,7 @@ describe('Mi Wi-Fi', () => {
   it('keeps the measurement and says so when the AI could not grade it', async () => {
     vi.mocked(api.myNetworks).mockResolvedValue([casa]);
     vi.mocked(api.myTests).mockResolvedValue([{ ...graded, quality: null, qualityScore: null, qualityGrade: null }]);
-    renderPage();
+    renderPage('/mi-wifi/conexion');
 
     expect(await screen.findByText(/El servicio de análisis no estaba disponible/)).toBeInTheDocument();
     expect(screen.getByRole('img', { name: 'Latencia: 24 ms, Sin datos' })).toBeInTheDocument();
@@ -155,7 +185,7 @@ describe('Mi Wi-Fi', () => {
   it('shows the error in Spanish when the user ran too many tests', async () => {
     vi.mocked(api.myNetworks).mockResolvedValue([casa]);
     vi.mocked(runSpeedTest).mockRejectedValue(new ApiError(429, 'Hiciste muchas pruebas seguidas. Espera unos minutos e inténtalo de nuevo.'));
-    renderPage();
+    renderPage('/mi-wifi/conexion');
 
     await userEvent.click(await screen.findByRole('button', { name: /Probar mi conexión/ }));
 
@@ -165,7 +195,7 @@ describe('Mi Wi-Fi', () => {
 
   it('switches the dashboard between the user networks', async () => {
     vi.mocked(api.myNetworks).mockResolvedValue([casa, { ...casa, id: 2, name: 'Oficina' }]);
-    renderPage();
+    renderPage('/mi-wifi/conexion');
 
     await userEvent.click(await screen.findByRole('button', { name: 'Oficina' }));
 

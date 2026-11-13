@@ -1,6 +1,6 @@
-import type { ReactNode } from 'react';
-import { Icon } from './Icon';
 import type { AgentDevice } from '../types';
+
+// Order and search of a list of devices; each category screen of DeviceCatalog uses them (Avance 27).
 
 export type DeviceView = 'all' | 'online' | 'unnamed';
 
@@ -35,51 +35,4 @@ export function visibleDevices(devices: AgentDevice[], names: string[], view: De
       || (a.device.online ? 0 : b.device.lastSeenAt.localeCompare(a.device.lastSeenAt))
       || a.index - b.index)
     .map(({ index }) => index);
-}
-
-/**
- * Summary and filters above a long list of devices: how many there are, how many are connected and how many have no
- * name, with the reason in words (most phones do not say their name, and some networks do not let us ask).
- */
-export function DeviceFilters({ devices, view, onView, query, onQuery, team, actions }: {
-  devices: AgentDevice[]; view: DeviceView; onView: (view: DeviceView) => void; query: string;
-  onQuery: (query: string) => void; team: boolean;
-  /** Buttons that act on the list ("¿Cuál es este equipo?"), shown with the filters. */
-  actions?: ReactNode;
-}) {
-  const online = devices.filter((d) => d.online).length;
-  const unnamed = devices.filter((d) => !hasOwnName(d)).length;
-  const views: { id: DeviceView; label: string; count: number }[] = [
-    { id: 'all', label: 'Todos', count: devices.length },
-    { id: 'online', label: 'Conectados', count: online },
-    { id: 'unnamed', label: 'Sin nombre', count: unnamed },
-  ];
-  return (
-    <div className="devfilters">
-      <div className="devfilters__bar">
-        <div className="segmented" role="group" aria-label="Qué equipos mostrar">
-          {views.map((v) => (
-            <button key={v.id} type="button" aria-pressed={view === v.id} onClick={() => onView(v.id)}>
-              {v.label} <span className="devfilters__count">{v.count}</span>
-            </button>
-          ))}
-        </div>
-        {actions}
-        {devices.length >= 8 && (
-          <label className="devfilters__search">
-            <Icon name="search" size={16} />
-            <input type="search" placeholder="Buscar por nombre o marca" value={query} aria-label="Buscar equipo"
-                   onChange={(e) => onQuery(e.target.value)} />
-          </label>
-        )}
-      </div>
-      {unnamed > 0 && (
-        <p className="devfilters__why muted">
-          {unnamed === 1 ? '1 equipo no dice su nombre' : `${unnamed} equipos no dicen su nombre`}: los celulares con
-          dirección privada no lo anuncian y {team ? 'muchas redes de universidades' : 'algunos routers'} no dejan
-          preguntarlo. Nómbralos con «¿Cuál es este equipo?» o con el lápiz; el nombre queda guardado.
-        </p>
-      )}
-    </div>
-  );
 }

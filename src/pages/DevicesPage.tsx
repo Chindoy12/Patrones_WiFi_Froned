@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../auth/AuthContext';
-import { DeviceList } from '../components/AgentPanel';
+import { DeviceCatalog } from '../components/DeviceCatalog';
 import { DataState } from '../components/DataState';
 import { PageHeader } from '../components/PageHeader';
 import { RouterPanel } from '../components/RouterPanel';
@@ -64,7 +64,7 @@ function SensorDevices({ network }: { network: Network }) {
                 {data.latest ? `${data.latest.deviceCount === 1 ? '1 conectado' : `${data.latest.deviceCount} conectados`} en el último reporte. ` : ''}
                 Cada equipo se reconoce por una huella de su dirección: la MAC nunca sale del computador del sensor.
               </p>
-              <DeviceList devices={data.devices} onChange={overview.reload} team canManage={can('ADMIN')}
+              <DeviceCatalog devices={data.devices} onChange={overview.reload} team canManage={can('ADMIN')}
                           updateDevice={(id, change) => api.updateSensorDevice(network.id, id, change)}
                           loadHistory={(id) => api.sensorDeviceSessions(network.id, id)}
                           identify={() => api.identifySensorDevice(network.id)} latestAt={data.latest?.receivedAt ?? null} />

@@ -7,7 +7,7 @@ demuestra.
 | Patrón | Dónde | Problema que resuelve | Prueba |
 |---|---|---|---|
 | **Error Boundary** | `src/components/ErrorBoundary.tsx`, usado en `App.tsx` y `Layout.tsx` | Un error al dibujar una página dejaba toda la pantalla en blanco | `errorBoundary.test.tsx` |
-| **Provider (Context)** | `src/auth/AuthContext.tsx` | La sesión (usuario, rol, iniciar y cerrar sesión) la necesitan muchas pantallas: se comparte sin pasarla por props | `register.test.tsx`, `components.test.tsx` |
+| **Provider (Context)** | `src/auth/AuthContext.tsx` y, desde el Avance 27, `src/pages/miwifi/context.ts` (`MiWifiContext`) | La sesión (usuario, rol, iniciar y cerrar sesión) la necesitan muchas pantallas: se comparte sin pasarla por props. Igual con Mi Wi-Fi en pantallas: las redes, la red elegida y lo que reportó su agente se cargan una vez en el marco y las siete pantallas lo leen | `register.test.tsx`, `components.test.tsx`, `myNetworks.test.tsx` |
 | **Componentes guardia** | `src/auth/guards.tsx` (`RequireAuth`, `RequireStaff`, `RequireEndUser`, `RequireAnalyst`, `RequireAdmin`) | Cada ruta declara quién puede entrar envolviendo la página; la regla no se repite dentro de cada pantalla | `guards.test.tsx` |
 | **Custom Hook** | `src/hooks/useApi.ts`, `useNow.ts`, `useOnline.ts`, `useNetworkSelection.ts` | Cargar datos (cargando, error, recargar), el reloj y la conexión se escriben una vez y los usan todas las páginas | `components.test.tsx`, pruebas de cada página |
 | **Single-flight** | `src/services/apiClient.ts`: `renewSession()` | Si varias peticiones encuentran el token vencido a la vez, la sesión se renueva **una sola vez** (el refresh token sirve una vez: dos renovaciones cerrarían la sesión) | `apiClient.test.ts` ("renews an expired token…") |

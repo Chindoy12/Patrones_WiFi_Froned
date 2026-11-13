@@ -137,7 +137,8 @@ describe('Redes del equipo con sensor', () => {
     const panel = await screen.findByRole('region', { name: 'Sensor de Lab-Redes' });
     await waitFor(() => expect(within(panel).getByText(/1\.4\.0 · Windows/)).toBeInTheDocument());
     expect(within(panel).queryByRole('button', { name: /Quitar sensor|Conectar sensor|Reinstalar/ })).not.toBeInTheDocument();
-    // what the sensor sees, as in Mi Wi-Fi, but a viewer cannot block a device
+    // what the sensor sees, as in Mi Wi-Fi (by category), but a viewer cannot block a device
+    await userEvent.click(await within(panel).findByRole('link', { name: /Computadores: 1/ }));
     expect(await within(panel).findByText('PC-Lab')).toBeInTheDocument();
     expect(within(panel).getByText('El router expone su página web.')).toBeInTheDocument();
     expect(within(panel).queryByRole('button', { name: 'Marcar como no autorizado' })).not.toBeInTheDocument();
@@ -163,6 +164,7 @@ describe('Redes del equipo con sensor', () => {
     const row = (await screen.findByText('Lab-Redes')).closest('tr')!;
     await userEvent.click(within(row).getByRole('button', { name: 'Sensor' }));
     const panel = await screen.findByRole('region', { name: 'Sensor de Lab-Redes' });
+    await userEvent.click(await within(panel).findByRole('link', { name: /Computadores: 1/ }));
     await userEvent.click(await within(panel).findByRole('button', { name: 'Marcar como no autorizado' }));
 
     expect(api.updateSensorDevice).toHaveBeenCalledWith(7, 'b'.repeat(24), { authorized: false });
