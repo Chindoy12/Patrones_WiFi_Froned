@@ -5,6 +5,7 @@ import { AgentPanel } from '../components/AgentPanel';
 import { ConnectionPanel } from '../components/ConnectionPanel';
 import { EndUserShell } from '../components/EndUserShell';
 import { HomeNetworkForm } from '../components/HomeNetworkForm';
+import { LivePanel } from '../components/LivePanel';
 import { FunctionGuide } from '../components/FunctionGuide';
 import { NearbyNetworksPanel } from '../components/NearbyNetworksPanel';
 import { RouterPanel } from '../components/RouterPanel';
@@ -72,6 +73,8 @@ export function EndUserHomePage() {
           <ConnectionPanel key={selected.id} network={selected} onTested={setLastTest} />
         </section>
       )}
+
+      {selected && <LivePanel key={`live-${selected.id}`} load={(after) => api.myLive(selected.id, after)} />}
 
       {selected && <AgentPanel key={`agent-${selected.id}`} network={selected} />}
 
