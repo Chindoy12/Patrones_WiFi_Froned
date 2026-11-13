@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Icon } from '../Icon';
 import { CHAPTER_MS, CHAPTERS, nextChapter } from './chapters';
-import { stepFor } from './stageProgress';
+import type { Shape } from './stageProgress';
 
 function prefersStill(): boolean {
   return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
@@ -15,21 +15,15 @@ function prefersStill(): boolean {
  * With reduced motion the story does not advance by itself: the visitor moves it with the dots. While it plays, the
  * changes are not announced to screen readers (that would interrupt them every few seconds); paused, they are.
  */
-export function Welcome({ stage, onStage, onStart }: {
-  stage: number;
-  onStage: (step: number) => void;
-  onStart: () => void;
-}) {
+export function Welcome({ onShape, onStart }: { onShape: (shape: Shape) => void; onStart: () => void }) {
   const [index, setIndex] = useState(0);
   const [playing, setPlaying] = useState(() => !prefersStill());
-  const stageRef = useRef(stage);
-  stageRef.current = stage;
   const chapter = CHAPTERS[index];
 
-  // the scene travels to the shape of the chapter
+  // the scene shows the shape of the chapter
   useEffect(() => {
-    onStage(stepFor(chapter.shape, stageRef.current));
-  }, [chapter.shape, onStage]);
+    onShape(chapter.shape);
+  }, [chapter.shape, onShape]);
 
   useEffect(() => {
     if (!playing) return undefined;

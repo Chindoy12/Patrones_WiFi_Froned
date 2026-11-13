@@ -2,40 +2,40 @@ import { useEffect, useRef } from 'react';
 import { useTheme } from '../../theme';
 import { buildClouds, type Clouds, PALETTE_SIZE, pointCount } from './particleShapes';
 import {
-  CAMERA_Z, FIELD_OF_VIEW, LAST_STAGE, LOOP, perspective, SHAPE, stageLayout, type StageLayout, toWorld,
+  CAMERA_Z, FIELD_OF_VIEW, perspective, SHAPE, type Shape, SHAPE_COUNT, stageLayout, type StageLayout, toWorld,
 } from './stageProgress';
 
 /**
- * The 3D scene of the start page: thousands of small triangles of color that form the Wi-Fi symbol, scatter all over
- * the screen, gather again into a router and become a planet with links around it. The page says which step of the
- * loop to show (`stage`, see stageProgress.ts) and the scene travels there; every point leaves at its own moment, so
- * the shape comes apart and comes together like a living thing.
+ * The 3D scene of the start page: thousands of small triangles of color that take one shape after another (the
+ * Wi-Fi symbol, a laptop and a phone, the points scattered over the whole screen, a router, a brain, a shield and a
+ * planet). The page says which shape to show (`shape`); every point leaves at its own moment and flies a little on its
+ * way, so the shape comes apart and comes together like a living thing.
  *
- * It answers the visitor (Avance 29): the triangles move away from the pointer (or the finger) as if they dodged it,
- * and a click (or a tap) on an empty spot makes them burst and come back together.
+ * It answers the visitor: the triangles move away from the pointer (or the finger) as if they dodged it, and a click
+ * (or a tap) on an empty spot makes them burst and come back together.
  *
- * Drawn with WebGL directly (no libraries): one draw call, the shapes live on the graphics card and the browser only
- * sends a few numbers each frame. Decoration only: hidden from assistive technology. Without WebGL it draws nothing
- * and the page reads the same; with reduced motion the shape changes without flying and does not react to the
- * pointer; it pauses while the tab is hidden.
+ * Drawn with WebGL directly (no libraries): one draw call per frame. Only two shapes are on the graphics card at a
+ * time, the one it leaves and the one it goes to (Avance 31: seven shapes would need more attributes than every
+ * graphics card has); each change uploads them once. Decoration only: hidden from assistive technology. Without WebGL
+ * it draws nothing and the page reads the same; with reduced motion the shape changes without flying and does not
+ * react to the pointer; it pauses while the tab is hidden.
  */
 
-/** The shape of each step of the loop, written as GLSL. */
-const KIND = LOOP.slice(0, -1).map((shape, step) => `if (i < ${step}.5) return ${shape}.0;`).join(' ')
-  + ` return ${LOOP[LOOP.length - 1]}.0;`;
+/** How long one shape takes to become the next. */
+export const MORPH_MS = 2000;
 
 const VERTEX = `
-attribute vec3 aWifi;
-attribute vec3 aScatter;
-attribute vec3 aRouter;
-attribute vec3 aPlanet;
+attribute vec3 aFrom;
+attribute vec3 aTo;
 attribute float aColor;
 attribute float aSeed;
 attribute float aSize;
 attribute float aAmbient;
 attribute float aSea;
 uniform mat4 uProjection;
-uniform float uStage;
+uniform float uMix;
+uniform float uFromKind;
+uniform float uToKind;
 uniform float uTime;
 uniform float uFocal;
 uniform float uAlpha;
@@ -44,7 +44,7 @@ uniform vec2 uPointer;
 uniform float uPush;
 uniform vec2 uBurstAt;
 uniform float uBurst;
-uniform vec3 uPlace[4];
+uniform vec3 uPlace[${SHAPE_COUNT}];
 uniform vec3 uPalette[${PALETTE_SIZE}];
 varying vec3 vColor;
 varying float vAlpha;
@@ -55,36 +55,32 @@ varying float vSolid;
 vec3 turnY(vec3 p, float a) { float c = cos(a); float s = sin(a); return vec3(c * p.x + s * p.z, p.y, -s * p.x + c * p.z); }
 vec3 turnX(vec3 p, float a) { float c = cos(a); float s = sin(a); return vec3(p.x, c * p.y - s * p.z, s * p.y + c * p.z); }
 
-float kind(float i) { ${KIND} }
-
-vec3 shape(float i) {
-  if (i < 0.5) return turnY(aWifi, sin(uTime * 0.35) * 0.42);
-  if (i < 1.5) return turnY(aScatter, uTime * 0.025);
-  if (i < 2.5) return turnY(aRouter, -0.45 + sin(uTime * 0.3) * 0.32);
-  return turnX(turnY(aPlanet, uTime * 0.12), 0.3);
-}
-
-vec3 placed(float i) {
-  vec3 place = i < 0.5 ? uPlace[0] : i < 1.5 ? uPlace[1] : i < 2.5 ? uPlace[2] : uPlace[3];
-  return shape(i) * place.z + vec3(place.xy, 0.0);
+/** How each shape moves while it is shown, and where it sits. */
+vec3 placed(vec3 p, float kind) {
+  vec3 q;
+  if (kind == ${SHAPE.wifi}.0) q = turnY(p, sin(uTime * 0.35) * 0.42);
+  else if (kind == ${SHAPE.devices}.0) q = turnY(p, -0.18 + sin(uTime * 0.3) * 0.2);
+  else if (kind == ${SHAPE.scatter}.0) q = turnY(p, uTime * 0.025);
+  else if (kind == ${SHAPE.router}.0) q = turnY(p, -0.45 + sin(uTime * 0.3) * 0.32);
+  else if (kind == ${SHAPE.brain}.0) q = turnX(turnY(p, -0.7 + sin(uTime * 0.25) * 0.5), 0.45);
+  else if (kind == ${SHAPE.shield}.0) q = turnY(p, sin(uTime * 0.4) * 0.38);
+  else q = turnX(turnY(p, uTime * 0.12), 0.3);
+  vec3 place = uPlace[0];
+  for (int k = 1; k < ${SHAPE_COUNT}; k++) if (float(k) == kind) place = uPlace[k];
+  return q * place.z + vec3(place.xy, 0.0);
 }
 
 void main() {
-  float from = floor(uStage);
-  float to = min(from + 1.0, ${LAST_STAGE.toFixed(1)});
-  float f = uStage - from;
   // each point leaves at its own moment: the shape comes apart instead of sliding as a block
-  float t = smoothstep(aSeed * 0.45, aSeed * 0.45 + 0.55, f);
-  float a = kind(from);
-  float b = kind(to);
-  vec3 p = mix(placed(a), placed(b), t);
+  float t = smoothstep(aSeed * 0.45, aSeed * 0.45 + 0.55, uMix);
+  vec3 p = mix(placed(aFrom, uFromKind), placed(aTo, uToKind), t);
   float flight = t * (1.0 - t) * 4.0;
   p += vec3(sin(aSeed * 41.0) * 1.1, cos(aSeed * 29.0) * 0.8, sin(aSeed * 17.0) * 1.6) * flight;
-  if (aAmbient > 0.5) p = turnY(aScatter, uTime * 0.02);
+  if (aAmbient > 0.5) p = turnY(aFrom, uTime * 0.02);
   // the back of a shape is fainter than its front, so it reads as a solid in 3D
   float front = aAmbient > 0.5 ? 1.0 : 0.35 + 0.65 * smoothstep(-1.4, 1.1, p.z);
   // on the planet the sea is fainter than the land
-  float planet = (a == ${SHAPE.planet}.0 ? 1.0 - t : 0.0) + (b == ${SHAPE.planet}.0 ? t : 0.0);
+  float planet = (uFromKind == ${SHAPE.planet}.0 ? 1.0 - t : 0.0) + (uToKind == ${SHAPE.planet}.0 ? t : 0.0);
   front *= 1.0 - 0.6 * aSea * planet;
   p += vec3(sin(uTime * 0.7 + aSeed * 60.0), cos(uTime * 0.6 + aSeed * 50.0), sin(uTime * 0.5 + aSeed * 70.0)) * 0.03;
   p = turnX(turnY(p, uTilt.x), uTilt.y);
@@ -143,6 +139,7 @@ void main() {
   gl_FragColor = vec4(vColor * a, a);
 }`;
 
+
 /** "#8052ff" → [0.5, 0.32, 1]. */
 export function rgb(hex: string): [number, number, number] {
   const value = hex.trim().replace('#', '');
@@ -158,6 +155,16 @@ function palette(): Float32Array {
   const colors = new Float32Array(PALETTE_SIZE * 3);
   for (let i = 0; i < PALETTE_SIZE; i += 1) colors.set(rgb(style.getPropertyValue(`--particle-${i + 1}`) || '#ffffff'), i * 3);
   return colors;
+}
+
+/** The points of each shape, indexed by Shape. */
+export function shapePoints(clouds: Clouds): Float32Array[] {
+  const byShape: Record<Shape, Float32Array> = {
+    [SHAPE.wifi]: clouds.wifi, [SHAPE.devices]: clouds.devices, [SHAPE.scatter]: clouds.scatter,
+    [SHAPE.router]: clouds.router, [SHAPE.brain]: clouds.brain, [SHAPE.shield]: clouds.shield,
+    [SHAPE.planet]: clouds.planet,
+  };
+  return Array.from({ length: SHAPE_COUNT }, (_, shape) => byShape[shape as Shape]);
 }
 
 /** A press on a link, a button, a field or the card is not a press on the scene. */
@@ -177,6 +184,9 @@ interface Scene {
   gl: WebGLRenderingContext;
   uniforms: Record<string, WebGLUniformLocation | null>;
   clouds: Clouds;
+  shapes: Float32Array[];
+  from: WebGLBuffer | null;
+  to: WebGLBuffer | null;
 }
 
 function createScene(canvas: HTMLCanvasElement): Scene | null {
@@ -195,36 +205,38 @@ function createScene(canvas: HTMLCanvasElement): Scene | null {
   const clouds = buildClouds(pointCount(window.innerWidth));
   const ambient = new Float32Array(clouds.count);
   ambient.fill(1, clouds.count - clouds.ambient);
-  const attributes: [string, Float32Array, number][] = [
-    ['aWifi', clouds.wifi, 3], ['aScatter', clouds.scatter, 3], ['aRouter', clouds.router, 3],
-    ['aPlanet', clouds.planet, 3], ['aColor', clouds.colors, 1], ['aSeed', clouds.seeds, 1],
-    ['aSize', clouds.sizes, 1], ['aAmbient', ambient, 1], ['aSea', clouds.sea, 1],
+  const buffers: Record<string, WebGLBuffer | null> = {};
+  const attributes: [string, Float32Array, number, number][] = [
+    ['aFrom', clouds.wifi, 3, gl.DYNAMIC_DRAW], ['aTo', clouds.wifi, 3, gl.DYNAMIC_DRAW],
+    ['aColor', clouds.colors, 1, gl.STATIC_DRAW], ['aSeed', clouds.seeds, 1, gl.STATIC_DRAW],
+    ['aSize', clouds.sizes, 1, gl.STATIC_DRAW], ['aAmbient', ambient, 1, gl.STATIC_DRAW],
+    ['aSea', clouds.sea, 1, gl.STATIC_DRAW],
   ];
-  for (const [name, data, size] of attributes) {
+  for (const [name, data, size, usage] of attributes) {
     const location = gl.getAttribLocation(program, name);
     if (location < 0) continue;
     const buffer = gl.createBuffer();
+    buffers[name] = buffer;
     gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-    gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
+    gl.bufferData(gl.ARRAY_BUFFER, data, usage);
     gl.enableVertexAttribArray(location);
     gl.vertexAttribPointer(location, size, gl.FLOAT, false, 0, 0);
   }
   const uniforms = Object.fromEntries(
-    ['uProjection', 'uStage', 'uTime', 'uFocal', 'uAlpha', 'uTilt', 'uPointer', 'uPush', 'uBurstAt', 'uBurst', 'uPlace',
-      'uPalette']
-      .map((name) => [name, gl.getUniformLocation(program, name)]),
+    ['uProjection', 'uMix', 'uFromKind', 'uToKind', 'uTime', 'uFocal', 'uAlpha', 'uTilt', 'uPointer', 'uPush',
+      'uBurstAt', 'uBurst', 'uPlace', 'uPalette'].map((name) => [name, gl.getUniformLocation(program, name)]),
   );
   gl.enable(gl.BLEND);
   gl.disable(gl.DEPTH_TEST);
   gl.clearColor(0, 0, 0, 0);
-  return { gl, uniforms, clouds };
+  return { gl, uniforms, clouds, shapes: shapePoints(clouds), from: buffers.aFrom ?? null, to: buffers.aTo ?? null };
 }
 
-/** `stage`: the step of the loop to show (0 to LAST_STAGE); the scene travels there smoothly. */
-export function ParticleStage({ stage: wanted }: { stage: number }) {
+/** `shape`: the shape to show; the scene travels there (one change at a time: a new one waits for the current one). */
+export function ParticleStage({ shape: wanted }: { shape: Shape }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const sceneRef = useRef<Scene | null>(null);
-  const wantedRef = useRef(wanted);
+  const wantedRef = useRef<Shape>(wanted);
   const redrawRef = useRef<() => void>(() => undefined);
   const theme = useTheme();
 
@@ -242,15 +254,34 @@ export function ParticleStage({ stage: wanted }: { stage: number }) {
       canvas.hidden = true;  // no WebGL: the page reads the same without the scene
       return undefined;
     }
-    const { gl, uniforms: u, clouds } = scene;
+    const { gl, uniforms: u, clouds, shapes } = scene;
     const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
     let layout: StageLayout = stageLayout(window.innerWidth, window.innerHeight);
-    let stage = wantedRef.current;
+    const morph = { from: wantedRef.current as Shape, to: wantedRef.current as Shape, startedAt: -1e9 };
     let frame = 0;
     const tilt = { x: 0, y: 0, goalX: 0, goalY: 0 };
     const pointer = { x: 0, y: 0, push: 0, movedAt: -1e9 };
     const burst = { x: 0, y: 0, power: 0 };
     const start = performance.now();
+
+    function upload(buffer: WebGLBuffer | null, points: Float32Array) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+      gl.bufferSubData(gl.ARRAY_BUFFER, 0, points);
+    }
+
+    /** Starts the change to the wanted shape once the current change is over. */
+    function follow(now: number) {
+      const wantedShape = wantedRef.current;
+      const busy = now - morph.startedAt < MORPH_MS;
+      if (wantedShape === morph.to || (busy && !reduced)) return;
+      morph.from = morph.to;
+      morph.to = wantedShape;
+      morph.startedAt = now;
+      upload(scene!.from, shapes[morph.from]);
+      upload(scene!.to, shapes[morph.to]);
+      gl.uniform1f(u.uFromKind, morph.from);
+      gl.uniform1f(u.uToKind, morph.to);
+    }
 
     function resize() {
       const ratio = Math.min(window.devicePixelRatio || 1, 2);
@@ -267,17 +298,13 @@ export function ParticleStage({ stage: wanted }: { stage: number }) {
     }
 
     function draw(now: number) {
-      const target = wantedRef.current;
-      // far back on the loop from its end: finish the lap (the last step is the first shape again) and start over
-      const goal = target < stage - 2 && stage > LAST_STAGE - 2 ? LAST_STAGE : target;
-      stage += (goal - stage) * (reduced ? 1 : 0.06);
-      if (Math.abs(goal - stage) < 0.0005) stage = goal;
-      if (stage === LAST_STAGE && target < LAST_STAGE) stage = 0;
+      follow(now);
+      const mix = reduced ? 1 : Math.min(1, (now - morph.startedAt) / MORPH_MS);
       tilt.x += (tilt.goalX - tilt.x) * 0.05;
       tilt.y += (tilt.goalY - tilt.y) * 0.05;
       pointer.push += ((now - pointer.movedAt < 900 ? 1 : 0) - pointer.push) * 0.06;
       burst.power *= 0.955;
-      gl.uniform1f(u.uStage, Math.min(Math.max(stage, 0), LAST_STAGE));
+      gl.uniform1f(u.uMix, mix);
       gl.uniform1f(u.uTime, reduced ? 0 : (now - start) / 1000);
       gl.uniform2f(u.uTilt, tilt.x, tilt.y);
       gl.uniform2f(u.uPointer, pointer.x, pointer.y);
@@ -310,6 +337,10 @@ export function ParticleStage({ stage: wanted }: { stage: number }) {
     }
 
     resize();
+    upload(scene.from, shapes[morph.from]);
+    upload(scene.to, shapes[morph.to]);
+    gl.uniform1f(u.uFromKind, morph.from);
+    gl.uniform1f(u.uToKind, morph.to);
     gl.uniform3fv(u.uPalette, palette());
     if (reduced) {
       draw(performance.now());
@@ -336,7 +367,7 @@ export function ParticleStage({ stage: wanted }: { stage: number }) {
     };
   }, []);
 
-  // the colors and the way they mix follow the theme: light that adds up on the dark canvas, ink on the light one
+  // the colors follow the theme: light on the dark canvas, ink on the light one
   useEffect(() => {
     const scene = sceneRef.current;
     if (!scene) return;
