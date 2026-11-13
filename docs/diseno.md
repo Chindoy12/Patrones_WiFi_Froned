@@ -45,14 +45,15 @@ navegador (clave `wifisense.theme.v2`; la clave vieja guardaba "claro" para todo
   uno, como los saltos de un paquete. El nodo repite el estado en color; el texto lo dice.
 - **Encabezado de los dashboards** (`TopBar`): etiqueta sello del área ("Equipo · Monitoreo en vivo", "Mi Wi-Fi"),
   título en Lora itálica, reloj y acciones en una franja de vidrio esmerilado.
-- **El inicio** (`LandingShell` + `ParticleStage`, Avances 28 y 29): una sola pantalla, lienzo `--auth-canvas` sin
+- **El inicio** (`LandingShell` + `ParticleStage`, Avances 28 a 31): una sola pantalla, lienzo `--auth-canvas` sin
   cajas, barra con la marca, «Ya tengo cuenta» o «Ver la presentación» y el tema. La bienvenida (`Welcome`) muestra un
-  capítulo a la vez con el botón «Comenzar» en píldora `--auth-cta` (late suave para invitar), cinco puntos que se
-  alargan en el capítulo actual y se llenan en 6 segundos, y la pausa redonda; el login es compacto. Titular grande en Space Grotesk 400 con el degradado
-  `--auth-wordmark` y espaciado negativo, texto en Inter 300 y etiquetas en mono ámbar (`--landing-label`). Detrás, una
-  escena 3D de triángulos de contorno en seis colores (`--particle-1` a `--particle-6`, más oscuros en el tema claro)
-  que pasa del símbolo Wi-Fi a una nube por toda la pantalla, a un router y a un planeta según la sección. La parte de
-  atrás de cada forma es más tenue que la de adelante, y en el planeta el mar es más tenue que los continentes.
+  capítulo a la vez, cada uno con su figura, y solo el botón «Comenzar» en píldora `--auth-cta` (late suave para
+  invitar): nada de puntos ni botones sobre la escena (la pausa aparece solo con el teclado); el login es compacto.
+  Titular grande en Space Grotesk 400 con el degradado `--auth-wordmark` y espaciado negativo, texto en Inter 300 y
+  etiquetas en mono ámbar (`--landing-label`). Detrás, una escena 3D de triángulos de contorno en seis colores
+  (`--particle-1` a `--particle-6`, más oscuros en el tema claro) con siete figuras: el símbolo Wi-Fi, un portátil y un
+  celular, una nube por toda la pantalla, un router, un cerebro, un escudo con un visto y un planeta. La parte de atrás
+  de cada forma es más tenue que la de adelante, y en el planeta el mar es más tenue que los continentes.
 - **Registro y recuperación** (`AuthShell` + `WifiNetworkFlow`): lienzo `--auth-canvas` con cuadrícula de plano y un foco
   desde arriba, etiqueta en mono entre dos líneas, la marca con degradado `--auth-wordmark`, tarjeta de vidrio
   (`--auth-card`, radio 16, campos de radio 6) con el botón en píldora `--auth-cta` y el cambio de tema debajo. Detrás,
