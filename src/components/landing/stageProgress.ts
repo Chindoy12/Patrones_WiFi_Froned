@@ -73,15 +73,15 @@ export const HALF_HEIGHT = Math.tan(FOV / 2) * CAMERA_Z;
 export const FIELD_OF_VIEW = FOV;
 
 /**
- * On a wide screen the shape goes beside the text: the Wi-Fi symbol and the planet on the right, the router on the
- * left. On a phone the text takes the whole width, so every shape stays centered, smaller and fainter behind it.
+ * On a wide screen the words and the login go on the left and every shape on the right. On a phone the words take
+ * the whole width, so every shape stays centered, smaller and fainter behind them. Indexed by Shape.
  */
 export function stageLayout(width: number, height: number): StageLayout {
   const aspect = width / Math.max(1, height);
   const halfWidth = HALF_HEIGHT * aspect;
   if (width < 760 || aspect < 1.05) {
     const scale = Math.min(0.72, (halfWidth * 0.95) / 2.4);
-    const place = { x: 0, y: 0.35, scale };
+    const place = { x: 0, y: 0.55, scale };
     return { places: [{ ...place, y: 0.9 }, { x: 0, y: 0, scale: 1 }, place, place], alpha: 0.38 };
   }
   const side = Math.min(halfWidth * 0.48, 3.3);
@@ -90,11 +90,17 @@ export function stageLayout(width: number, height: number): StageLayout {
     places: [
       { x: side, y: 0.1, scale },
       { x: 0, y: 0, scale: 1 },
-      { x: -side, y: 0, scale: scale * 0.95 },
-      { x: side * 0.92, y: 0, scale: scale * 0.95 },
+      { x: side, y: 0, scale: scale * 0.88 },
+      { x: side * 0.94, y: 0, scale: scale * 0.8 },
     ],
     alpha: 1,
   };
+}
+
+/** A point of the screen (pixels) on the plane z = 0 of the scene, in world units. */
+export function toWorld(x: number, y: number, width: number, height: number): [number, number] {
+  const halfWidth = HALF_HEIGHT * (width / Math.max(1, height));
+  return [(x / Math.max(1, width) * 2 - 1) * halfWidth, (1 - y / Math.max(1, height) * 2) * HALF_HEIGHT];
 }
 
 /** The camera's projection (perspective), as the 16 numbers WebGL expects (column by column). */
