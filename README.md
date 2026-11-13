@@ -25,7 +25,7 @@ src/components/             layout, AuthShell (login y registro), WifiLogo anima
                             ErrorBoundary (una página que falla muestra un mensaje en vez de dejar la pantalla en blanco)
 src/pages/                  una página por sección
 src/pages/miwifi/           Mi Wi-Fi en pantallas (Avance 27): el marco con el menú y una pantalla por cada cosa
-src/components/landing/     el inicio (Avance 28): la escena 3D de partículas (WebGL) y la historia al desplazarse
+src/components/landing/     el inicio (Avances 28 y 29): la escena 3D de partículas (WebGL), la bienvenida y el login
 src/auth/credentials.ts     límites de usuario (40, nombre o correo) y contraseña (10–12) y reglas de contraseña
 tests/                      pruebas de apiClient, reglas de arquitectura y seguridad, y componentes
 .github/workflows/pagina.yml  tipos, pruebas, build y npm audit en cada Pull Request
@@ -179,15 +179,23 @@ Administrador además registra redes).
 
 ## Inicio de sesión y cuentas
 
-- **El inicio** (`/login`, Avance 28) es una página que se recorre: el login sigue en la primera pantalla y detrás hay
-  una **escena 3D** de miles de triángulos de colores (`ParticleStage`, WebGL propio, sin librerías). Primero forman el
-  **símbolo Wi-Fi**; al bajar se **desintegran por toda la pantalla** mientras el texto cuenta cómo se ve hoy una red
-  (invisible y regada), se vuelven a juntar en un **router** cuando se explica el agente y la IA, y terminan en un
-  **planeta** con una órbita y enlaces entre lugares: «todo se conecta». Cada sección marca su forma con
-  `data-stage` y cada punto sale en su propio momento, así la forma se deshace y se rehace como algo vivo. En celular la
-  escena queda centrada y tenue detrás del texto; sin WebGL no se dibuja y la página se lee igual; con «reducir
-  movimiento» la forma cambia sin volar; se pausa con la pestaña oculta. Los colores son los tokens `--particle-*`.
-  Registro y recuperación siguen con el diseño de abajo.
+- **El inicio** (`/login`) cabe en una sola pantalla, sin bajar. Detrás hay una **escena 3D** de miles de triángulos
+  de colores (`ParticleStage`, WebGL propio, sin librerías) que forma el **símbolo Wi-Fi**, se **desintegra por toda
+  la pantalla**, se junta en un **router** y termina en un **planeta** con una órbita y enlaces: «todo se conecta».
+  Cada punto sale en su propio momento, así la forma se deshace y se rehace como algo vivo (Avance 28).
+  - **Bienvenida** (Avance 29): la primera visita cuenta la historia sola, un mensaje cada **10 segundos**, mientras la
+    escena cambia de forma. Los puntos de abajo saltan a cualquier parte (el actual se llena con el tiempo que queda),
+    el botón redondo pausa y sigue, y **Comenzar** lleva al login en cualquier momento («Ya tengo cuenta» también).
+    La escena responde: los triángulos esquivan el puntero (o el dedo) y un clic en un espacio vacío los hace estallar
+    y volver a juntarse.
+  - **Login compacto:** cabe todo sin bajar; detrás, las figuras se siguen formando y deformando solas (una cada 10
+    segundos). Crear una cuenta se ofrece solo dentro de la tarjeta («¿No tienes cuenta? Crea una aquí»).
+  - Quien ya vio la bienvenida entra directo al login (se recuerda en el navegador), con «Ver la presentación» para
+    verla otra vez.
+  - Cuidados: la escena es solo decoración (oculta para lectores de pantalla); sin WebGL no se dibuja y la página se
+    lee igual; con «reducir movimiento» la historia no avanza sola, las formas cambian sin volar y no reaccionan al
+    puntero; mientras avanza sola, los cambios no se anuncian a los lectores de pantalla (pausada, sí). Los colores son
+    los tokens `--particle-*`. Registro y recuperación siguen con el diseño de abajo.
 - **Registro y recuperación** (y antes el login) comparten el mismo diseño: lienzo de medianoche con cuadrícula de plano, la marca
   «WiFiSense» iluminada (Space Grotesk), una tarjeta de vidrio con el botón principal en forma de píldora y, detrás, un
   dibujo vivo de **cómo funciona una red Wi-Fi**, en capas como una red neuronal: equipos → puntos de acceso → router →
@@ -226,7 +234,7 @@ Administrador además registra redes).
 npm install
 cp .env.example .env        # VITE_API_URL=http://localhost:8080
 npm run dev                 # http://localhost:5173
-npm test                    # 288 pruebas
+npm test                    # 294 pruebas
 npm run build               # tipos + build de producción en dist/
 ```
 

@@ -1,8 +1,9 @@
-import { render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AuthProvider } from '../src/auth/AuthContext';
+import { CHAPTER_MS, CHAPTERS, nextChapter, previousChapter, welcomeSeen } from '../src/components/landing/chapters';
 import { rgb } from '../src/components/landing/ParticleStage';
 import { LoginPage } from '../src/pages/LoginPage';
 
@@ -10,18 +11,75 @@ vi.mock('../src/services/api', () => ({ api: { me: vi.fn(), login: vi.fn() } }))
 
 const renderStart = () => render(<MemoryRouter><AuthProvider><LoginPage /></AuthProvider></MemoryRouter>);
 
-afterEach(() => vi.restoreAllMocks());
+beforeEach(() => localStorage.clear());
+afterEach(() => {
+  vi.useRealTimers();
+  Reflect.deleteProperty(window, 'matchMedia');
+});
 
-describe('Inicio', () => {
-  it('keeps the login in the first screen and tells the story below, one shape per section', () => {
-    const { container } = renderStart();
+describe('Bienvenida', () => {
+  it('the first visit opens the welcome, on one screen, with the first chapter and «Comenzar»', () => {
+    renderStart();
+
+    expect(screen.getByRole('heading', { level: 1, name: CHAPTERS[0].title })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Comenzar/ })).toBeInTheDocument();
+    expect(screen.queryByLabelText('Usuario o correo')).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /Crear cuenta/i })).not.toBeInTheDocument();  // only inside the card
+  });
+
+  it('plays by itself, one chapter every 10 seconds, and pause stops it', () => {
+    vi.useFakeTimers();
+    renderStart();
+
+    act(() => vi.advanceTimersByTime(CHAPTER_MS));
+    expect(screen.getByRole('heading', { level: 1, name: CHAPTERS[1].title })).toBeInTheDocument();
+    act(() => screen.getByRole('button', { name: 'Pausar la presentación' }).click());
+    act(() => vi.advanceTimersByTime(CHAPTER_MS * 3));
+    expect(screen.getByRole('heading', { level: 1, name: CHAPTERS[1].title })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Seguir la presentación' })).toBeInTheDocument();
+  });
+
+  it('the dots jump to any chapter and say which one is showing', async () => {
+    renderStart();
+
+    await userEvent.click(screen.getByRole('button', { name: /Parte 4 de 5/ }));
+
+    expect(screen.getByRole('heading', { level: 1, name: CHAPTERS[3].title })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Parte 4 de 5/ })).toHaveAttribute('aria-current', 'step');
+  });
+
+  it('with reduced motion the story waits for the visitor', () => {
+    Object.defineProperty(window, 'matchMedia', { value: () => ({ matches: true }), configurable: true });
+    vi.useFakeTimers();
+    renderStart();
+
+    act(() => vi.advanceTimersByTime(CHAPTER_MS * 2));
+    expect(screen.getByRole('heading', { level: 1, name: CHAPTERS[0].title })).toBeInTheDocument();
+  });
+
+  it('«Comenzar» opens the compact login with the cursor ready, and the next visit goes straight there', async () => {
+    const { unmount } = renderStart();
+
+    await userEvent.click(screen.getByRole('button', { name: /Comenzar/ }));
 
     expect(screen.getByRole('heading', { level: 1, name: 'Inicia sesión' })).toBeInTheDocument();
+    expect(screen.getByLabelText('Usuario o correo')).toHaveFocus();
+    expect(screen.getByRole('link', { name: 'Crea una aquí' })).toBeInTheDocument();
+    expect(welcomeSeen()).toBe(true);
+
+    unmount();
+    renderStart();
     expect(screen.getByLabelText('Usuario o correo')).toBeInTheDocument();
-    const stages = [...container.querySelectorAll<HTMLElement>('[data-stage]')].map((el) => Number(el.dataset.stage));
-    expect(stages).toEqual([0, 1, 1, 2, 3]);  // Wi-Fi, scattered twice, router, planet
-    expect(screen.getByRole('heading', { name: 'Hoy tu red es invisible.' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: /en un solo lugar/ })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Ver la presentación' }));
+    expect(screen.getByRole('button', { name: /Comenzar/ })).toBeInTheDocument();
+  });
+
+  it('«Ya tengo cuenta» skips the welcome', async () => {
+    renderStart();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Ya tengo cuenta' }));
+
+    expect(screen.getByLabelText('Usuario o correo')).toBeInTheDocument();
   });
 
   it('the scene is decoration, and without WebGL it hides itself and the page reads the same', () => {
@@ -32,21 +90,10 @@ describe('Inicio', () => {
     expect(canvas).toHaveProperty('hidden', true);  // jsdom has no WebGL
   });
 
-  it('«Cómo funciona» goes to the story and «Iniciar sesión» at the end goes back to the form', async () => {
-    const intoView = vi.fn();
-    Element.prototype.scrollIntoView = intoView;
-    const scrollTo = vi.spyOn(window, 'scrollTo').mockImplementation(() => undefined);
-    renderStart();
-
-    await userEvent.click(screen.getByRole('link', { name: 'Cómo funciona' }));
-    expect(intoView).toHaveBeenCalled();
-
-    await userEvent.click(screen.getByRole('button', { name: 'Iniciar sesión' }));
-    expect(scrollTo).toHaveBeenCalledWith(expect.objectContaining({ top: 0 }));
-    expect(screen.getByLabelText('Usuario o correo')).toHaveFocus();
-  });
-
-  it('reads the colors of the triangles from the tokens', () => {
+  it('the chapters go around, and the colors of the triangles come from the tokens', () => {
+    expect(CHAPTERS).toHaveLength(5);
+    expect(nextChapter(CHAPTERS.length - 1)).toBe(0);
+    expect(previousChapter(0)).toBe(CHAPTERS.length - 1);
     expect(rgb('#ff0000')).toEqual([1, 0, 0]);
     expect(rgb(' #fff')).toEqual([1, 1, 1]);
     expect(rgb('nada')).toEqual([1, 1, 1]);

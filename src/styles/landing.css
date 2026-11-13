@@ -1,20 +1,20 @@
 /*
- * Start page (Avance 28): a deep canvas with the 3D scene of triangles fixed behind (ParticleStage), a bar with the
- * brand, the login in the first screen and the story below, told in large, light type that floats on the canvas with
- * no boxes. Colors come from the --auth-*, --particle-* and --landing-* tokens, so both themes work.
+ * Start page (Avances 28 and 29): one screen with no scrolling. A deep canvas with the 3D scene of triangles fixed
+ * behind (ParticleStage), a bar with the brand, and either the welcome (the story in large, light type, the dots and
+ * «Comenzar») or the compact login. No boxes around the words. Colors come from the --auth-*, --particle-* and
+ * --landing-* tokens, so both themes work.
  */
-.landing { position: relative; min-height: 100vh; color: var(--auth-ink); background: var(--auth-canvas); overflow-x: clip; }
-.particle-stage { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; }
-.landing__bar, .landing__hero, .story { position: relative; z-index: 1; }
-
-/* The bar: brand on the left, «Cómo funciona», the theme switch and «Crear cuenta» on the right */
-.landing__bar {
-  position: sticky; top: 0; z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: 16px;
-  max-width: 1280px; margin: 0 auto; padding: 18px 32px;
+.landing {
+  position: relative; display: flex; flex-direction: column; min-height: 100vh; min-height: 100dvh;
+  color: var(--auth-ink); background: var(--auth-canvas); overflow: hidden;
 }
-.landing__bar::before {
-  content: ''; position: absolute; inset: 0 -50vw; z-index: -1; pointer-events: none;
-  background: linear-gradient(var(--auth-canvas) 35%, transparent);
+.particle-stage { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; }
+.landing__bar, .welcome, .landing__login { position: relative; z-index: 1; }
+
+/* The bar: brand on the left, «Ya tengo cuenta» or «Ver la presentación» and the theme switch on the right */
+.landing__bar {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px; width: 100%; max-width: 1280px;
+  margin: 0 auto; padding: 18px 32px;
 }
 .landing__brand {
   display: inline-flex; align-items: center; gap: 10px; font-family: var(--font-wordmark); font-weight: 500;
@@ -22,90 +22,100 @@
 }
 .landing__nav { display: flex; align-items: center; gap: 18px; }
 .landing__navlink {
-  color: var(--auth-muted); text-decoration: none; font-size: .78rem; font-weight: 600; letter-spacing: .06em;
-  text-transform: uppercase;
+  padding: 0; border: 0; background: none; color: var(--auth-muted); font: inherit; font-size: .78rem; font-weight: 600;
+  letter-spacing: .06em; text-transform: uppercase; cursor: pointer;
 }
 .landing__navlink:hover { color: var(--auth-ink); }
 .landing__nav .theme-toggle {
   border-radius: var(--radius-pill); border-color: var(--auth-edge); color: var(--auth-muted); font-size: .8rem;
 }
-.landing__signup, .story__cta {
-  display: inline-flex; align-items: center; padding: 10px 18px; border: 0; border-radius: var(--radius-pill);
-  background: var(--auth-cta); color: var(--on-accent); font: inherit; font-size: .78rem; font-weight: 600;
-  letter-spacing: .06em; text-transform: uppercase; text-decoration: none; cursor: pointer;
-}
-.landing__signup:hover, .story__cta:hover { background: var(--auth-cta-hover); }
 
-/* First screen: the words and the login on the left, the Wi-Fi symbol of the scene on the right */
-.landing__hero {
-  display: grid; grid-template-columns: minmax(0, 470px); align-content: center; gap: 28px;
-  max-width: 1280px; min-height: calc(100vh - 76px); margin: 0 auto; padding: 8px 32px 72px;
+/* ---------------------------------------------------------------- the welcome */
+.welcome {
+  flex: 1; display: grid; grid-template-rows: 1fr auto auto; width: 100%; max-width: 1280px; margin: 0 auto;
+  padding: 0 32px 28px;
 }
-.landing__eyebrow {
+.welcome__chapter {
+  align-self: center; max-width: 560px; animation: welcome-in 1.1s var(--ease) both;
+}
+@keyframes welcome-in { from { opacity: 0; transform: translateY(14px); filter: blur(6px); } to { opacity: 1; transform: none; filter: none; } }
+.welcome__label, .landing__eyebrow {
   margin: 0 0 14px; font-family: var(--font-mono); font-size: .74rem; letter-spacing: .12em; text-transform: uppercase;
   color: var(--landing-label);
 }
-.landing__headline {
-  margin: 0; font-family: var(--font-wordmark); font-weight: 400; font-size: clamp(3rem, 6.4vw, 5.6rem);
-  line-height: .95; letter-spacing: -.045em; background: var(--auth-wordmark); -webkit-background-clip: text;
-  background-clip: text; color: transparent;
+.welcome__title, .landing__headline {
+  margin: 0; font-family: var(--font-wordmark); font-weight: 400; letter-spacing: -.045em; background: var(--auth-wordmark);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
 }
-.landing__text { margin: 18px 0 0; max-width: 420px; font-size: 1.08rem; font-weight: 300; line-height: 1.55; color: var(--auth-muted); }
-.landing .landing__card { width: 100%; max-width: 420px; }
-.landing__scroll {
-  position: absolute; left: 50%; bottom: 22px; transform: translateX(-50%); display: inline-flex; gap: 8px;
-  color: var(--auth-muted); font-family: var(--font-mono); font-size: .72rem; letter-spacing: .1em;
-  text-transform: uppercase; text-decoration: none; white-space: nowrap;
-}
-.landing__scroll span { display: inline-block; animation: landing-nudge 1.8s var(--ease) infinite; }
-@keyframes landing-nudge { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(5px); } }
+.welcome__title { font-size: clamp(2.6rem, 5.6vw, 5.2rem); line-height: .98; }
+.welcome__text { margin: 22px 0 0; max-width: 480px; font-size: 1.12rem; font-weight: 300; line-height: 1.6; color: var(--auth-ink); }
+.welcome__text { text-shadow: 0 0 8px var(--auth-canvas); }
 
-/* The story: each part takes a screen, so the scene has time to change while it is read */
-.story { max-width: 1280px; margin: 0 auto; padding: 0 32px; }
-.story__part { display: grid; align-content: center; min-height: 100vh; padding: 80px 0; }
-.story__part > * { max-width: 540px; }
-.story__part--center { justify-items: center; text-align: center; }
-.story__part--center > * { max-width: 780px; }
-.story__part--right { justify-items: end; }
-.story__part--right > * { width: min(540px, 100%); }
-.story h2, .story__lead {
-  margin: 0 0 22px; font-family: var(--font-wordmark); font-weight: 400; font-size: clamp(2.2rem, 4.6vw, 4.2rem);
-  line-height: 1.02; letter-spacing: -.04em; color: var(--auth-ink);
+/* «Comenzar», the five dots (the current one fills up in 10 seconds) and pause */
+.welcome__controls { display: flex; flex-wrap: wrap; align-items: center; gap: 22px; margin-top: 24px; }
+.welcome__start {
+  display: inline-flex; align-items: center; gap: 10px; padding: 14px 26px; border: 0; border-radius: var(--radius-pill);
+  background: var(--auth-cta); color: var(--on-accent); font: inherit; font-size: .84rem; font-weight: 600;
+  letter-spacing: .08em; text-transform: uppercase; cursor: pointer; box-shadow: 0 0 0 0 var(--accent-glow);
+  animation: welcome-call 2.6s var(--ease) infinite;
 }
-.story .story__lead { font-size: clamp(1.8rem, 3.6vw, 3.2rem); line-height: 1.12; }
-.story p { margin: 0 0 16px; font-size: 1.12rem; font-weight: 300; line-height: 1.6; color: var(--auth-ink); }
-.story h2, .story p { text-shadow: 0 0 8px var(--auth-canvas), 0 0 3px var(--auth-canvas); }
-.story__label {
-  font-family: var(--font-mono); font-size: .74rem !important; letter-spacing: .12em; text-transform: uppercase;
-  color: var(--landing-label) !important;
+.welcome__start:hover { background: var(--auth-cta-hover); }
+@keyframes welcome-call { 0%, 100% { box-shadow: 0 0 0 0 var(--accent-glow); } 50% { box-shadow: 0 0 0 10px transparent; } }
+.welcome__dots { display: flex; align-items: center; gap: 8px; }
+.welcome__dot {
+  position: relative; width: 10px; height: 10px; padding: 0; border: 0; border-radius: var(--radius-pill); overflow: hidden;
+  background: var(--auth-edge-strong); cursor: pointer; transition: width .4s var(--ease);
 }
-.story__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 20px; margin-top: 12px; }
-.story__link { color: var(--auth-ink); font-size: .95rem; }
+.welcome__dot[aria-current] { width: 44px; }
+.welcome__fill {
+  position: absolute; inset: 0; transform-origin: left; background: var(--auth-cta); animation: welcome-fill linear both;
+}
+@keyframes welcome-fill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.welcome__pause {
+  display: grid; place-items: center; width: 34px; height: 34px; padding: 0; border: 1px solid var(--auth-edge);
+  border-radius: 50%; background: transparent; color: var(--auth-muted); cursor: pointer;
+}
+.welcome__pause:hover { color: var(--auth-ink); border-color: var(--auth-edge-strong); }
+.welcome__bars { width: 10px; height: 12px; border-left: 3px solid currentColor; border-right: 3px solid currentColor; }
+.welcome__hint {
+  margin: 18px 0 0; font-family: var(--font-mono); font-size: .7rem; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--auth-muted);
+}
 
-/* A wide screen: the scene needs the right half next to the login */
-@media (min-width: 1100px) {
-  .landing__hero { grid-template-columns: minmax(0, 470px) 1fr; }
-  .landing__intro, .landing .landing__card { grid-column: 1; }
+/* ---------------------------------------------------------------- the compact login */
+.landing__login {
+  flex: 1; display: grid; align-content: center; gap: 22px; width: 100%; max-width: 1280px; margin: 0 auto;
+  padding: 0 32px 28px; grid-template-columns: minmax(0, 400px);
 }
-/* A laptop screen: a little tighter so the login fits without scrolling */
-@media (max-height: 820px) and (min-width: 761px) {
-  .landing__hero { gap: 20px; padding-bottom: 60px; }
-  .landing__headline { font-size: clamp(2.8rem, 5.4vw, 4.6rem); }
-  .landing__text { margin-top: 12px; font-size: 1rem; }
-  .landing .landing__card { padding: 20px 26px 18px; }
+.landing__headline { font-size: clamp(2.4rem, 4.4vw, 3.8rem); line-height: .95; }
+.landing .landing__card { width: 100%; max-width: 400px; padding: 22px 26px 18px; animation: auth-card-in .7s var(--ease) both; }
+.landing .auth-card__mark { width: 44px; height: 44px; margin-bottom: 10px; }
+.landing .auth-card h1 { font-size: 1.2rem; }
+.landing .auth-card__subtitle { margin-bottom: 16px; font-size: .88rem; }
+.landing .auth-card .field { margin-bottom: 12px; }
+.landing .auth-card__footer { margin-top: 14px; padding-top: 12px; }
+
+/* A laptop screen: the login without the round mark, so everything fits */
+@media (max-height: 760px) and (min-width: 761px) {
+  .landing__login { gap: 16px; }
+  .landing__headline { font-size: clamp(2.2rem, 3.8vw, 3.2rem); }
   .landing .auth-card__mark { display: none; }
+  .welcome__title { font-size: clamp(2.4rem, 4.8vw, 4.4rem); }
 }
-/* Phone: one column, the scene centered and faint behind the words */
+/* Phone: the words at the bottom, the scene centered and faint above them */
 @media (max-width: 760px) {
   .landing__bar { padding: 14px 16px; }
-  .landing__navlink, .landing__nav .theme-toggle span { display: none; }
   .landing__nav { gap: 10px; }
-  .landing__signup { padding: 9px 14px; }
-  .landing__hero { padding: 36px 16px 84px; min-height: auto; }
-  .story { padding: 0 16px; }
-  .story__part { min-height: 92vh; }
-  .story__part--right { justify-items: start; }
+  .landing__nav .theme-toggle span { display: none; }
+  .welcome { padding: 0 16px 20px; grid-template-rows: 1fr auto auto; }
+  .welcome__chapter { align-self: end; }
+  .welcome__text { font-size: 1rem; }
+  .welcome__controls { gap: 14px; }
+  .welcome__start { padding: 12px 20px; }
+  .landing__login { padding: 8px 16px 20px; align-content: start; grid-template-columns: 1fr; }
+  .landing__headline { font-size: 2.2rem; }
+  .landing .auth-card__mark { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .landing__scroll span { animation: none; }
+  .welcome__chapter, .welcome__start, .landing .landing__card { animation: none; }
 }

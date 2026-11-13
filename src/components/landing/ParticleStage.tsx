@@ -2,20 +2,27 @@ import { useEffect, useRef } from 'react';
 import { useTheme } from '../../theme';
 import { buildClouds, type Clouds, PALETTE_SIZE, pointCount } from './particleShapes';
 import {
-  type Anchor, CAMERA_Z, FIELD_OF_VIEW, LAST_STAGE, perspective, stageAt, stageLayout, type StageLayout,
+  CAMERA_Z, FIELD_OF_VIEW, LAST_STAGE, LOOP, perspective, SHAPE, stageLayout, type StageLayout, toWorld,
 } from './stageProgress';
 
 /**
- * The 3D scene behind the start page: thousands of small triangles of color that form the Wi-Fi symbol, scatter all
- * over the screen while the page tells how a network looks today, gather again into a router and end as a planet with
- * links around it. Each section of the page marks its shape with `data-stage`; scrolling moves between them, and every
- * point leaves at its own moment, so the shape comes apart and comes together like a living thing.
+ * The 3D scene of the start page: thousands of small triangles of color that form the Wi-Fi symbol, scatter all over
+ * the screen, gather again into a router and become a planet with links around it. The page says which step of the
+ * loop to show (`stage`, see stageProgress.ts) and the scene travels there; every point leaves at its own moment, so
+ * the shape comes apart and comes together like a living thing.
+ *
+ * It answers the visitor (Avance 29): the triangles move away from the pointer (or the finger) as if they dodged it,
+ * and a click (or a tap) on an empty spot makes them burst and come back together.
  *
  * Drawn with WebGL directly (no libraries): one draw call, the shapes live on the graphics card and the browser only
- * sends a few numbers each frame. Decoration only: hidden from assistive technology, nothing to click. Without WebGL
- * it draws nothing and the page reads the same; with reduced motion the shape changes only when the section changes,
- * without flying; it pauses while the tab is hidden.
+ * sends a few numbers each frame. Decoration only: hidden from assistive technology. Without WebGL it draws nothing
+ * and the page reads the same; with reduced motion the shape changes without flying and does not react to the
+ * pointer; it pauses while the tab is hidden.
  */
+
+/** The shape of each step of the loop, written as GLSL. */
+const KIND = LOOP.slice(0, -1).map((shape, step) => `if (i < ${step}.5) return ${shape}.0;`).join(' ')
+  + ` return ${LOOP[LOOP.length - 1]}.0;`;
 
 const VERTEX = `
 attribute vec3 aWifi;
@@ -33,6 +40,10 @@ uniform float uTime;
 uniform float uFocal;
 uniform float uAlpha;
 uniform vec2 uTilt;
+uniform vec2 uPointer;
+uniform float uPush;
+uniform vec2 uBurstAt;
+uniform float uBurst;
 uniform vec3 uPlace[4];
 uniform vec3 uPalette[${PALETTE_SIZE}];
 varying vec3 vColor;
@@ -43,6 +54,8 @@ varying float vSolid;
 
 vec3 turnY(vec3 p, float a) { float c = cos(a); float s = sin(a); return vec3(c * p.x + s * p.z, p.y, -s * p.x + c * p.z); }
 vec3 turnX(vec3 p, float a) { float c = cos(a); float s = sin(a); return vec3(p.x, c * p.y - s * p.z, s * p.y + c * p.z); }
+
+float kind(float i) { ${KIND} }
 
 vec3 shape(float i) {
   if (i < 0.5) return turnY(aWifi, sin(uTime * 0.35) * 0.42);
@@ -62,17 +75,25 @@ void main() {
   float f = uStage - from;
   // each point leaves at its own moment: the shape comes apart instead of sliding as a block
   float t = smoothstep(aSeed * 0.45, aSeed * 0.45 + 0.55, f);
-  vec3 p = mix(placed(from), placed(to), t);
+  float a = kind(from);
+  float b = kind(to);
+  vec3 p = mix(placed(a), placed(b), t);
   float flight = t * (1.0 - t) * 4.0;
   p += vec3(sin(aSeed * 41.0) * 1.1, cos(aSeed * 29.0) * 0.8, sin(aSeed * 17.0) * 1.6) * flight;
   if (aAmbient > 0.5) p = turnY(aScatter, uTime * 0.02);
   // the back of a shape is fainter than its front, so it reads as a solid in 3D
   float front = aAmbient > 0.5 ? 1.0 : 0.35 + 0.65 * smoothstep(-1.4, 1.1, p.z);
   // on the planet the sea is fainter than the land
-  float planet = (from > 2.5 ? 1.0 - t : 0.0) + (to > 2.5 ? t : 0.0);
+  float planet = (a == ${SHAPE.planet}.0 ? 1.0 - t : 0.0) + (b == ${SHAPE.planet}.0 ? t : 0.0);
   front *= 1.0 - 0.6 * aSea * planet;
   p += vec3(sin(uTime * 0.7 + aSeed * 60.0), cos(uTime * 0.6 + aSeed * 50.0), sin(uTime * 0.5 + aSeed * 70.0)) * 0.03;
   p = turnX(turnY(p, uTilt.x), uTilt.y);
+  // the pointer pushes the triangles near it away; a click throws them out and they come back
+  float reach = (${CAMERA_Z.toFixed(1)} - p.z) / ${CAMERA_Z.toFixed(1)};
+  vec2 away = p.xy - uPointer * reach;
+  p.xy += normalize(away + 0.0001) * uPush * 0.5 * exp(-dot(away, away) / 0.35);
+  vec2 blast = p.xy - uBurstAt * reach;
+  p += vec3(normalize(blast + 0.0001) * (0.6 + aSeed), (aSeed - 0.5) * 2.4) * uBurst * 1.8 * exp(-length(blast) * 0.32);
 
   float depth = ${CAMERA_Z.toFixed(1)} - p.z;
   gl_Position = uProjection * vec4(p.x, p.y, p.z - ${CAMERA_Z.toFixed(1)}, 1.0);
@@ -139,12 +160,9 @@ function palette(): Float32Array {
   return colors;
 }
 
-/** The middle of each section that names a shape, in page pixels. */
-function anchors(): Anchor[] {
-  return [...document.querySelectorAll<HTMLElement>('[data-stage]')].map((el) => {
-    const box = el.getBoundingClientRect();
-    return { at: box.top + window.scrollY + box.height / 2, stage: Number(el.dataset.stage) || 0 };
-  });
+/** A press on a link, a button, a field or the card is not a press on the scene. */
+function onControl(target: EventTarget | null): boolean {
+  return target instanceof Element && target.closest('a, button, input, label, select, textarea, .auth-card') !== null;
 }
 
 function compile(gl: WebGLRenderingContext, type: number, source: string): WebGLShader | null {
@@ -192,7 +210,8 @@ function createScene(canvas: HTMLCanvasElement): Scene | null {
     gl.vertexAttribPointer(location, size, gl.FLOAT, false, 0, 0);
   }
   const uniforms = Object.fromEntries(
-    ['uProjection', 'uStage', 'uTime', 'uFocal', 'uAlpha', 'uTilt', 'uPlace', 'uPalette']
+    ['uProjection', 'uStage', 'uTime', 'uFocal', 'uAlpha', 'uTilt', 'uPointer', 'uPush', 'uBurstAt', 'uBurst', 'uPlace',
+      'uPalette']
       .map((name) => [name, gl.getUniformLocation(program, name)]),
   );
   gl.enable(gl.BLEND);
@@ -201,10 +220,18 @@ function createScene(canvas: HTMLCanvasElement): Scene | null {
   return { gl, uniforms, clouds };
 }
 
-export function ParticleStage() {
+/** `stage`: the step of the loop to show (0 to LAST_STAGE); the scene travels there smoothly. */
+export function ParticleStage({ stage: wanted }: { stage: number }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const sceneRef = useRef<Scene | null>(null);
+  const wantedRef = useRef(wanted);
+  const redrawRef = useRef<() => void>(() => undefined);
   const theme = useTheme();
+
+  useEffect(() => {
+    wantedRef.current = wanted;
+    redrawRef.current();
+  }, [wanted]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -218,11 +245,11 @@ export function ParticleStage() {
     const { gl, uniforms: u, clouds } = scene;
     const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
     let layout: StageLayout = stageLayout(window.innerWidth, window.innerHeight);
-    let marks: Anchor[] = [];
-    let target = 0;
-    let stage = 0;
+    let stage = wantedRef.current;
     let frame = 0;
     const tilt = { x: 0, y: 0, goalX: 0, goalY: 0 };
+    const pointer = { x: 0, y: 0, push: 0, movedAt: -1e9 };
+    const burst = { x: 0, y: 0, power: 0 };
     const start = performance.now();
 
     function resize() {
@@ -237,23 +264,26 @@ export function ParticleStage() {
       layout = stageLayout(width, height);
       gl.uniform3fv(u.uPlace, layout.places.flatMap((p) => [p.x, p.y, p.scale]));
       gl.uniform1f(u.uAlpha, layout.alpha);
-      marks = anchors();
-      measure();
-    }
-
-    function measure() {
-      const exact = stageAt(window.scrollY + window.innerHeight / 2, marks);
-      target = reduced ? Math.round(exact) : exact;
     }
 
     function draw(now: number) {
-      stage += (target - stage) * (reduced ? 1 : 0.075);
-      if (Math.abs(target - stage) < 0.0005) stage = target;
+      const target = wantedRef.current;
+      // far back on the loop from its end: finish the lap (the last step is the first shape again) and start over
+      const goal = target < stage - 2 && stage > LAST_STAGE - 2 ? LAST_STAGE : target;
+      stage += (goal - stage) * (reduced ? 1 : 0.06);
+      if (Math.abs(goal - stage) < 0.0005) stage = goal;
+      if (stage === LAST_STAGE && target < LAST_STAGE) stage = 0;
       tilt.x += (tilt.goalX - tilt.x) * 0.05;
       tilt.y += (tilt.goalY - tilt.y) * 0.05;
+      pointer.push += ((now - pointer.movedAt < 900 ? 1 : 0) - pointer.push) * 0.06;
+      burst.power *= 0.955;
       gl.uniform1f(u.uStage, Math.min(Math.max(stage, 0), LAST_STAGE));
       gl.uniform1f(u.uTime, reduced ? 0 : (now - start) / 1000);
       gl.uniform2f(u.uTilt, tilt.x, tilt.y);
+      gl.uniform2f(u.uPointer, pointer.x, pointer.y);
+      gl.uniform1f(u.uPush, reduced ? 0 : pointer.push);
+      gl.uniform2f(u.uBurstAt, burst.x, burst.y);
+      gl.uniform1f(u.uBurst, reduced ? 0 : burst.power);
       gl.clear(gl.COLOR_BUFFER_BIT);
       gl.drawArrays(gl.POINTS, 0, clouds.count);
     }
@@ -263,13 +293,16 @@ export function ParticleStage() {
       frame = requestAnimationFrame(loop);
     }
 
-    function onScroll() {
-      measure();
-      if (reduced) draw(performance.now());
-    }
     function onPointer(event: PointerEvent) {
       tilt.goalX = (event.clientX / window.innerWidth - 0.5) * 0.25;
       tilt.goalY = (event.clientY / window.innerHeight - 0.5) * 0.12;
+      [pointer.x, pointer.y] = toWorld(event.clientX, event.clientY, window.innerWidth, window.innerHeight);
+      pointer.movedAt = performance.now();
+    }
+    function onPress(event: PointerEvent) {
+      if (onControl(event.target)) return;
+      [burst.x, burst.y] = toWorld(event.clientX, event.clientY, window.innerWidth, window.innerHeight);
+      burst.power = 1;
     }
     function onVisibility() {
       cancelAnimationFrame(frame);
@@ -277,22 +310,25 @@ export function ParticleStage() {
     }
 
     resize();
-    stage = target;  // start on the shape of the place where the page opens (a reload halfway down)
     gl.uniform3fv(u.uPalette, palette());
-    if (reduced) draw(performance.now());
-    else frame = requestAnimationFrame(loop);
-    // the sections may change height once the fonts load
-    const remeasure = window.setTimeout(resize, 600);
+    if (reduced) {
+      draw(performance.now());
+      redrawRef.current = () => draw(performance.now());
+    } else {
+      frame = requestAnimationFrame(loop);
+    }
     window.addEventListener('resize', resize);
-    window.addEventListener('scroll', onScroll, { passive: true });
-    if (!reduced) window.addEventListener('pointermove', onPointer, { passive: true });
+    if (!reduced) {
+      window.addEventListener('pointermove', onPointer, { passive: true });
+      window.addEventListener('pointerdown', onPress, { passive: true });
+    }
     document.addEventListener('visibilitychange', onVisibility);
     return () => {
       cancelAnimationFrame(frame);
-      window.clearTimeout(remeasure);
+      redrawRef.current = () => undefined;
       window.removeEventListener('resize', resize);
-      window.removeEventListener('scroll', onScroll);
       window.removeEventListener('pointermove', onPointer);
+      window.removeEventListener('pointerdown', onPress);
       document.removeEventListener('visibilitychange', onVisibility);
       // the context is not lost on purpose: React may mount the same canvas again (StrictMode), and the browser frees
       // it with the canvas when the page goes away
